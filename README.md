@@ -38,7 +38,7 @@
 - UI：React 19
 - Styling：Tailwind CSS 4
 - Chart：Recharts
-- Quality：ESLint 9 + eslint-config-next
+- Quality：Prettier
 - Weather API：Open-Meteo
 
 ## 專案結構
@@ -105,11 +105,9 @@ npm start
 ### 品質檢查
 
 ```bash
-npm run lint
+npm run format
 npm audit --audit-level=moderate
 ```
-
-目前保留 ESLint，因為它能提供 Next.js、React hooks 與基本可存取性檢查，而且只存在於開發依賴，不會進 production bundle。
 
 ## 環境變數
 
