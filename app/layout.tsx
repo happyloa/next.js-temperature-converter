@@ -18,6 +18,7 @@ const siteUrl =
   "https://next-js-temperature-convert.vercel.app";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   manifest: "/manifest.webmanifest",
   title: {
     default: "溫度工作室 | 多尺度智慧轉換",
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
   description:
     "現代化的溫度轉換工作室，支援攝氏、華氏、絕對溫標與進階單位並提供情境洞察與歷史紀錄。即時天氣資訊與 7 日預報，讓溫度轉換更具情境背景。",
 
-  // Open Graph 設定
+  // Open Graph 設定（分享圖由 app/opengraph-image.tsx 自動產生並帶入 metadata）
   openGraph: {
     type: "website",
     locale: "zh_TW",
@@ -35,14 +36,6 @@ export const metadata: Metadata = {
     title: "溫度工作室 | 多尺度智慧轉換",
     description:
       "支援六種溫標即時轉換、全球天氣資訊、7 日趨勢圖表與環境儀表板。支援語音輸入，快捷鍵操作。",
-    images: [
-      {
-        url: `${siteUrl}/og-image.png`,
-        width: 1200,
-        height: 630,
-        alt: "溫度工作室 - Temperature Studio",
-      },
-    ],
   },
 
   // Twitter 卡片設定
@@ -50,8 +43,6 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "溫度工作室 | 多尺度智慧轉換",
     description: "六種溫標即時轉換、全球天氣資訊與環境儀表板。支援語音輸入。",
-    images: [`${siteUrl}/og-image.png`],
-    creator: "@TemperatureStudio",
   },
 
   // 基礎 SEO 設定
