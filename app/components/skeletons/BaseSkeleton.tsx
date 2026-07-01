@@ -7,10 +7,7 @@ interface BaseSkeletonProps extends React.HTMLAttributes<HTMLDivElement> {}
 export function BaseSkeleton({ className, ...props }: BaseSkeletonProps) {
   return (
     <div
-      className={cn(
-        "animate-pulse rounded-md bg-slate-200 dark:bg-white/10",
-        className,
-      )}
+      className={cn("skeleton-shimmer rounded-md", className)}
       {...props}
     />
   );

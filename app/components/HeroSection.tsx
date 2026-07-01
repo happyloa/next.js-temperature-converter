@@ -11,7 +11,7 @@ type HeroSectionProps = {
 
 export function HeroSection({ presets, onPresetSelect }: HeroSectionProps) {
   return (
-    <section className="flex w-full min-w-0 max-w-full flex-col items-center gap-6 text-center">
+    <section className="flex w-full min-w-0 max-w-full flex-col items-center gap-6 px-4 text-center">
       <span className="theme-tag">⚡ Temperature Intelligence Platform</span>
       <h1 className="text-3xl font-bold leading-tight text-slate-50 sm:text-4xl md:text-5xl">
         溫度實驗室 · 智慧轉換平台

@@ -61,6 +61,7 @@ app/
 ├── lib/                     # 純函式與資料定義
 │   ├── format.ts
 │   ├── history.ts
+│   ├── storage.ts           # localStorage/sessionStorage fallback 共用邏輯
 │   ├── temperature.ts
 │   ├── utils.ts
 │   └── weather.ts
@@ -125,8 +126,17 @@ npm audit --audit-level=moderate
 
 ## 專案健康度
 
-目前不需要大型重構。專案已依照職責拆成 `components`、`hooks`、`lib`、`types`，整體結構清楚。較適合後續漸進改善的方向如下：
+目前不需要大型重構。專案已依照職責拆成 `components`、`hooks`、`lib`、`types`，整體結構清楚。
 
+已完成的清理：
+
+- 移除未被使用的 export（`formatWeatherTime`、`formatWeekday`、`formatCoordinate`、`formatShortcut`、`ThemeProvider` 的 `setTheme`）與重複型別宣告。
+- 將 `useHistoryStore` 與 `useWeatherDashboard` 重複的 localStorage/sessionStorage fallback 邏輯收斂進 `lib/storage.ts`。
+- 修正 `/weather` 首次載入時淺色主題閃爍（FOUC）、對比度不足、行動裝置版面溢出等問題。
+
+較適合後續漸進改善的方向如下：
+
+- `/weather` 目前仍是獨立於首頁 token 系統之外的一套硬編碼配色（主色 `#00CECB`、卡片圓角、陰影都不同），建議統一改用 `globals.css` 既有的 CSS 變數與 `.theme-*` 樣式，並抽出共用的 App 級導覽列。
 - 將 `useWeatherDashboard` 再拆成 weather API client、payload parser 與 React hook，降低單一 hook 的責任。
 - 補上單元測試，優先涵蓋 `lib/temperature.ts`、`lib/format.ts` 與 weather payload validation。
 - 若要主打完整 PWA 離線能力，可再加入 service worker 與快取策略；目前已具備 Web App Manifest。

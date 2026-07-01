@@ -14,7 +14,7 @@ export function WeatherSkeleton() {
       {/* 1. Hero and Summary Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         <HeroSkeleton />
-        <div className="grid gap-4 grid-rows-3 h-full">
+        <div className="grid auto-rows-max gap-4 lg:grid-rows-3 lg:h-full">
           <SummaryCardSkeleton />
           <SummaryCardSkeleton />
           <SummaryCardSkeleton />

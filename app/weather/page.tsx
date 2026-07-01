@@ -98,11 +98,11 @@ export default function WeatherPage() {
     <main className="min-h-screen w-full bg-slate-50 dark:bg-[#0B0C15] text-slate-900 dark:text-slate-100 selection:bg-[#00CECB]/30 transition-colors duration-300">
       {/* 1. Navbar / Header Section */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-[#0B0C15]/80 backdrop-blur-xl transition-colors duration-300">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:h-20 sm:flex-row sm:items-center sm:justify-between sm:gap-0 sm:px-6 sm:py-0 lg:px-8">
           <div className="flex items-center gap-6">
             <Link
               href="/"
-              className="group flex items-center gap-2 rounded-xl bg-[#00CECB] px-4 py-2 text-sm font-bold text-white hover:bg-[#00CECB]/90 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#00CECB]/20 whitespace-nowrap"
+              className="group flex items-center gap-2 rounded-xl bg-[var(--button-primary-bg)] px-4 py-2 text-sm font-bold text-[var(--button-primary-text)] hover:bg-[var(--button-primary-hover-bg)] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[var(--button-primary-bg)]/20 whitespace-nowrap"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -126,7 +126,7 @@ export default function WeatherPage() {
 
           <form
             onSubmit={handleWeatherSubmit}
-            className="relative w-full max-w-md ml-4"
+            className="relative w-full sm:max-w-md sm:ml-4"
           >
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -194,6 +194,16 @@ export default function WeatherPage() {
           ))}
         </div>
 
+        <div role="status" aria-live="polite" className="sr-only">
+          {weatherError
+            ? weatherError
+            : weatherLoading
+              ? "正在載入天氣資料"
+              : weatherData
+                ? `${weatherData.location} 天氣資料已更新`
+                : ""}
+        </div>
+
         {weatherError ? (
           <div className="rounded-3xl border border-red-500/20 bg-red-500/5 p-8 text-center text-red-400">
             <p className="text-lg font-medium">{weatherError}</p>
@@ -229,7 +239,9 @@ export default function WeatherPage() {
                         {getWeatherDescription(
                           weatherData.weatherCode,
                         ).includes("晴")
-                          ? "☀️"
+                          ? weatherData.isDay
+                            ? "☀️"
+                            : "🌙"
                           : "☁️"}
                       </span>
                       <span className="mt-2 block text-sm font-bold text-cyan-600 dark:text-[#00CECB] tracking-wide whitespace-nowrap">
@@ -299,7 +311,7 @@ export default function WeatherPage() {
               {/* Air Quality */}
               <div className="rounded-[2rem] border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#121420] p-6 shadow-sm dark:shadow-none hover:border-slate-300 dark:hover:border-white/20 transition-colors">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     <span className="text-base">🍃</span> 空氣品質
                   </h3>
                   {weatherData.airQuality && (
@@ -317,7 +329,7 @@ export default function WeatherPage() {
                       <div className="text-4xl font-bold text-slate-900 dark:text-slate-100">
                         {weatherData.airQuality.aqi}
                       </div>
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         AQI 指數
                       </div>
                     </div>
@@ -359,7 +371,7 @@ export default function WeatherPage() {
                   key={item.label}
                   className="rounded-[2rem] border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#121420] p-6 hover:border-slate-300 dark:hover:border-white/20 transition-colors shadow-sm dark:shadow-none"
                 >
-                  <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     {item.label}
                   </h3>
                   <div className="flex items-end justify-between">

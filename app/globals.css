@@ -111,7 +111,7 @@
     --tag-bg: rgba(248, 250, 252, 0.7);
     --tag-border: rgba(59, 130, 246, 0.4);
     --tag-border-hover: rgba(168, 85, 247, 0.5);
-    --tag-text: #3b82f6;
+    --tag-text: #2563eb;
 
     --success-bg: rgba(16, 185, 129, 0.18);
     --success-border: rgba(16, 185, 129, 0.45);
@@ -320,4 +320,39 @@
     color: var(--success-text);
   }
 
+  .theme-chip:focus-visible,
+  .theme-segment:focus-visible,
+  .theme-primary-button:focus-visible,
+  .theme-outline-button:focus-visible,
+  .theme-tag:focus-visible {
+    outline: 2px solid var(--button-primary-bg);
+    outline-offset: 2px;
+  }
+
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--surface-soft) 25%,
+      var(--border-strong) 37%,
+      var(--surface-soft) 63%
+    );
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-shimmer {
+      animation: none;
+      background: var(--surface-soft);
+    }
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }

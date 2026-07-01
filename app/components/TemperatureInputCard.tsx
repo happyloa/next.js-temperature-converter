@@ -285,7 +285,7 @@ function ConversionResultGrid({
   formatTemperature,
 }: ConversionResultGridProps) {
   return (
-    <section className="space-y-4">
+    <section className="space-y-4" aria-live="polite">
       <h3 className="text-lg font-semibold text-slate-100">即時轉換結果</h3>
       <ul className="grid gap-4 sm:grid-cols-2 list-none m-0 p-0">
         {conversions.map((item) => (

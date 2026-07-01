@@ -92,6 +92,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="zh-TW" suppressHydrationWarning>
       <head>
         <link rel="canonical" href={siteUrl} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '(function(){try{var s=localStorage.getItem("theme-preference");var t=s==="dark"||s==="light"?s:(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);}catch(e){}})();',
+          }}
+        />
       </head>
       <body className="font-sans">
         <ThemeProvider>
