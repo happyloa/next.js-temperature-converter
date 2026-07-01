@@ -96,6 +96,7 @@ export function TemperatureInputCard({
       </div>
 
       <ConversionResultGrid
+        activeScale={scale}
         conversions={conversions}
         copiedScale={copiedScale}
         onCopy={onCopy}
@@ -129,9 +130,9 @@ function TemperatureCardHeader({
   shareText,
 }: TemperatureCardHeaderProps) {
   return (
-    <header className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:[&>*]:min-w-0">
+    <header className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:*:min-w-0">
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold text-slate-50">輸入溫度</h2>
+        <h2 className="text-heading text-slate-50">輸入溫度</h2>
         <p className="max-w-xl text-sm leading-relaxed text-slate-300">
           選擇想要輸入的溫標後填入數值，系統會即時計算其他尺度並提供安全洞察與轉換紀錄。
         </p>
@@ -146,7 +147,20 @@ function TemperatureCardHeader({
           onClick={onReset}
           className="theme-outline-button"
         >
-          🔄 重設
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="h-4 w-4"
+            aria-hidden="true"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903h-3.183a.75.75 0 100 1.5h4.992a.75.75 0 00.75-.75V4.356a.75.75 0 00-1.5 0v3.18l-1.9-1.9A9 9 0 003.306 9.67a.75.75 0 101.45.388zm15.408 3.352a.75.75 0 00-.919.53 7.5 7.5 0 01-12.548 3.364l-1.902-1.903h3.183a.75.75 0 000-1.5H2.984a.75.75 0 00-.75.75v4.992a.75.75 0 001.5 0v-3.18l1.9 1.9a9 9 0 0015.059-4.035.75.75 0 00-.53-.918z"
+              clipRule="evenodd"
+            />
+          </svg>
+          重設
         </button>
         <button
           type="button"
@@ -154,7 +168,16 @@ function TemperatureCardHeader({
           disabled={!canAddHistory}
           className="theme-primary-button px-6"
         >
-          📝 加入紀錄
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="h-4 w-4"
+            aria-hidden="true"
+          >
+            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+          </svg>
+          加入紀錄
         </button>
       </div>
     </header>
@@ -176,11 +199,17 @@ function TemperatureScaleSelector({
   onScaleChange,
 }: TemperatureScaleSelectorProps) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div
+      role="radiogroup"
+      aria-label="選擇溫標"
+      className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
+    >
       {scales.map((item) => (
         <button
           key={item.code}
           type="button"
+          role="radio"
+          aria-checked={activeScale === item.code}
           onClick={() => onScaleChange(item.code)}
           className={cn(
             "theme-segment",
@@ -211,7 +240,7 @@ function TemperatureValueField({
   return (
     <label className="flex flex-col gap-2 text-left">
       <span className="text-sm font-semibold text-slate-200">輸入數值</span>
-      <div className="flex items-center gap-3 rounded-2xl border border-slate-700/60 bg-slate-900/70 px-4 py-3 text-lg font-semibold text-slate-100 focus-within:border-[#FF5E5B] focus-within:ring-2 focus-within:ring-[#FF5E5B]/40">
+      <div className="focus-within:border-accent focus-within:ring-accent/40 flex items-center gap-3 rounded-2xl border border-slate-700/60 bg-slate-900/70 px-4 py-3 text-lg font-semibold text-slate-100 focus-within:ring-2">
         <span className="text-xl">🌡️</span>
         <input
           type="text"
@@ -260,13 +289,14 @@ function TemperatureSliderControl({
         step={sliderStep}
         value={sliderValue}
         onChange={onSliderChange}
-        className="h-2 w-full cursor-grab appearance-none rounded-full bg-slate-800 accent-[#FF5E5B] active:cursor-grabbing"
+        className="accent-accent h-2 w-full cursor-grab appearance-none rounded-full bg-slate-800 active:cursor-grabbing"
       />
     </label>
   );
 }
 
 type ConversionResultGridProps = {
+  activeScale: TemperatureScaleCode;
   conversions: TemperatureConversion[];
   copiedScale: TemperatureScaleCode | null;
   onCopy: (text: string, code: TemperatureScaleCode) => void | Promise<void>;
@@ -275,9 +305,10 @@ type ConversionResultGridProps = {
 };
 
 /**
- * 將所有溫標的換算結果以卡片形式呈現。
+ * 將所有溫標的換算結果以卡片形式呈現；目前輸入的溫標會以較大的字級突顯。
  */
 function ConversionResultGrid({
+  activeScale,
   conversions,
   copiedScale,
   onCopy,
@@ -286,12 +317,13 @@ function ConversionResultGrid({
 }: ConversionResultGridProps) {
   return (
     <section className="space-y-4" aria-live="polite">
-      <h3 className="text-lg font-semibold text-slate-100">即時轉換結果</h3>
+      <h3 className="text-heading text-slate-100">即時轉換結果</h3>
       <ul className="grid gap-4 sm:grid-cols-2 list-none m-0 p-0">
         {conversions.map((item) => (
           <li key={item.code} className="list-none">
             <ConversionResultCard
               conversion={item}
+              isPrimary={item.code === activeScale}
               copiedScale={copiedScale}
               onCopy={onCopy}
               mood={mood}
@@ -306,6 +338,7 @@ function ConversionResultGrid({
 
 type ConversionResultCardProps = {
   conversion: TemperatureConversion;
+  isPrimary: boolean;
   copiedScale: TemperatureScaleCode | null;
   onCopy: (text: string, code: TemperatureScaleCode) => void | Promise<void>;
   mood: ThermalMood | null;
@@ -314,19 +347,32 @@ type ConversionResultCardProps = {
 
 function ConversionResultCard({
   conversion,
+  isPrimary,
   copiedScale,
   onCopy,
   mood,
   formatTemperature,
 }: ConversionResultCardProps) {
   return (
-    <div className="relative min-w-0 overflow-hidden rounded-3xl border border-slate-600/30 bg-slate-900/60 p-5">
+    <div
+      className={cn(
+        "relative min-w-0 overflow-hidden rounded-3xl border p-5 transition-colors",
+        isPrimary
+          ? "border-accent/40 bg-accent/10"
+          : "border-edge-subtle bg-slate-900/60",
+      )}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2">
           <span className="text-xs uppercase tracking-wide text-slate-200/80">
             {conversion.label}
           </span>
-          <p className="text-2xl font-bold text-slate-50 sm:text-3xl">
+          <p
+            className={cn(
+              "font-bold leading-none tracking-tight text-slate-50",
+              isPrimary ? "text-4xl sm:text-5xl" : "text-2xl sm:text-3xl",
+            )}
+          >
             {formatTemperature(conversion.result)} {conversion.symbol}
           </p>
         </div>

@@ -11,24 +11,69 @@ import {
   CartesianGrid,
 } from "recharts";
 import type { DailyForecast } from "../types/weather";
+import { useTheme } from "./ThemeProvider";
 
 interface WeatherChartProps {
   data: DailyForecast[];
   unit?: string;
 }
 
+type ChartColors = {
+  grid: string;
+  axisText: string;
+  axisLine: string;
+  tooltipBg: string;
+  tooltipBorder: string;
+  high: string;
+  low: string;
+};
+
+const FALLBACK_COLORS: ChartColors = {
+  grid: "#334155",
+  axisText: "#94a3b8",
+  axisLine: "#475569",
+  tooltipBg: "#1e293b",
+  tooltipBorder: "#334155",
+  high: "#ef4444",
+  low: "#3b82f6",
+};
+
+const readChartColors = (): ChartColors => {
+  const styles = getComputedStyle(document.documentElement);
+  const read = (name: string, fallback: string) =>
+    styles.getPropertyValue(name).trim() || fallback;
+
+  return {
+    grid: read("--border-subtle", FALLBACK_COLORS.grid),
+    axisText: read("--text-subtle", FALLBACK_COLORS.axisText),
+    axisLine: read("--border-strong", FALLBACK_COLORS.axisLine),
+    tooltipBg: read("--surface-strong", FALLBACK_COLORS.tooltipBg),
+    tooltipBorder: read("--border-subtle", FALLBACK_COLORS.tooltipBorder),
+    high: "#ef4444",
+    low: read("--button-primary-bg", FALLBACK_COLORS.low),
+  };
+};
+
 /**
  * Weather trend chart showing 7-day temperature forecast.
  */
 export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
   const [mounted, setMounted] = useState(false);
+  const { theme } = useTheme();
+  const [colors, setColors] = useState<ChartColors>(FALLBACK_COLORS);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    setColors(readChartColors());
+  }, [mounted, theme]);
+
   if (!mounted || data.length === 0) {
     return (
-      <div className="flex h-full min-h-64 items-center justify-center rounded-2xl border border-dashed border-slate-700/40 bg-slate-900/40 text-sm text-slate-400">
+      <div className="border-edge-subtle bg-surface-light text-ink-subtle flex h-full min-h-64 items-center justify-center rounded-2xl border border-dashed text-sm">
         {!mounted ? "載入圖表..." : "暫無預報資料"}
       </div>
     );
@@ -36,7 +81,8 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+    const weekday = date.toLocaleDateString("zh-TW", { weekday: "short" });
+    return `${date.getMonth() + 1}/${date.getDate()}(${weekday.replace("週", "")})`;
   };
 
   return (
@@ -57,26 +103,26 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
           >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="#334155"
+              stroke={colors.grid}
               opacity={0.5}
             />
             <XAxis
               dataKey="date"
               tickFormatter={formatDate}
-              tick={{ fill: "#94a3b8", fontSize: 11 }}
-              axisLine={{ stroke: "#475569" }}
-              tickLine={{ stroke: "#475569" }}
+              tick={{ fill: colors.axisText, fontSize: 11 }}
+              axisLine={{ stroke: colors.axisLine }}
+              tickLine={{ stroke: colors.axisLine }}
             />
             <YAxis
-              tick={{ fill: "#94a3b8", fontSize: 11 }}
-              axisLine={{ stroke: "#475569" }}
-              tickLine={{ stroke: "#475569" }}
+              tick={{ fill: colors.axisText, fontSize: 11 }}
+              axisLine={{ stroke: colors.axisLine }}
+              tickLine={{ stroke: colors.axisLine }}
               tickFormatter={(value) => `${value}${unit}`}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#1e293b",
-                border: "1px solid #334155",
+                backgroundColor: colors.tooltipBg,
+                border: `1px solid ${colors.tooltipBorder}`,
                 borderRadius: "12px",
                 fontSize: "12px",
               }}
@@ -99,28 +145,28 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
             <Line
               type="monotone"
               dataKey="high"
-              stroke="#ef4444"
+              stroke={colors.high}
               strokeWidth={2}
-              dot={{ fill: "#ef4444", strokeWidth: 0, r: 3 }}
+              dot={{ fill: colors.high, strokeWidth: 0, r: 3 }}
               activeDot={{
                 r: 5,
-                stroke: "#ef4444",
+                stroke: colors.high,
                 strokeWidth: 2,
-                fill: "#1e293b",
+                fill: colors.tooltipBg,
               }}
               name="high"
             />
             <Line
               type="monotone"
               dataKey="low"
-              stroke="#3b82f6"
+              stroke={colors.low}
               strokeWidth={2}
-              dot={{ fill: "#3b82f6", strokeWidth: 0, r: 3 }}
+              dot={{ fill: colors.low, strokeWidth: 0, r: 3 }}
               activeDot={{
                 r: 5,
-                stroke: "#3b82f6",
+                stroke: colors.low,
                 strokeWidth: 2,
-                fill: "#1e293b",
+                fill: colors.tooltipBg,
               }}
               name="low"
             />

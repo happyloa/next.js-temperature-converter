@@ -2,6 +2,7 @@
 
 import type { FC } from "react";
 import { useCallback, useState } from "react";
+import { cn } from "../lib/utils";
 
 interface ShareButtonProps {
   title: string;
@@ -71,15 +72,15 @@ export const ShareButton: FC<ShareButtonProps> = ({
       <button
         type="button"
         onClick={handleShare}
-        className={`
-          group flex items-center gap-2 rounded-xl px-4 py-2.5
-          bg-white/5 text-white/70 
-          hover:bg-white/10 hover:text-white
-          transition-all duration-200
-          ${copied ? "bg-green-500/20 text-green-400" : ""}
-          ${error ? "bg-red-500/20 text-red-400" : ""}
-          ${className}
-        `}
+        className={cn(
+          "group flex items-center gap-2 rounded-xl px-4 py-2.5 transition-all duration-200",
+          copied
+            ? "theme-status-success"
+            : error
+              ? "theme-status-error"
+              : "bg-surface-light text-ink-medium hover:bg-surface-soft hover:text-ink-strong",
+          className,
+        )}
         aria-label="分享"
       >
         {copied ? (
@@ -89,6 +90,7 @@ export const ShareButton: FC<ShareButtonProps> = ({
               viewBox="0 0 24 24"
               fill="currentColor"
               className="w-5 h-5"
+              aria-hidden="true"
             >
               <path
                 fillRule="evenodd"
@@ -105,6 +107,7 @@ export const ShareButton: FC<ShareButtonProps> = ({
               viewBox="0 0 24 24"
               fill="currentColor"
               className="w-5 h-5"
+              aria-hidden="true"
             >
               <path
                 fillRule="evenodd"
@@ -121,6 +124,7 @@ export const ShareButton: FC<ShareButtonProps> = ({
               viewBox="0 0 24 24"
               fill="currentColor"
               className="w-5 h-5"
+              aria-hidden="true"
             >
               <path
                 fillRule="evenodd"

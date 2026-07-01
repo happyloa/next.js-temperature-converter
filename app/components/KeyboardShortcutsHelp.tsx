@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from "react";
-import { useState } from "react";
+import { useEffect, useId, useRef } from "react";
 
 interface ShortcutInfo {
   keys: string;
@@ -10,23 +10,42 @@ interface ShortcutInfo {
 
 interface KeyboardShortcutsHelpProps {
   shortcuts: ShortcutInfo[];
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 /**
- * 鍵盤快捷鍵說明面板，按下 ? 鍵時顯示。
+ * 鍵盤快捷鍵說明面板。觸發按鈕永遠可見，`isOpen` 由外部（? / Escape 快捷鍵）
+ * 或按鈕本身共同控制，確保使用者一定找得到這個功能的入口。
  */
 export const KeyboardShortcutsHelp: FC<KeyboardShortcutsHelpProps> = ({
   shortcuts,
+  isOpen,
+  onOpenChange,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const headingId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const wasOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      closeButtonRef.current?.focus();
+      wasOpenRef.current = true;
+    } else if (wasOpenRef.current) {
+      wasOpenRef.current = false;
+      triggerRef.current?.focus();
+    }
+  }, [isOpen]);
 
   return (
     <>
       {/* Help button */}
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-slate-800/80 text-slate-300 shadow-lg backdrop-blur transition-all hover:bg-slate-700 hover:text-white"
+        onClick={() => onOpenChange(true)}
+        className="bg-surface-strong text-ink-medium hover:text-ink-strong hover:bg-surface-soft fixed bottom-20 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full shadow-lg backdrop-blur transition-all"
         aria-label="鍵盤快捷鍵"
         title="鍵盤快捷鍵 (?)"
       >
@@ -35,6 +54,7 @@ export const KeyboardShortcutsHelp: FC<KeyboardShortcutsHelpProps> = ({
           viewBox="0 0 24 24"
           fill="currentColor"
           className="h-5 w-5"
+          aria-hidden="true"
         >
           <path
             fillRule="evenodd"
@@ -48,26 +68,35 @@ export const KeyboardShortcutsHelp: FC<KeyboardShortcutsHelpProps> = ({
       {isOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          onClick={() => setIsOpen(false)}
+          onClick={() => onOpenChange(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={headingId}
         >
           <div
-            className="mx-4 max-w-md rounded-2xl border border-slate-700/60 bg-slate-900/95 p-6 shadow-2xl"
+            className="border-edge-subtle bg-surface-strong mx-4 max-w-md rounded-2xl border p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-100">
+              <h3
+                id={headingId}
+                className="text-ink-strong text-lg font-semibold"
+              >
                 鍵盤快捷鍵
               </h3>
               <button
+                ref={closeButtonRef}
                 type="button"
-                onClick={() => setIsOpen(false)}
-                className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+                onClick={() => onOpenChange(false)}
+                className="text-ink-subtle hover:text-ink-strong hover:bg-surface-soft rounded-lg p-1 transition-colors"
+                aria-label="關閉"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                   className="h-5 w-5"
+                  aria-hidden="true"
                 >
                   <path
                     fillRule="evenodd"
@@ -78,21 +107,23 @@ export const KeyboardShortcutsHelp: FC<KeyboardShortcutsHelpProps> = ({
               </button>
             </div>
 
-            <div className="space-y-3">
+            <dl className="space-y-3">
               {shortcuts.map((shortcut, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between gap-4 text-sm"
                 >
-                  <span className="text-slate-300">{shortcut.description}</span>
-                  <kbd className="rounded-lg bg-slate-800 px-2 py-1 font-mono text-xs text-slate-200">
-                    {shortcut.keys}
-                  </kbd>
+                  <dt className="text-ink-medium">{shortcut.description}</dt>
+                  <dd>
+                    <kbd className="bg-surface-soft text-ink-medium rounded-lg px-2 py-1 font-mono text-xs">
+                      {shortcut.keys}
+                    </kbd>
+                  </dd>
                 </div>
               ))}
-            </div>
+            </dl>
 
-            <p className="mt-4 text-xs text-slate-500">
+            <p className="text-ink-subtle mt-4 text-xs">
               按 Escape 或點擊外部關閉
             </p>
           </div>

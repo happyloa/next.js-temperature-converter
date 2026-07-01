@@ -8,7 +8,6 @@ import { HistorySection } from "./components/HistorySection";
 import { InsightsSection } from "./components/InsightsSection";
 import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
 import { TemperatureInputCard } from "./components/TemperatureInputCard";
-import Link from "next/link";
 import { useHistoryStore } from "./hooks/useHistoryStore";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useTemperatureConversion } from "./hooks/useTemperatureConversion";
@@ -164,53 +163,29 @@ export default function TemperatureStudio() {
 
           {/* Sidebar Area (5/12) */}
           <aside className="flex min-w-0 flex-col gap-8 lg:col-span-5">
+            <InsightsSection insights={insights} />
+
             <HistorySection
               history={history}
               onClearHistory={handleClearHistory}
               formatTemperature={formatTemperature}
               formatTime={(date) => timeFormatter.format(date)}
             />
-
-            <InsightsSection insights={insights} />
-
-            <Link
-              href="/weather"
-              className="group relative overflow-hidden rounded-3xl border border-slate-700/40 bg-slate-900/60 p-6 transition-all hover:bg-slate-900/80 hover:shadow-lg hover:border-[#00CECB]/30"
-            >
-              <div className="relative z-10 flex flex-col gap-3">
-                <div className="flex items-center gap-3 text-slate-200">
-                  <span className="text-2xl">🌍</span>
-                  <h2 className="text-lg font-semibold group-hover:text-[#00CECB] transition-colors">
-                    全球環境儀表板
-                  </h2>
-                </div>
-                <p className="text-sm text-slate-400">
-                  查詢全球城市天氣、環境指標與空氣品質，獲得更完整的溫度情境。
-                </p>
-                <div className="mt-2 flex items-center text-xs font-medium text-[#00CECB]">
-                  立即前往{" "}
-                  <span className="ml-1 transition-transform group-hover:translate-x-1">
-                    →
-                  </span>
-                </div>
-              </div>
-              <div className="absolute -right-6 -bottom-6 h-24 w-24 rounded-full bg-[#00CECB]/10 blur-xl transition-all group-hover:bg-[#00CECB]/20"></div>
-            </Link>
           </aside>
         </div>
       </div>
 
-      {showShortcutsHelp && (
-        <KeyboardShortcutsHelp
-          shortcuts={[
-            { keys: "Alt+R", description: "重設溫度輸入" },
-            { keys: "Alt+H", description: "清除歷史紀錄" },
-            { keys: "Alt+T", description: "切換深淺色主題" },
-            { keys: "?", description: "顯示/隱藏快捷鍵說明" },
-            { keys: "Esc", description: "關閉彈窗" },
-          ]}
-        />
-      )}
+      <KeyboardShortcutsHelp
+        isOpen={showShortcutsHelp}
+        onOpenChange={setShowShortcutsHelp}
+        shortcuts={[
+          { keys: "Alt+R", description: "重設溫度輸入" },
+          { keys: "Alt+H", description: "清除歷史紀錄" },
+          { keys: "Alt+T", description: "切換深淺色主題" },
+          { keys: "?", description: "顯示/隱藏快捷鍵說明" },
+          { keys: "Esc", description: "關閉彈窗" },
+        ]}
+      />
     </main>
   );
 }

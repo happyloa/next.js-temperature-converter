@@ -25,7 +25,8 @@
 
 ### 使用者體驗
 
-- 支援深色/淺色主題並記住偏好。
+- 全站共用導覽列（`AppHeader`），轉換器與天氣頁之間可直接切換。
+- 支援深色/淺色主題並記住偏好，且以 blocking inline script 避免重新整理時的主題閃爍。
 - 支援 Web Share API，瀏覽器不支援時會 fallback 到剪貼簿。
 - 支援 CSV/JSON 匯出。
 - 支援鍵盤快捷鍵說明。
@@ -47,6 +48,7 @@
 app/
 ├── components/              # UI 元件
 │   ├── skeletons/           # Skeleton loading 元件
+│   ├── AppHeader.tsx        # 全站共用導覽列
 │   ├── ExportButton.tsx
 │   ├── HistorySection.tsx
 │   ├── ShareButton.tsx
@@ -128,15 +130,18 @@ npm audit --audit-level=moderate
 
 目前不需要大型重構。專案已依照職責拆成 `components`、`hooks`、`lib`、`types`，整體結構清楚。
 
-已完成的清理：
+已完成的清理與改版：
 
 - 移除未被使用的 export（`formatWeatherTime`、`formatWeekday`、`formatCoordinate`、`formatShortcut`、`ThemeProvider` 的 `setTheme`）與重複型別宣告。
 - 將 `useHistoryStore` 與 `useWeatherDashboard` 重複的 localStorage/sessionStorage fallback 邏輯收斂進 `lib/storage.ts`。
 - 修正 `/weather` 首次載入時淺色主題閃爍（FOUC）、對比度不足、行動裝置版面溢出等問題。
+- 將配色系統正式收斂為 Tailwind v4 `@theme` design token（`bg-surface-strong`、`text-ink-strong`、`bg-accent` 等），元件不再需要 `bg-[var(--x)]` 任意值語法；`/weather` 也已改用同一套 token，不再有獨立於首頁之外的硬編碼配色（原本的青綠 `#00CECB`／珊瑚 `#FF5E5B` 僅保留在 `lib/temperature.ts` 的溫標裝飾漸層，不再用於任何互動元件）。
+- 抽出共用 `AppHeader`，轉換器與天氣頁共用同一份導覽列與圓角/陰影規則。
+- 修正 `KeyboardShortcutsHelp` 觸發按鈕過去因外部狀態控制而永遠不會顯示的問題（使用者必須已經知道 `?` 快捷鍵才能開啟，現已改為一律可見）。
+- 為互動元件補上語意標籤與 ARIA（溫標選擇器與天氣預報天數改用 `radiogroup`/`radio`、快捷鍵說明改用 `<dl>`、匯出選單補上 `role="menu"` 與 Escape/焦點管理、天氣頁載入狀態補上 `aria-live`）。
 
 較適合後續漸進改善的方向如下：
 
-- `/weather` 目前仍是獨立於首頁 token 系統之外的一套硬編碼配色（主色 `#00CECB`、卡片圓角、陰影都不同），建議統一改用 `globals.css` 既有的 CSS 變數與 `.theme-*` 樣式，並抽出共用的 App 級導覽列。
 - 將 `useWeatherDashboard` 再拆成 weather API client、payload parser 與 React hook，降低單一 hook 的責任。
 - 補上單元測試，優先涵蓋 `lib/temperature.ts`、`lib/format.ts` 與 weather payload validation。
 - 若要主打完整 PWA 離線能力，可再加入 service worker 與快取策略；目前已具備 Web App Manifest。

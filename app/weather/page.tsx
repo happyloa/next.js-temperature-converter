@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import { cn } from "../lib/utils";
 import { WeatherChart } from "../components/WeatherChart";
 import { WeatherSkeleton } from "../components/skeletons/WeatherSkeleton";
@@ -14,6 +13,8 @@ import {
   formatUtcOffset,
 } from "../lib/format";
 
+const WEEKDAY_LABELS = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
+
 export default function WeatherPage() {
   const {
     weatherQuery,
@@ -21,6 +22,7 @@ export default function WeatherPage() {
     weatherData,
     weatherLoading,
     weatherError,
+    fetchWeather,
     handleWeatherSubmit,
     handleWeatherPreset,
     handleGeolocate,
@@ -94,52 +96,44 @@ export default function WeatherPage() {
     ? `${Math.abs(weatherData.coordinates.latitude)}°${weatherData.coordinates.latitude >= 0 ? "N" : "S"} · ${Math.abs(weatherData.coordinates.longitude)}°${weatherData.coordinates.longitude >= 0 ? "E" : "W"}`
     : null;
 
+  const weekdayLabel =
+    weatherData?.dayOfWeek !== null && weatherData?.dayOfWeek !== undefined
+      ? WEEKDAY_LABELS[weatherData.dayOfWeek]
+      : null;
+
   return (
-    <main className="min-h-screen w-full bg-slate-50 dark:bg-[#0B0C15] text-slate-900 dark:text-slate-100 selection:bg-[#00CECB]/30 transition-colors duration-300">
-      {/* 1. Navbar / Header Section */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-[#0B0C15]/80 backdrop-blur-xl transition-colors duration-300">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:h-20 sm:flex-row sm:items-center sm:justify-between sm:gap-0 sm:px-6 sm:py-0 lg:px-8">
-          <div className="flex items-center gap-6">
-            <Link
-              href="/"
-              className="group flex items-center gap-2 rounded-xl bg-[var(--button-primary-bg)] px-4 py-2 text-sm font-bold text-[var(--button-primary-text)] hover:bg-[var(--button-primary-hover-bg)] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[var(--button-primary-bg)]/20 whitespace-nowrap"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-4 h-4 transition-transform group-hover:-translate-x-1"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>返回轉換器</span>
-            </Link>
-            <div className="h-6 w-px bg-slate-200 dark:bg-white/10 hidden lg:block"></div>
-            <h1 className="text-xl font-bold tracking-tight hidden lg:block text-slate-900 dark:text-slate-100">
-              全球環境監測中心
-            </h1>
-          </div>
+    <main className="text-ink-strong selection:bg-accent/30 w-full transition-colors duration-300">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* Page toolbar: title + city search */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-heading text-ink-strong">全球環境監測中心</h1>
 
           <form
             onSubmit={handleWeatherSubmit}
-            className="relative w-full sm:max-w-md sm:ml-4"
+            className="relative w-full sm:max-w-md"
           >
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <span className="text-slate-500 group-focus-within:text-[#00CECB] transition-colors">
-                  📍
-                </span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="text-ink-subtle group-focus-within:text-accent h-4 w-4 transition-colors"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10.5 3.75a6.75 6.75 0 100 13.5 6.75 6.75 0 000-13.5zM2.25 10.5a8.25 8.25 0 1114.59 5.28l4.69 4.69a.75.75 0 11-1.06 1.06l-4.69-4.69A8.25 8.25 0 012.25 10.5z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </div>
               <input
                 type="text"
                 value={weatherQuery}
                 onChange={(e) => setWeatherQuery(e.target.value)}
                 placeholder="搜尋全球城市..."
-                className="block w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 py-2.5 pl-10 pr-12 text-sm text-slate-900 dark:text-slate-200 placeholder:text-slate-500 dark:placeholder:text-slate-600 focus:border-[#00CECB]/50 focus:bg-white dark:focus:bg-white/10 focus:ring-1 focus:ring-[#00CECB]/50 transition-all outline-none"
+                className="border-edge-subtle bg-surface-light text-ink-strong placeholder:text-ink-subtle focus:ring-accent/50 block w-full rounded-xl border py-2.5 pl-10 pr-12 text-sm transition-all outline-none focus:ring-1"
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-1.5">
                 {handleGeolocate && (
@@ -147,17 +141,18 @@ export default function WeatherPage() {
                     type="button"
                     onClick={handleGeolocate}
                     disabled={geolocating || weatherLoading}
-                    className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-colors"
+                    className="text-ink-subtle hover:bg-surface-soft hover:text-ink-strong focus-visible:outline-accent rounded-lg p-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                     title="定位目前位置"
                   >
                     {geolocating ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
+                      <div className="border-edge-strong h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
                     ) : (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         fill="currentColor"
                         className="w-4 h-4"
+                        aria-hidden="true"
                       >
                         <path
                           fillRule="evenodd"
@@ -172,26 +167,25 @@ export default function WeatherPage() {
             </div>
           </form>
         </div>
-      </header>
 
-      {/* 2. Main Content Area */}
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Presets Bar */}
         <div className="mb-8 flex flex-wrap gap-2">
-          {WEATHER_PRESETS.map((preset) => (
-            <button
-              key={preset.query}
-              onClick={() => handleWeatherPreset(preset.query)}
-              className={cn(
-                "rounded-full px-4 py-1.5 text-xs font-medium transition-all border",
-                weatherQuery === preset.query || weatherQuery === preset.label
-                  ? "bg-[#00CECB]/10 text-[#00CECB] border-[#00CECB]/30"
-                  : "bg-white dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-slate-200 shadow-sm dark:shadow-none",
-              )}
-            >
-              {preset.label}
-            </button>
-          ))}
+          {WEATHER_PRESETS.map((preset) => {
+            const isActive =
+              weatherQuery === preset.query || weatherQuery === preset.label;
+            return (
+              <button
+                key={preset.query}
+                onClick={() => handleWeatherPreset(preset.query)}
+                className={cn(
+                  "theme-chip px-4 py-2.5 text-xs",
+                  isActive && "theme-chip--active",
+                )}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
         </div>
 
         <div role="status" aria-live="polite" className="sr-only">
@@ -205,9 +199,16 @@ export default function WeatherPage() {
         </div>
 
         {weatherError ? (
-          <div className="rounded-3xl border border-red-500/20 bg-red-500/5 p-8 text-center text-red-400">
+          <div className="border-error-border bg-error-bg text-error-ink rounded-3xl border p-8 text-center">
             <p className="text-lg font-medium">{weatherError}</p>
             <p className="mt-2 text-sm opacity-70">請檢查城市名稱或網路連線</p>
+            <button
+              type="button"
+              onClick={() => fetchWeather(weatherQuery)}
+              className="theme-primary-button mx-auto mt-4 w-fit px-6"
+            >
+              重試
+            </button>
           </div>
         ) : weatherLoading ? (
           <WeatherSkeleton />
@@ -216,19 +217,19 @@ export default function WeatherPage() {
             {/* 2.1 Hero Section: Big Data Display */}
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Left: Main Status (Span 2) */}
-              <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-200/50 dark:border-white/10 bg-white dark:bg-slate-900 p-8 lg:col-span-2 shadow-2xl dark:shadow-none">
+              <div className="border-edge-subtle bg-surface-medium shadow-glass relative overflow-hidden rounded-3xl border p-8 lg:col-span-2">
                 <div className="relative z-10 flex h-full flex-col justify-between gap-8">
                   <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
                     <div className="flex-1 min-w-0">
-                      <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight sm:text-4xl truncate">
+                      <h2 className="text-ink-strong text-3xl font-bold tracking-tight sm:text-4xl truncate">
                         {weatherData.location}
                       </h2>
-                      <div className="mt-3 flex flex-wrap items-center gap-y-2 gap-x-3 text-sm text-slate-500 dark:text-slate-400">
+                      <div className="text-ink-subtle mt-3 flex flex-wrap items-center gap-y-2 gap-x-3 text-sm">
                         <span className="leading-relaxed">
                           {weatherData.administrative.join(", ")}
                         </span>
                         {coordinatesText && (
-                          <span className="inline-flex rounded-full bg-slate-200 dark:bg-white/5 px-2.5 py-1 text-[0.7rem] font-mono whitespace-nowrap shadow-sm dark:shadow-none font-medium">
+                          <span className="bg-surface-light inline-flex rounded-full px-2.5 py-1 text-[0.7rem] font-mono whitespace-nowrap font-medium">
                             {coordinatesText}
                           </span>
                         )}
@@ -244,7 +245,7 @@ export default function WeatherPage() {
                             : "🌙"
                           : "☁️"}
                       </span>
-                      <span className="mt-2 block text-sm font-bold text-cyan-600 dark:text-[#00CECB] tracking-wide whitespace-nowrap">
+                      <span className="text-accent mt-2 block text-sm font-bold tracking-wide whitespace-nowrap">
                         {getWeatherDescription(weatherData.weatherCode)}
                       </span>
                     </div>
@@ -252,32 +253,35 @@ export default function WeatherPage() {
 
                   <div className="flex items-end gap-6">
                     <div className="flex-1">
-                      <div className="text-[6rem] font-bold leading-none tracking-tighter text-slate-900 dark:text-slate-50 sm:text-[8rem]">
+                      <div className="text-display text-ink-strong">
                         {Math.round(weatherData.temperature)}
-                        <span className="text-3xl text-slate-500 align-super font-light ml-2">
+                        <span className="text-ink-subtle ml-2 align-super text-3xl font-light">
                           {weatherData.temperatureUnit}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex flex-col gap-1 pb-4 text-right">
-                      <div className="text-lg text-slate-600 dark:text-slate-300">
+                      <div className="text-ink-medium text-lg">
                         {formatLocalClock(
                           weatherData.localTime,
                           weatherData.timezone,
                           { withSeconds: false },
                         )}
                       </div>
-                      <div className="text-sm text-slate-500">
+                      <div className="text-ink-subtle text-sm">
+                        {weekdayLabel ? `${weekdayLabel} · ` : ""}
                         {formatUtcOffset(weatherData.utcOffset)}
+                        {weatherData.timezoneAbbreviation
+                          ? ` (${weatherData.timezoneAbbreviation})`
+                          : ""}
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Background Decoration */}
-                <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-[#00CECB]/5 blur-3xl"></div>
-                {/* Remove gradient overlay for cleaner CSS */}
+                <div className="bg-accent/5 absolute -right-20 -top-20 h-96 w-96 rounded-full blur-3xl"></div>
               </div>
 
               {/* Right: Summary Cards (Span 1) */}
@@ -285,20 +289,20 @@ export default function WeatherPage() {
                 {climateHighlights.map((item) => (
                   <div
                     key={item.label}
-                    className="flex items-center justify-between rounded-3xl border border-slate-200 dark:border-white/5 bg-white/80 dark:bg-white/5 px-6 py-4 hover:bg-white dark:hover:bg-white/10 transition-colors shadow-sm dark:shadow-none"
+                    className="border-edge-subtle bg-surface-light hover:bg-surface-soft shadow-glass flex items-center justify-between rounded-3xl border px-6 py-4 transition-colors"
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-2xl">{item.icon}</span>
                       <div className="flex flex-col">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                        <span className="text-ink-subtle text-sm">
                           {item.label}
                         </span>
-                        <span className="text-xs text-slate-400 dark:text-slate-500">
+                        <span className="text-ink-subtle text-xs">
                           {item.desc}
                         </span>
                       </div>
                     </div>
-                    <span className="text-xl font-bold text-slate-900 dark:text-slate-200">
+                    <span className="text-ink-strong text-xl font-bold">
                       {formatOptionalMetric(item.value, item.unit)}
                     </span>
                   </div>
@@ -309,15 +313,13 @@ export default function WeatherPage() {
             {/* 2.2 Metrics Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {/* Air Quality */}
-              <div className="rounded-[2rem] border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#121420] p-6 shadow-sm dark:shadow-none hover:border-slate-300 dark:hover:border-white/20 transition-colors">
+              <div className="border-edge-subtle bg-surface-soft shadow-glass hover:border-edge-strong rounded-3xl border p-6 transition-colors">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <h3 className="text-ink-subtle flex items-center gap-2 text-xs font-semibold uppercase tracking-wider">
                     <span className="text-base">🍃</span> 空氣品質
                   </h3>
                   {weatherData.airQuality && (
-                    <span
-                      className={`px-2 py-0.5 text-[0.65rem] font-bold rounded bg-emerald-500/20 text-emerald-400`}
-                    >
+                    <span className="bg-success-bg text-success-ink rounded px-2 py-0.5 text-[0.65rem] font-bold">
                       良好
                     </span>
                   )}
@@ -326,19 +328,17 @@ export default function WeatherPage() {
                 {weatherData.airQuality ? (
                   <div className="flex flex-col gap-4">
                     <div>
-                      <div className="text-4xl font-bold text-slate-900 dark:text-slate-100">
+                      <div className="text-ink-strong text-4xl font-bold">
                         {weatherData.airQuality.aqi}
                       </div>
-                      <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      <div className="text-ink-subtle mt-1 text-xs">
                         AQI 指數
                       </div>
                     </div>
-                    <div className="space-y-2 border-t border-slate-200 dark:border-white/5 pt-3">
+                    <div className="border-edge-subtle space-y-2 border-t pt-3">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-500 dark:text-slate-400">
-                          PM2.5
-                        </span>
-                        <span className="font-mono text-slate-900 dark:text-slate-200">
+                        <span className="text-ink-subtle">PM2.5</span>
+                        <span className="text-ink-strong font-mono">
                           {formatOptionalMetric(
                             weatherData.airQuality.pm25,
                             weatherData.airQuality.pm25Unit,
@@ -346,10 +346,8 @@ export default function WeatherPage() {
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-500 dark:text-slate-400">
-                          PM10
-                        </span>
-                        <span className="font-mono text-slate-900 dark:text-slate-200">
+                        <span className="text-ink-subtle">PM10</span>
+                        <span className="text-ink-strong font-mono">
                           {formatOptionalMetric(
                             weatherData.airQuality.pm10,
                             weatherData.airQuality.pm10Unit,
@@ -359,7 +357,7 @@ export default function WeatherPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex h-24 items-center justify-center text-xs text-slate-500">
+                  <div className="text-ink-subtle flex h-24 items-center justify-center text-xs">
                     暫無資料
                   </div>
                 )}
@@ -369,13 +367,13 @@ export default function WeatherPage() {
               {environmentMetrics.map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[2rem] border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#121420] p-6 hover:border-slate-300 dark:hover:border-white/20 transition-colors shadow-sm dark:shadow-none"
+                  className="border-edge-subtle bg-surface-soft shadow-glass hover:border-edge-strong rounded-3xl border p-6 transition-colors"
                 >
-                  <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <h3 className="text-ink-subtle mb-4 text-xs font-semibold uppercase tracking-wider">
                     {item.label}
                   </h3>
                   <div className="flex items-end justify-between">
-                    <span className="text-3xl font-bold text-slate-900 dark:text-slate-200">
+                    <span className="text-ink-strong text-3xl font-bold">
                       {formatOptionalMetric(item.value, item.unit)}
                     </span>
                     <span className="text-2xl opacity-50 grayscale dark:grayscale-0">
@@ -387,40 +385,48 @@ export default function WeatherPage() {
             </div>
 
             <div
-              className="relative overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#121420] p-8 shadow-sm dark:shadow-none transition-all"
+              className="border-edge-subtle bg-surface-soft shadow-glass relative overflow-hidden rounded-3xl border p-8 transition-all"
               aria-busy={forecastLoading}
             >
               <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                  <h3 className="text-heading text-ink-strong">
                     溫度趨勢預報
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-ink-subtle text-sm">
                     未來 {forecastDays} 天的高低溫變化趨勢
                   </p>
                 </div>
 
-                <div className="flex items-center rounded-xl bg-slate-100 dark:bg-white/5 p-1">
+                <div
+                  role="radiogroup"
+                  aria-label="預報天數"
+                  className="bg-surface-light flex items-center rounded-xl p-1"
+                >
                   <button
+                    role="radio"
+                    aria-checked={forecastDays === 7}
                     onClick={() => setForecastDays(7)}
                     disabled={forecastLoading}
                     className={cn(
-                      "px-4 py-1.5 text-xs font-medium rounded-lg transition-all disabled:cursor-wait disabled:opacity-60",
+                      "px-4 py-1.5 text-xs font-medium rounded-lg transition-all disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                       forecastDays === 7
-                        ? "bg-[#00CECB]/20 text-[#00CECB] shadow-sm"
-                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200",
+                        ? "bg-accent/20 text-accent"
+                        : "text-ink-subtle hover:text-ink-strong",
                     )}
                   >
                     7 天
                   </button>
                   <button
+                    role="radio"
+                    aria-checked={forecastDays === 14}
                     onClick={() => setForecastDays(14)}
                     disabled={forecastLoading}
                     className={cn(
-                      "px-4 py-1.5 text-xs font-medium rounded-lg transition-all disabled:cursor-wait disabled:opacity-60",
+                      "px-4 py-1.5 text-xs font-medium rounded-lg transition-all disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                       forecastDays === 14
-                        ? "bg-[#00CECB]/20 text-[#00CECB] shadow-sm"
-                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200",
+                        ? "bg-accent/20 text-accent"
+                        : "text-ink-subtle hover:text-ink-strong",
                     )}
                   >
                     14 天
@@ -428,7 +434,7 @@ export default function WeatherPage() {
                 </div>
               </div>
 
-              <div className="h-[400px] w-full">
+              <div className="h-100 w-full">
                 {forecastLoading ? (
                   <ChartGraphicSkeleton className="w-full" />
                 ) : (
@@ -441,9 +447,9 @@ export default function WeatherPage() {
             </div>
           </div>
         ) : (
-          <div className="flex min-h-[400px] flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 dark:border-white/10 p-12 text-center text-slate-500">
+          <div className="border-edge-strong text-ink-subtle flex min-h-100 flex-col items-center justify-center rounded-3xl border border-dashed p-12 text-center">
             <span className="text-4xl mb-4">🌍</span>
-            <p className="text-lg font-medium text-slate-700 dark:text-slate-300">
+            <p className="text-ink-medium text-lg font-medium">
               開始探索全球氣候
             </p>
             <p className="mt-2 text-sm">

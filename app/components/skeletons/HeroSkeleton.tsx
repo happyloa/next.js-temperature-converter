@@ -4,7 +4,7 @@ import { BaseSkeleton } from "./BaseSkeleton";
 
 export function HeroSkeleton() {
   return (
-    <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-200/50 dark:border-white/10 bg-white dark:bg-slate-900 p-8 lg:col-span-2 shadow-2xl dark:shadow-none min-h-[320px] flex flex-col justify-between">
+    <div className="border-edge-subtle bg-surface-medium shadow-glass relative flex min-h-80 flex-col justify-between overflow-hidden rounded-3xl border p-8 lg:col-span-2">
       <div className="relative z-10 flex flex-col sm:flex-row items-start justify-between gap-6">
         <div className="flex-1 min-w-0 w-full space-y-4">
           <BaseSkeleton className="h-10 w-3/4 sm:h-12 sm:w-64" />
@@ -31,7 +31,7 @@ export function HeroSkeleton() {
       </div>
 
       {/* Mimic the background gradient spot */}
-      <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-[#00CECB]/5 blur-3xl"></div>
+      <div className="bg-accent/5 absolute -right-20 -top-20 h-96 w-96 rounded-full blur-3xl"></div>
     </div>
   );
 }

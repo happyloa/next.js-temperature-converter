@@ -3,6 +3,32 @@
 @theme {
   --font-sans: "Noto Sans TC", system-ui, -apple-system, sans-serif;
   --shadow-glass: 0 25px 60px -35px rgba(15, 23, 42, 0.9);
+
+  /*
+   * 設計 token：對應到下方 :root / :root[data-theme="light"] 內會隨主題切換的
+   * CSS 變數，讓元件可以直接用 bg-surface-strong、text-ink-strong 這類真正的
+   * Tailwind utility class，不需要用任意值（bg-[var(--x)]）語法。
+   */
+  --color-canvas: var(--body-background);
+  --color-ink-strong: var(--text-strong);
+  --color-ink-medium: var(--text-medium);
+  --color-ink-subtle: var(--text-subtle);
+  --color-surface-strong: var(--surface-strong);
+  --color-surface-medium: var(--surface-medium);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-light: var(--surface-light);
+  --color-surface-deep: var(--surface-deep);
+  --color-edge-subtle: var(--border-subtle);
+  --color-edge-strong: var(--border-strong);
+  --color-accent: var(--button-primary-bg);
+  --color-accent-hover: var(--button-primary-hover-bg);
+  --color-accent-ink: var(--button-primary-text);
+  --color-success-bg: var(--success-bg);
+  --color-success-border: var(--success-border);
+  --color-success-ink: var(--success-text);
+  --color-error-bg: var(--error-bg);
+  --color-error-border: var(--error-border);
+  --color-error-ink: var(--error-text);
 }
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
@@ -61,6 +87,10 @@
     --success-bg: rgba(16, 185, 129, 0.18);
     --success-border: rgba(16, 185, 129, 0.5);
     --success-text: #bbf7d0;
+
+    --error-bg: rgba(239, 68, 68, 0.18);
+    --error-border: rgba(239, 68, 68, 0.5);
+    --error-text: #fca5a5;
   }
 
   :root[data-theme="light"] {
@@ -116,6 +146,10 @@
     --success-bg: rgba(16, 185, 129, 0.18);
     --success-border: rgba(16, 185, 129, 0.45);
     --success-text: #0f172a;
+
+    --error-bg: rgba(239, 68, 68, 0.12);
+    --error-border: rgba(239, 68, 68, 0.4);
+    --error-text: #b91c1c;
   }
 
   html {
@@ -270,6 +304,7 @@
     box-shadow: var(--chip-active-shadow);
   }
 
+  .theme-chip--active,
   .theme-segment--active {
     background-color: var(--chip-active-bg);
     border-color: var(--chip-active-border);
@@ -278,7 +313,7 @@
   }
 
   .theme-primary-button {
-    @apply flex items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold transition;
+    @apply flex items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold transition active:scale-[0.97];
     background: var(--button-primary-bg);
     color: var(--button-primary-text);
   }
@@ -293,7 +328,7 @@
   }
 
   .theme-outline-button {
-    @apply inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition;
+    @apply inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition active:scale-[0.97];
     background-color: transparent;
     border-color: var(--outline-border);
     color: var(--outline-text);
@@ -318,6 +353,24 @@
     background-color: var(--success-bg);
     border-color: var(--success-border);
     color: var(--success-text);
+  }
+
+  .theme-status-success {
+    background-color: var(--success-bg) !important;
+    color: var(--success-text) !important;
+  }
+
+  .theme-status-error {
+    background-color: var(--error-bg) !important;
+    color: var(--error-text) !important;
+  }
+
+  .text-heading {
+    @apply text-xl font-semibold;
+  }
+
+  .text-display {
+    @apply text-5xl leading-none font-bold tracking-tight sm:text-6xl;
   }
 
   .theme-chip:focus-visible,

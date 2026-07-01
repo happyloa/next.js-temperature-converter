@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { ThemeToggleButton } from "./components/ThemeToggleButton";
+import { AppHeader } from "./components/AppHeader";
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -101,6 +102,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className="font-sans">
         <ThemeProvider>
+          <AppHeader />
           {children}
           <ThemeToggleButton />
         </ThemeProvider>

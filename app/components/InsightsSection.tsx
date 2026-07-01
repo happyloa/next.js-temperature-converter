@@ -13,7 +13,7 @@ export function InsightsSection({ insights }: InsightsSectionProps) {
     <section className="w-full min-w-0 space-y-6 rounded-3xl border border-slate-700/40 bg-slate-900/70 p-5 shadow-glass backdrop-blur sm:p-6 md:p-7">
       <div className="flex items-center gap-3 text-slate-200">
         <span className="text-xl">💡</span>
-        <h2 className="text-xl font-semibold">溫度洞察</h2>
+        <h2 className="text-heading">溫度洞察</h2>
       </div>
       <ul className="space-y-4 list-none m-0 p-0">
         {insights.length > 0 ? (

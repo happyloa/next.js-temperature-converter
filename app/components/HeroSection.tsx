@@ -25,7 +25,7 @@ export function HeroSection({ presets, onPresetSelect }: HeroSectionProps) {
             <button
               type="button"
               onClick={() => onPresetSelect(preset)}
-              className="theme-chip w-full px-4 py-2 text-xs font-medium sm:text-sm"
+              className="theme-chip w-full px-4 py-2.5 text-xs font-medium sm:py-2 sm:text-sm"
             >
               <span>{preset.emoji}</span>
               {preset.label}

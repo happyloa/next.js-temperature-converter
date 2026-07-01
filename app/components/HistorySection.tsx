@@ -53,7 +53,7 @@ export function HistorySection({
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3 text-slate-200">
           <span className="text-xl">🗂️</span>
-          <h2 className="text-xl font-semibold text-slate-100">轉換紀錄</h2>
+          <h2 className="text-heading text-slate-100">轉換紀錄</h2>
         </div>
         <p className="text-sm text-slate-300">
           將感興趣的轉換加入歷史紀錄，可快速對照實驗或製程所需的常用溫度設定。

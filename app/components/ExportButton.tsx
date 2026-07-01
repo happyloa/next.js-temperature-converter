@@ -1,7 +1,8 @@
 "use client";
 
 import type { FC } from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { cn } from "../lib/utils";
 import type { HistoryEntry } from "../types/history";
 
 interface ExportButtonProps {
@@ -20,11 +21,39 @@ export const ExportButton: FC<ExportButtonProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const menuId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const firstItemRef = useRef<HTMLButtonElement>(null);
 
   const flashStatus = useCallback((next: "success" | "error") => {
     setStatus(next);
     setTimeout(() => setStatus("idle"), 2000);
   }, []);
+
+  const closeMenu = useCallback((returnFocus: boolean) => {
+    setIsOpen(false);
+    if (returnFocus) {
+      triggerRef.current?.focus();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      firstItemRef.current?.focus();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeMenu(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, closeMenu]);
 
   const generateCSV = useCallback((): string => {
     if (history.length === 0) return "";
@@ -61,7 +90,7 @@ export const ExportButton: FC<ExportButtonProps> = ({
       }
 
       // Create blob and download
-      const blob = new Blob(["\uFEFF" + csv], {
+      const blob = new Blob(["﻿" + csv], {
         type: "text/csv;charset=utf-8",
       });
       const url = URL.createObjectURL(blob);
@@ -73,12 +102,12 @@ export const ExportButton: FC<ExportButtonProps> = ({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      setIsOpen(false);
+      closeMenu(false);
       flashStatus("success");
     } catch {
       flashStatus("error");
     }
-  }, [generateCSV, flashStatus]);
+  }, [generateCSV, flashStatus, closeMenu]);
 
   const handleCopyToClipboard = useCallback(async () => {
     try {
@@ -89,12 +118,12 @@ export const ExportButton: FC<ExportButtonProps> = ({
       }
 
       await navigator.clipboard?.writeText(csv);
-      setIsOpen(false);
+      closeMenu(false);
       flashStatus("success");
     } catch {
       flashStatus("error");
     }
-  }, [generateCSV, flashStatus]);
+  }, [generateCSV, flashStatus, closeMenu]);
 
   const handleExportJSON = useCallback(() => {
     try {
@@ -114,12 +143,12 @@ export const ExportButton: FC<ExportButtonProps> = ({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      setIsOpen(false);
+      closeMenu(false);
       flashStatus("success");
     } catch {
       flashStatus("error");
     }
-  }, [history, flashStatus]);
+  }, [history, flashStatus, closeMenu]);
 
   if (history.length === 0) {
     return null;
@@ -128,17 +157,21 @@ export const ExportButton: FC<ExportButtonProps> = ({
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`
-          flex items-center gap-2 rounded-xl px-3 py-2
-          bg-white/5 text-white/70 text-sm
-          hover:bg-white/10 hover:text-white
-          transition-all duration-200
-          ${status === "success" ? "bg-green-500/20 text-green-400" : ""}
-          ${status === "error" ? "bg-red-500/20 text-red-400" : ""}
-          ${className}
-        `}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        aria-controls={menuId}
+        className={cn(
+          "flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-200",
+          status === "success"
+            ? "theme-status-success"
+            : status === "error"
+              ? "theme-status-error"
+              : "bg-surface-light text-ink-medium hover:bg-surface-soft hover:text-ink-strong",
+          className,
+        )}
         aria-label="匯出紀錄"
       >
         <svg
@@ -146,6 +179,7 @@ export const ExportButton: FC<ExportButtonProps> = ({
           viewBox="0 0 24 24"
           fill="currentColor"
           className="w-4 h-4"
+          aria-hidden="true"
         >
           <path
             fillRule="evenodd"
@@ -153,7 +187,9 @@ export const ExportButton: FC<ExportButtonProps> = ({
             clipRule="evenodd"
           />
         </svg>
-        {status === "success" ? "已匯出" : status === "error" ? "失敗" : "匯出"}
+        <span aria-live="polite">
+          {status === "success" ? "已匯出" : status === "error" ? "失敗" : "匯出"}
+        </span>
       </button>
 
       {/* Dropdown menu */}
@@ -161,31 +197,40 @@ export const ExportButton: FC<ExportButtonProps> = ({
         <>
           <div
             className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
+            onClick={() => closeMenu(false)}
           />
-          <div className="absolute right-0 top-full mt-2 z-50 min-w-[160px] rounded-xl border border-slate-700/60 bg-slate-900/95 p-1 shadow-xl backdrop-blur">
+          <div
+            id={menuId}
+            role="menu"
+            aria-label="匯出選項"
+            className="border-edge-subtle bg-surface-strong shadow-glass absolute right-0 top-full z-50 mt-2 min-w-40 rounded-xl border p-1 backdrop-blur"
+          >
             <button
+              ref={firstItemRef}
               type="button"
+              role="menuitem"
               onClick={handleExportCSV}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-white/10"
+              className="text-ink-medium hover:bg-surface-soft hover:text-ink-strong flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm"
             >
-              <span>📊</span>
+              <span aria-hidden="true">📊</span>
               <span>下載 CSV</span>
             </button>
             <button
               type="button"
+              role="menuitem"
               onClick={handleExportJSON}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-white/10"
+              className="text-ink-medium hover:bg-surface-soft hover:text-ink-strong flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm"
             >
-              <span>📋</span>
+              <span aria-hidden="true">📋</span>
               <span>下載 JSON</span>
             </button>
             <button
               type="button"
+              role="menuitem"
               onClick={handleCopyToClipboard}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-white/10"
+              className="text-ink-medium hover:bg-surface-soft hover:text-ink-strong flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm"
             >
-              <span>📎</span>
+              <span aria-hidden="true">📎</span>
               <span>複製到剪貼簿</span>
             </button>
           </div>

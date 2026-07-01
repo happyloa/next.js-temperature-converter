@@ -13,14 +13,11 @@ export function ChartGraphicSkeleton({ className }: ChartGraphicSkeletonProps) {
       aria-hidden="true"
     >
       {/* Axis and Labels mimic */}
-      <div className="relative min-h-0 flex-1 w-full border-l border-b border-slate-200/20 dark:border-white/10">
+      <div className="border-edge-subtle relative min-h-0 flex-1 w-full border-l border-b">
         {/* Horizontal grid lines */}
         <div className="absolute inset-0 flex flex-col justify-between py-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="w-full h-px bg-slate-200/5 dark:bg-white/5"
-            />
+            <div key={i} className="bg-edge-subtle h-px w-full opacity-40" />
           ))}
         </div>
 
@@ -99,7 +96,7 @@ export function ChartGraphicSkeleton({ className }: ChartGraphicSkeletonProps) {
 
 export function ChartSkeleton() {
   return (
-    <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#121420] p-8 shadow-sm dark:shadow-none min-h-[500px]">
+    <div className="border-edge-subtle bg-surface-soft shadow-glass relative min-h-125 overflow-hidden rounded-3xl border p-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-3">
           <BaseSkeleton className="h-7 w-40" />
@@ -114,7 +111,7 @@ export function ChartSkeleton() {
       <ChartGraphicSkeleton />
 
       {/* Background Decoration Pulse */}
-      <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-slate-200/5 dark:bg-white/5 blur-3xl animate-pulse" />
+      <div className="bg-edge-subtle absolute -bottom-20 -left-20 h-64 w-64 animate-pulse rounded-full opacity-30 blur-3xl" />
     </div>
   );
 }

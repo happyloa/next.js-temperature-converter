@@ -10,7 +10,7 @@ import { ChartSkeleton } from "./ChartSkeleton";
 
 export function WeatherSkeleton() {
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500" aria-hidden="true">
       {/* 1. Hero and Summary Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         <HeroSkeleton />
