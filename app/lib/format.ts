@@ -12,13 +12,6 @@ export const timeFormatter = new Intl.DateTimeFormat("zh-TW", {
   second: "2-digit",
 });
 
-const dateTimeFormatter = new Intl.DateTimeFormat("zh-TW", {
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
 /**
  * 將數值轉成輸入框可用的文字，避免出現科學記號。
  */
@@ -42,35 +35,6 @@ export const formatOptionalMetric = (value: number, suffix = ""): string => {
     return suffix ? `--${suffix}` : "--";
   }
   return `${formatTemperature(value)}${suffix}`;
-};
-
-export const formatWeatherTime = (value: string | null): string => {
-  if (!value) return "--";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return dateTimeFormatter.format(date);
-};
-
-const WEEKDAY_LABELS = [
-  "週日",
-  "週一",
-  "週二",
-  "週三",
-  "週四",
-  "週五",
-  "週六",
-] as const;
-
-export const formatWeekday = (index: number | null): string => {
-  if (!Number.isFinite(index)) return "--";
-  return WEEKDAY_LABELS[index as number] ?? `週${index}`;
-};
-
-export const formatCoordinate = (value: number | null): string => {
-  if (!Number.isFinite(value)) return "--";
-  return numberFormatter.format(value as number);
 };
 
 export const formatLocalClock = (

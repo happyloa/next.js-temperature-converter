@@ -10,12 +10,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
-
-interface DailyForecast {
-  date: string;
-  high: number;
-  low: number;
-}
+import type { DailyForecast } from "../types/weather";
 
 interface WeatherChartProps {
   data: DailyForecast[];
@@ -29,7 +24,6 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
   if (!mounted || data.length === 0) {

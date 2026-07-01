@@ -21,6 +21,11 @@ export const ExportButton: FC<ExportButtonProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
+  const flashStatus = useCallback((next: "success" | "error") => {
+    setStatus(next);
+    setTimeout(() => setStatus("idle"), 2000);
+  }, []);
+
   const generateCSV = useCallback((): string => {
     if (history.length === 0) return "";
 
@@ -51,8 +56,7 @@ export const ExportButton: FC<ExportButtonProps> = ({
     try {
       const csv = generateCSV();
       if (!csv) {
-        setStatus("error");
-        setTimeout(() => setStatus("idle"), 2000);
+        flashStatus("error");
         return;
       }
 
@@ -69,39 +73,33 @@ export const ExportButton: FC<ExportButtonProps> = ({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      setStatus("success");
       setIsOpen(false);
-      setTimeout(() => setStatus("idle"), 2000);
+      flashStatus("success");
     } catch {
-      setStatus("error");
-      setTimeout(() => setStatus("idle"), 2000);
+      flashStatus("error");
     }
-  }, [generateCSV]);
+  }, [generateCSV, flashStatus]);
 
   const handleCopyToClipboard = useCallback(async () => {
     try {
       const csv = generateCSV();
       if (!csv) {
-        setStatus("error");
-        setTimeout(() => setStatus("idle"), 2000);
+        flashStatus("error");
         return;
       }
 
       await navigator.clipboard?.writeText(csv);
-      setStatus("success");
       setIsOpen(false);
-      setTimeout(() => setStatus("idle"), 2000);
+      flashStatus("success");
     } catch {
-      setStatus("error");
-      setTimeout(() => setStatus("idle"), 2000);
+      flashStatus("error");
     }
-  }, [generateCSV]);
+  }, [generateCSV, flashStatus]);
 
   const handleExportJSON = useCallback(() => {
     try {
       if (history.length === 0) {
-        setStatus("error");
-        setTimeout(() => setStatus("idle"), 2000);
+        flashStatus("error");
         return;
       }
 
@@ -116,14 +114,12 @@ export const ExportButton: FC<ExportButtonProps> = ({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      setStatus("success");
       setIsOpen(false);
-      setTimeout(() => setStatus("idle"), 2000);
+      flashStatus("success");
     } catch {
-      setStatus("error");
-      setTimeout(() => setStatus("idle"), 2000);
+      flashStatus("error");
     }
-  }, [history]);
+  }, [history, flashStatus]);
 
   if (history.length === 0) {
     return null;

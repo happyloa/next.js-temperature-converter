@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import { HISTORY_STORAGE_KEY, parseHistoryPayload } from "../lib/history";
+import { readWithFallback, writeWithFallback } from "../lib/storage";
 import type { HistoryEntry } from "../types/history";
 
 /**
@@ -20,29 +21,14 @@ export function useHistoryStore() {
   const storageRef = useRef<"local" | "session">("local");
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    const restored = readWithFallback(HISTORY_STORAGE_KEY, (raw) => {
+      const parsed = parseHistoryPayload(raw);
+      return parsed.length ? parsed : null;
+    });
 
-    const storages: Array<{ name: "local" | "session"; storage: Storage }> = [
-      { name: "local", storage: window.localStorage },
-      { name: "session", storage: window.sessionStorage },
-    ];
-
-    for (const { name, storage } of storages) {
-      try {
-        const raw = storage.getItem(HISTORY_STORAGE_KEY);
-        if (!raw) {
-          continue;
-        }
-
-        const parsed = parseHistoryPayload(JSON.parse(raw) as unknown);
-        if (parsed.length) {
-          startTransition(() => setHistory(parsed));
-          storageRef.current = name;
-          break;
-        }
-      } catch (error) {
-        console.error("Failed to restore history", error);
-      }
+    if (restored) {
+      startTransition(() => setHistory(restored.data));
+      storageRef.current = restored.name;
     }
 
     startTransition(() => setHydrated(true));
@@ -54,47 +40,13 @@ export function useHistoryStore() {
     }
 
     const payload = history.length > 0 ? JSON.stringify(history) : null;
-
-    const storages: Array<{ name: "local" | "session"; storage: Storage }> =
-      storageRef.current === "session"
-        ? [
-            { name: "session", storage: window.sessionStorage },
-            { name: "local", storage: window.localStorage },
-          ]
-        : [
-            { name: "local", storage: window.localStorage },
-            { name: "session", storage: window.sessionStorage },
-          ];
-
-    const isQuotaExceeded = (error: unknown): boolean => {
-      if (!error) return false;
-      if (error instanceof DOMException) {
-        return (
-          error.name === "QuotaExceededError" ||
-          error.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
-          error.code === 22 ||
-          error.code === 1014
-        );
-      }
-      return false;
-    };
-
-    for (const { name, storage } of storages) {
-      try {
-        if (!payload) {
-          storage.removeItem(HISTORY_STORAGE_KEY);
-        } else {
-          storage.setItem(HISTORY_STORAGE_KEY, payload);
-        }
-        storageRef.current = name;
-        return;
-      } catch (error) {
-        if (isQuotaExceeded(error)) {
-          continue;
-        }
-        console.error("Failed to persist history", error);
-        return;
-      }
+    const succeededWith = writeWithFallback(
+      HISTORY_STORAGE_KEY,
+      payload,
+      storageRef.current,
+    );
+    if (succeededWith) {
+      storageRef.current = succeededWith;
     }
   }, [history, hydrated]);
 

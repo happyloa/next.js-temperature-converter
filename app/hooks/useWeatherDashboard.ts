@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
+import { readWithFallback, writeWithFallback } from "../lib/storage";
 import type { WeatherData } from "../types/weather";
 
 const WEATHER_STORAGE_KEY = "weather-dashboard-state";
@@ -100,48 +101,15 @@ export function useWeatherDashboard(defaultQuery: string) {
     [],
   );
 
-  const isQuotaExceeded = (error: unknown): boolean => {
-    if (!error) return false;
-    if (error instanceof DOMException) {
-      return (
-        error.name === "QuotaExceededError" ||
-        error.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
-        error.code === 22 ||
-        error.code === 1014
-      );
-    }
-    return false;
-  };
-
   const persistWeather = useCallback(
     (payload: { query: string; data: WeatherData }) => {
-      if (typeof window === "undefined") return;
-
-      const storages: Array<{ name: "local" | "session"; storage: Storage }> =
-        storageRef.current === "session"
-          ? [
-              { name: "session", storage: window.sessionStorage },
-              { name: "local", storage: window.localStorage },
-            ]
-          : [
-              { name: "local", storage: window.localStorage },
-              { name: "session", storage: window.sessionStorage },
-            ];
-
-      const serialized = JSON.stringify(payload);
-
-      for (const { name, storage } of storages) {
-        try {
-          storage.setItem(WEATHER_STORAGE_KEY, serialized);
-          storageRef.current = name;
-          return;
-        } catch (error) {
-          if (isQuotaExceeded(error)) {
-            continue;
-          }
-          console.error("Failed to persist weather payload", error);
-          return;
-        }
+      const succeededWith = writeWithFallback(
+        WEATHER_STORAGE_KEY,
+        JSON.stringify(payload),
+        storageRef.current,
+      );
+      if (succeededWith) {
+        storageRef.current = succeededWith;
       }
     },
     [],
@@ -415,31 +383,14 @@ export function useWeatherDashboard(defaultQuery: string) {
   );
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    const restored = readWithFallback(WEATHER_STORAGE_KEY, parseWeatherPayload);
 
-    const storages: Array<{ name: "local" | "session"; storage: Storage }> = [
-      { name: "local", storage: window.localStorage },
-      { name: "session", storage: window.sessionStorage },
-    ];
-
-    for (const { name, storage } of storages) {
-      try {
-        const raw = storage.getItem(WEATHER_STORAGE_KEY);
-        if (!raw) {
-          continue;
-        }
-
-        const parsed = parseWeatherPayload(JSON.parse(raw) as unknown);
-        if (parsed) {
-          setWeatherQuery(parsed.query);
-          setWeatherData(parsed.data);
-          hasDataRef.current = true;
-          storageRef.current = name;
-          break;
-        }
-      } catch (error) {
-        console.error("Failed to restore weather payload", error);
-      }
+    if (restored) {
+      const { query, data } = restored.data;
+      setWeatherQuery(query);
+      setWeatherData(data);
+      hasDataRef.current = true;
+      storageRef.current = restored.name;
     }
 
     setHydrated(true);

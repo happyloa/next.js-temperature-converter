@@ -63,28 +63,3 @@ export function useKeyboardShortcuts({
 
   return { shortcuts };
 }
-
-/**
- * 取得格式化後的快捷鍵顯示字串。
- */
-export function formatShortcut(shortcut: KeyboardShortcut): string {
-  const parts: string[] = [];
-
-  if (shortcut.ctrl) {
-    // Mac 使用 ⌘，Windows 使用 Ctrl
-    const isMac =
-      typeof navigator !== "undefined" &&
-      navigator.platform.toLowerCase().includes("mac");
-    parts.push(isMac ? "⌘" : "Ctrl");
-  }
-
-  if (shortcut.shift) parts.push("Shift");
-  if (shortcut.alt) parts.push("Alt");
-
-  // 格式化特殊按鍵
-  const keyDisplay =
-    shortcut.key === "Escape" ? "Esc" : shortcut.key.toUpperCase();
-  parts.push(keyDisplay);
-
-  return parts.join("+");
-}

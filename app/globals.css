@@ -58,10 +58,6 @@
     --tag-border-hover: rgba(236, 72, 153, 0.45);
     --tag-text: #38bdf8;
 
-    --badge-bg: rgba(56, 189, 248, 0.1);
-    --badge-border: rgba(56, 189, 248, 0.35);
-    --badge-text: #bae6fd;
-
     --success-bg: rgba(16, 185, 129, 0.18);
     --success-border: rgba(16, 185, 129, 0.5);
     --success-text: #bbf7d0;
@@ -116,10 +112,6 @@
     --tag-border: rgba(59, 130, 246, 0.4);
     --tag-border-hover: rgba(168, 85, 247, 0.5);
     --tag-text: #3b82f6;
-
-    --badge-bg: rgba(59, 130, 246, 0.12);
-    --badge-border: rgba(59, 130, 246, 0.35);
-    --badge-text: #1e293b;
 
     --success-bg: rgba(16, 185, 129, 0.18);
     --success-border: rgba(16, 185, 129, 0.45);
@@ -278,7 +270,6 @@
     box-shadow: var(--chip-active-shadow);
   }
 
-  .theme-chip--active,
   .theme-segment--active {
     background-color: var(--chip-active-bg);
     border-color: var(--chip-active-border);
@@ -329,10 +320,4 @@
     color: var(--success-text);
   }
 
-  .theme-badge {
-    @apply inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold;
-    background-color: var(--badge-bg);
-    border-color: var(--badge-border);
-    color: var(--badge-text);
-  }
 }
