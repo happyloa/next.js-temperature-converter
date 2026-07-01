@@ -6,12 +6,9 @@ import { useCallback, useState } from "react";
 import { HeroSection } from "./components/HeroSection";
 import { HistorySection } from "./components/HistorySection";
 import { InsightsSection } from "./components/InsightsSection";
-import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
 import { TemperatureInputCard } from "./components/TemperatureInputCard";
 import { useHistoryStore } from "./hooks/useHistoryStore";
-import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useTemperatureConversion } from "./hooks/useTemperatureConversion";
-import { useTheme } from "./components/ThemeProvider";
 import { TEMPERATURE_PRESETS, TEMPERATURE_SCALES } from "./lib/temperature";
 import { formatTemperature, timeFormatter } from "./lib/format";
 import type { TemperatureScaleCode } from "./types/temperature";
@@ -42,9 +39,6 @@ export default function TemperatureStudio() {
   } = useTemperatureConversion();
 
   const { history, addHistoryEntry, clearHistory } = useHistoryStore();
-  const { toggleTheme } = useTheme();
-
-  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
   const [copiedScale, setCopiedScale] = useState<TemperatureScaleCode | null>(
     null,
@@ -88,40 +82,6 @@ export default function TemperatureStudio() {
     },
     [],
   );
-
-  // 鍵盤快捷鍵設定
-  useKeyboardShortcuts({
-    shortcuts: [
-      {
-        key: "r",
-        alt: true,
-        action: handleReset,
-        description: "重設溫度輸入",
-      },
-      {
-        key: "h",
-        alt: true,
-        action: clearHistory,
-        description: "清除歷史紀錄",
-      },
-      {
-        key: "t",
-        alt: true,
-        action: toggleTheme,
-        description: "切換主題",
-      },
-      {
-        key: "?",
-        action: () => setShowShortcutsHelp((prev) => !prev),
-        description: "顯示快捷鍵說明",
-      },
-      {
-        key: "Escape",
-        action: () => setShowShortcutsHelp(false),
-        description: "關閉彈窗",
-      },
-    ],
-  });
 
   return (
     <main className="w-full max-w-full py-12 pb-24">
@@ -171,18 +131,6 @@ export default function TemperatureStudio() {
           </aside>
         </div>
       </div>
-
-      <KeyboardShortcutsHelp
-        isOpen={showShortcutsHelp}
-        onOpenChange={setShowShortcutsHelp}
-        shortcuts={[
-          { keys: "Alt+R", description: "重設溫度輸入" },
-          { keys: "Alt+H", description: "清除歷史紀錄" },
-          { keys: "Alt+T", description: "切換深淺色主題" },
-          { keys: "?", description: "顯示/隱藏快捷鍵說明" },
-          { keys: "Esc", description: "關閉彈窗" },
-        ]}
-      />
     </main>
   );
 }

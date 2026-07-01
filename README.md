@@ -30,8 +30,8 @@
 - 支援深色/淺色主題並記住偏好，且以 blocking inline script 避免重新整理時的主題閃爍。
 - 支援 Web Share API，瀏覽器不支援時會 fallback 到剪貼簿。
 - 支援 CSV/JSON 匯出。
-- 支援鍵盤快捷鍵說明。
 - 具備 SEO metadata、robots、sitemap 與 Web App Manifest。
+- 具備自訂錯誤畫面（`app/error.tsx`），路由內未預期的例外會顯示符合品牌風格的錯誤頁並提供重試/返回首頁，而非瀏覽器預設畫面。
 
 ## 技術棧
 
@@ -58,7 +58,6 @@ app/
 │   └── WeatherChart.tsx
 ├── hooks/                   # 前端狀態與副作用
 │   ├── useHistoryStore.ts
-│   ├── useKeyboardShortcuts.ts
 │   ├── useTemperatureConversion.ts
 │   └── useWeatherDashboard.ts
 ├── lib/                     # 純函式與資料定義
@@ -67,9 +66,12 @@ app/
 │   ├── storage.ts           # localStorage/sessionStorage fallback 共用邏輯
 │   ├── temperature.ts
 │   ├── utils.ts
-│   └── weather.ts
+│   ├── weather.ts           # 天氣文字描述、城市預設值
+│   ├── weatherApi.ts        # Open-Meteo API 存取層（純 fetch，無 React 依賴）
+│   └── weatherPayload.ts    # API 回應/localStorage 資料轉換與驗證
 ├── types/                   # TypeScript 型別
 ├── weather/page.tsx         # 城市天氣頁
+├── error.tsx                # App Router 錯誤邊界
 ├── globals.css              # Tailwind v4 與主題 token
 ├── layout.tsx               # 全站 metadata 與 Provider
 ├── manifest.ts              # Web App Manifest
@@ -138,14 +140,15 @@ npm audit --audit-level=moderate
 - 修正 `/weather` 首次載入時淺色主題閃爍（FOUC）、對比度不足、行動裝置版面溢出等問題。
 - 將配色系統正式收斂為 Tailwind v4 `@theme` design token（`bg-surface-strong`、`text-ink-strong`、`bg-accent` 等），全部元件（含 `HeroSection`、`HistorySection`、`InsightsSection`、`TemperatureInputCard`、`ThemeToggleButton`、`WeatherChart`）已 100% 改用真正的 token utility class，不再有任何 `bg-[var(--x)]` 任意值語法或殘留的舊版 `slate-*` 相容層；原本的青綠 `#00CECB`／珊瑚 `#FF5E5B` 溫標裝飾漸層已確認完全沒有使用者，直接移除而非保留死碼。
 - 抽出共用 `AppHeader`，轉換器與天氣頁共用同一份導覽列與圓角/陰影規則。
-- 修正 `KeyboardShortcutsHelp` 觸發按鈕過去因外部狀態控制而永遠不會顯示的問題（使用者必須已經知道 `?` 快捷鍵才能開啟，現已改為一律可見）。
-- 為互動元件補上語意標籤與 ARIA：溫標選擇器與天氣預報天數改用 `radiogroup`/`radio` 並實作方向鍵瀏覽（roving tabindex）；快捷鍵說明改用 `<dl>`，並補上 Tab 焦點循環（focus trap）；匯出選單補上 `role="menu"` 與 Escape/焦點管理；天氣頁載入狀態補上 `aria-live`。
+- 為互動元件補上語意標籤與 ARIA：溫標選擇器與天氣預報天數改用 `radiogroup`/`radio` 並實作方向鍵瀏覽（roving tabindex）；匯出選單補上 `role="menu"` 與 Escape/焦點管理；天氣頁載入狀態補上 `aria-live`。
 - 修正淺色主題兩處對比度未達 WCAG AA 的問題：次要文字色（`--text-subtle`）與天氣頁預報天數切換鈕的選中狀態文字色。
+- 將 `useWeatherDashboard`（原本身兼 API 存取、資料驗證、React 狀態三種責任的單一 500+ 行 hook）拆成 `lib/weatherApi.ts`（純 API client）、`lib/weatherPayload.ts`（API 回應與 localStorage payload 的轉換/驗證）與精簡後只負責 React 狀態協調的 hook。
+- 新增 `app/error.tsx`，路由內未預期的例外會顯示符合品牌風格的錯誤頁（含重試/返回首頁），而非 Next.js 預設畫面。
+- 移除鍵盤快捷鍵功能（`useKeyboardShortcuts`、`KeyboardShortcutsHelp` 與首頁的相關按鈕/彈窗），非必要功能，已依需求整個拔除。
 
 較適合後續漸進改善的方向如下：
 
-- 將 `useWeatherDashboard` 再拆成 weather API client、payload parser 與 React hook，降低單一 hook 的責任。
-- 補上單元測試，優先涵蓋 `lib/temperature.ts`、`lib/format.ts` 與 weather payload validation。
+- 補上單元測試，優先涵蓋 `lib/temperature.ts`、`lib/format.ts` 與 `lib/weatherPayload.ts` 的資料驗證邏輯。
 - 若要主打完整 PWA 離線能力，可再加入 service worker 與快取策略；目前已具備 Web App Manifest。
 - 補上 `/og-image.png`，讓 Open Graph/Twitter 分享圖完整。
 
