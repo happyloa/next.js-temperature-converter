@@ -6,7 +6,7 @@ import type {
   TemperatureScaleCode,
   ThermalMood,
 } from "../types/temperature";
-import { cn } from "../lib/utils";
+import { cn, handleRadioGroupKeyDown } from "../lib/utils";
 import { ShareButton } from "./ShareButton";
 
 type TemperatureInputCardProps = {
@@ -66,7 +66,7 @@ export function TemperatureInputCard({
       : undefined;
 
   return (
-    <section className="w-full min-w-0 space-y-8 rounded-3xl border border-slate-700/40 bg-slate-900/70 p-5 shadow-glass backdrop-blur sm:p-6 md:p-8">
+    <section className="w-full min-w-0 space-y-8 rounded-3xl border border-edge-subtle bg-surface-medium p-5 shadow-glass backdrop-blur sm:p-6 md:p-8">
       <TemperatureCardHeader
         onReset={onReset}
         onAddHistory={onAddHistory}
@@ -132,8 +132,8 @@ function TemperatureCardHeader({
   return (
     <header className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:*:min-w-0">
       <div className="space-y-4">
-        <h2 className="text-heading text-slate-50">輸入溫度</h2>
-        <p className="max-w-xl text-sm leading-relaxed text-slate-300">
+        <h2 className="text-heading text-ink-strong">輸入溫度</h2>
+        <p className="max-w-xl text-sm leading-relaxed text-ink-medium">
           選擇想要輸入的溫標後填入數值，系統會即時計算其他尺度並提供安全洞察與轉換紀錄。
         </p>
       </div>
@@ -198,10 +198,15 @@ function TemperatureScaleSelector({
   scales,
   onScaleChange,
 }: TemperatureScaleSelectorProps) {
+  const scaleCodes = scales.map((item) => item.code);
+
   return (
     <div
       role="radiogroup"
       aria-label="選擇溫標"
+      onKeyDown={(event) =>
+        handleRadioGroupKeyDown(event, scaleCodes, activeScale, onScaleChange)
+      }
       className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
     >
       {scales.map((item) => (
@@ -210,6 +215,8 @@ function TemperatureScaleSelector({
           type="button"
           role="radio"
           aria-checked={activeScale === item.code}
+          data-radio-value={item.code}
+          tabIndex={activeScale === item.code ? 0 : -1}
           onClick={() => onScaleChange(item.code)}
           className={cn(
             "theme-segment",
@@ -239,8 +246,8 @@ function TemperatureValueField({
 }: TemperatureValueFieldProps) {
   return (
     <label className="flex flex-col gap-2 text-left">
-      <span className="text-sm font-semibold text-slate-200">輸入數值</span>
-      <div className="focus-within:border-accent focus-within:ring-accent/40 flex items-center gap-3 rounded-2xl border border-slate-700/60 bg-slate-900/70 px-4 py-3 text-lg font-semibold text-slate-100 focus-within:ring-2">
+      <span className="text-sm font-semibold text-ink-medium">輸入數值</span>
+      <div className="focus-within:border-accent focus-within:ring-accent/40 flex items-center gap-3 rounded-2xl border border-edge-subtle bg-surface-medium px-4 py-3 text-lg font-semibold text-ink-strong focus-within:ring-2">
         <span className="text-xl">🌡️</span>
         <input
           type="text"
@@ -250,7 +257,7 @@ function TemperatureValueField({
           placeholder="輸入溫度值"
           className="flex-1 bg-transparent text-base font-semibold outline-none sm:text-lg"
         />
-        <span className="text-sm font-semibold text-slate-400">
+        <span className="text-sm font-semibold text-ink-subtle">
           {activeSymbol ?? ""}
         </span>
       </div>
@@ -278,7 +285,7 @@ function TemperatureSliderControl({
 }: TemperatureSliderControlProps) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="text-sm font-semibold text-slate-200">
+      <span className="text-sm font-semibold text-ink-medium">
         範圍滑桿（{formatTemperature(sliderRange.min)} ~{" "}
         {formatTemperature(sliderRange.max)}）
       </span>
@@ -289,7 +296,7 @@ function TemperatureSliderControl({
         step={sliderStep}
         value={sliderValue}
         onChange={onSliderChange}
-        className="accent-accent h-2 w-full cursor-grab appearance-none rounded-full bg-slate-800 active:cursor-grabbing"
+        className="accent-accent h-2 w-full cursor-grab appearance-none rounded-full bg-surface-muted active:cursor-grabbing"
       />
     </label>
   );
@@ -317,7 +324,7 @@ function ConversionResultGrid({
 }: ConversionResultGridProps) {
   return (
     <section className="space-y-4" aria-live="polite">
-      <h3 className="text-heading text-slate-100">即時轉換結果</h3>
+      <h3 className="text-heading text-ink-strong">即時轉換結果</h3>
       <ul className="grid gap-4 sm:grid-cols-2 list-none m-0 p-0">
         {conversions.map((item) => (
           <li key={item.code} className="list-none">
@@ -359,17 +366,17 @@ function ConversionResultCard({
         "relative min-w-0 overflow-hidden rounded-3xl border p-5 transition-colors",
         isPrimary
           ? "border-accent/40 bg-accent/10"
-          : "border-edge-subtle bg-slate-900/60",
+          : "border-edge-subtle bg-surface-soft",
       )}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2">
-          <span className="text-xs uppercase tracking-wide text-slate-200/80">
+          <span className="text-xs uppercase tracking-wide text-ink-medium/80">
             {conversion.label}
           </span>
           <p
             className={cn(
-              "font-bold leading-none tracking-tight text-slate-50",
+              "font-bold leading-none tracking-tight text-ink-strong",
               isPrimary ? "text-4xl sm:text-5xl" : "text-2xl sm:text-3xl",
             )}
           >
@@ -392,7 +399,7 @@ function ConversionResultCard({
         </button>
       </div>
       {conversion.code === "celsius" && mood ? (
-        <p className="mt-3 text-sm text-slate-200/80">{mood.title}</p>
+        <p className="mt-3 text-sm text-ink-medium/80">{mood.title}</p>
       ) : null}
     </div>
   );
@@ -414,19 +421,19 @@ function SolarProgressPanel({
 }: SolarProgressPanelProps) {
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3 text-slate-200">
+      <div className="flex flex-wrap items-center gap-3 text-ink-medium">
         <span className="text-xl">📈</span>
         <h3 className="text-base font-semibold sm:text-lg">
           相對於太陽表面的能量比例
         </h3>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full border border-slate-700/60 bg-slate-800/80">
+      <div className="h-2 w-full overflow-hidden rounded-full border border-edge-subtle bg-surface-muted">
         <div
           className="h-full bg-orange-500"
           style={{ width: `${relativeSolarProgress}%` }}
         />
       </div>
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-ink-subtle">
         {showSolarProgress
           ? `目前為太陽表面溫度的 ${formatTemperature(relativeSolarProgress)}%`
           : "輸入溫度以分析熱能比例"}

@@ -1,7 +1,7 @@
 /**
  * 專案統一的數值格式化工具，確保展示時的一致性。
  */
-export const numberFormatter = new Intl.NumberFormat("zh-TW", {
+const numberFormatter = new Intl.NumberFormat("zh-TW", {
   maximumFractionDigits: 2,
   minimumFractionDigits: 0,
 });

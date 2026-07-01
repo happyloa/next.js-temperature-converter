@@ -1,9 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { ThemeToggleButton } from "./components/ThemeToggleButton";
 import { AppHeader } from "./components/AppHeader";
+
+const notoSansTC = Noto_Sans_TC({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-noto-sans-tc",
+  display: "swap",
+});
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -90,7 +98,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="zh-TW" suppressHydrationWarning>
+    <html
+      lang="zh-TW"
+      suppressHydrationWarning
+      className={notoSansTC.variable}
+    >
       <head>
         <link rel="canonical" href={siteUrl} />
         <script

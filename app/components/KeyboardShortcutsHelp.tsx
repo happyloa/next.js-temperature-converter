@@ -26,6 +26,7 @@ export const KeyboardShortcutsHelp: FC<KeyboardShortcutsHelpProps> = ({
   const headingId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const wasOpenRef = useRef(false);
 
   useEffect(() => {
@@ -37,6 +38,26 @@ export const KeyboardShortcutsHelp: FC<KeyboardShortcutsHelpProps> = ({
       triggerRef.current?.focus();
     }
   }, [isOpen]);
+
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Tab" || !dialogRef.current) return;
+
+    const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   return (
     <>
@@ -74,8 +95,10 @@ export const KeyboardShortcutsHelp: FC<KeyboardShortcutsHelpProps> = ({
           aria-labelledby={headingId}
         >
           <div
+            ref={dialogRef}
             className="border-edge-subtle bg-surface-strong mx-4 max-w-md rounded-2xl border p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={handleDialogKeyDown}
           >
             <div className="mb-4 flex items-center justify-between">
               <h3

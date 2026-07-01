@@ -26,6 +26,7 @@
 ### 使用者體驗
 
 - 全站共用導覽列（`AppHeader`），轉換器與天氣頁之間可直接切換。
+- 全站字體使用 Google Fonts「思源黑體」（Noto Sans TC），透過 `next/font/google` 自動子集化與快取，不依賴使用者系統是否安裝該字體。
 - 支援深色/淺色主題並記住偏好，且以 blocking inline script 避免重新整理時的主題閃爍。
 - 支援 Web Share API，瀏覽器不支援時會 fallback 到剪貼簿。
 - 支援 CSV/JSON 匯出。
@@ -132,13 +133,14 @@ npm audit --audit-level=moderate
 
 已完成的清理與改版：
 
-- 移除未被使用的 export（`formatWeatherTime`、`formatWeekday`、`formatCoordinate`、`formatShortcut`、`ThemeProvider` 的 `setTheme`）與重複型別宣告。
+- 移除未被使用的 export（`formatWeatherTime`、`formatWeekday`、`formatCoordinate`、`formatShortcut`、`ThemeProvider` 的 `setTheme`、`TemperatureScale.accent` 裝飾漸層欄位）與重複型別宣告；`numberFormatter`、`WEATHER_CODE_MAP`、`isQuotaExceededError` 等僅供模組內使用的 export 也已改為模組私有。
 - 將 `useHistoryStore` 與 `useWeatherDashboard` 重複的 localStorage/sessionStorage fallback 邏輯收斂進 `lib/storage.ts`。
 - 修正 `/weather` 首次載入時淺色主題閃爍（FOUC）、對比度不足、行動裝置版面溢出等問題。
-- 將配色系統正式收斂為 Tailwind v4 `@theme` design token（`bg-surface-strong`、`text-ink-strong`、`bg-accent` 等），元件不再需要 `bg-[var(--x)]` 任意值語法；`/weather` 也已改用同一套 token，不再有獨立於首頁之外的硬編碼配色（原本的青綠 `#00CECB`／珊瑚 `#FF5E5B` 僅保留在 `lib/temperature.ts` 的溫標裝飾漸層，不再用於任何互動元件）。
+- 將配色系統正式收斂為 Tailwind v4 `@theme` design token（`bg-surface-strong`、`text-ink-strong`、`bg-accent` 等），全部元件（含 `HeroSection`、`HistorySection`、`InsightsSection`、`TemperatureInputCard`、`ThemeToggleButton`、`WeatherChart`）已 100% 改用真正的 token utility class，不再有任何 `bg-[var(--x)]` 任意值語法或殘留的舊版 `slate-*` 相容層；原本的青綠 `#00CECB`／珊瑚 `#FF5E5B` 溫標裝飾漸層已確認完全沒有使用者，直接移除而非保留死碼。
 - 抽出共用 `AppHeader`，轉換器與天氣頁共用同一份導覽列與圓角/陰影規則。
 - 修正 `KeyboardShortcutsHelp` 觸發按鈕過去因外部狀態控制而永遠不會顯示的問題（使用者必須已經知道 `?` 快捷鍵才能開啟，現已改為一律可見）。
-- 為互動元件補上語意標籤與 ARIA（溫標選擇器與天氣預報天數改用 `radiogroup`/`radio`、快捷鍵說明改用 `<dl>`、匯出選單補上 `role="menu"` 與 Escape/焦點管理、天氣頁載入狀態補上 `aria-live`）。
+- 為互動元件補上語意標籤與 ARIA：溫標選擇器與天氣預報天數改用 `radiogroup`/`radio` 並實作方向鍵瀏覽（roving tabindex）；快捷鍵說明改用 `<dl>`，並補上 Tab 焦點循環（focus trap）；匯出選單補上 `role="menu"` 與 Escape/焦點管理；天氣頁載入狀態補上 `aria-live`。
+- 修正淺色主題兩處對比度未達 WCAG AA 的問題：次要文字色（`--text-subtle`）與天氣頁預報天數切換鈕的選中狀態文字色。
 
 較適合後續漸進改善的方向如下：
 

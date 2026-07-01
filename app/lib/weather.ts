@@ -1,7 +1,7 @@
 /**
  * Open-Meteo weather code 對應的中文描述。
  */
-export const WEATHER_CODE_MAP: Record<number, string> = {
+const WEATHER_CODE_MAP: Record<number, string> = {
   0: "晴朗無雲",
   1: "大致晴朗",
   2: "局部多雲",

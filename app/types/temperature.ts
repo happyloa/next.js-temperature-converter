@@ -14,7 +14,6 @@ export type TemperatureScale = {
   code: TemperatureScaleCode;
   label: string;
   symbol: string;
-  accent: string;
   toKelvin: (value: number) => number;
   fromKelvin: (value: number) => number;
 };

@@ -12,7 +12,7 @@ const withPreferred = (preferred: StorageName): NamedStorage[] => {
   return preferred === "session" ? [second, first] : [first, second];
 };
 
-export const isQuotaExceededError = (error: unknown): boolean => {
+const isQuotaExceededError = (error: unknown): boolean => {
   if (!error) return false;
   if (error instanceof DOMException) {
     return (

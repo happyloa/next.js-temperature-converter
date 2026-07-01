@@ -49,18 +49,18 @@ export function HistorySection({
   };
 
   return (
-    <section className="w-full min-w-0 space-y-6 rounded-3xl border border-slate-700/40 bg-slate-900/70 p-5 shadow-glass backdrop-blur transition-colors sm:p-6 md:p-7">
+    <section className="w-full min-w-0 space-y-6 rounded-3xl border border-edge-subtle bg-surface-medium p-5 shadow-glass backdrop-blur transition-colors sm:p-6 md:p-7">
       <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-3 text-slate-200">
+        <div className="flex items-center gap-3 text-ink-medium">
           <span className="text-xl">🗂️</span>
-          <h2 className="text-heading text-slate-100">轉換紀錄</h2>
+          <h2 className="text-heading text-ink-strong">轉換紀錄</h2>
         </div>
-        <p className="text-sm text-slate-300">
+        <p className="text-sm text-ink-medium">
           將感興趣的轉換加入歷史紀錄，可快速對照實驗或製程所需的常用溫度設定。
         </p>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-ink-subtle">
           {history.length > 0
             ? `共 ${history.length} 筆，依時間由新到舊排序`
             : "尚未加入紀錄"}
@@ -99,7 +99,7 @@ export function HistorySection({
         })}
         {history.length === 0 && (
           <li className="list-none">
-            <p className="rounded-2xl border border-dashed border-slate-700/40 bg-slate-900/60 p-4 text-sm text-slate-300 transition-colors">
+            <p className="rounded-2xl border border-dashed border-edge-subtle bg-surface-soft p-4 text-sm text-ink-medium transition-colors">
               加入紀錄後，系統會保留最近八筆轉換，方便在不同實驗之間快速比對。
             </p>
           </li>
@@ -129,19 +129,19 @@ function HistoryAccordionItem({
   const panelRef = useAccordionPanel(isOpen);
 
   return (
-    <li className="min-w-0 overflow-hidden rounded-2xl border border-slate-700/40 bg-slate-900/80 shadow-sm transition-colors list-none">
+    <li className="min-w-0 overflow-hidden rounded-2xl border border-edge-subtle bg-surface-strong shadow-sm transition-colors list-none">
       <button
         type="button"
         aria-expanded={isOpen}
         aria-controls={contentId}
         onClick={() => onToggle(entry.id)}
-        className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left text-sm text-slate-300 transition-colors hover:bg-slate-900/60"
+        className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left text-sm text-ink-medium transition-colors hover:bg-surface-soft"
       >
-        <span className="font-medium text-slate-100">
+        <span className="font-medium text-ink-strong">
           {formatTime(new Date(entry.timestamp))} ·{" "}
           {formatTemperature(entry.value)} {entry.scaleSymbol}
         </span>
-        <span className="flex items-center gap-2 text-xs text-slate-400">
+        <span className="flex items-center gap-2 text-xs text-ink-subtle">
           {entry.scaleLabel}
           <span
             aria-hidden="true"
@@ -157,7 +157,7 @@ function HistoryAccordionItem({
         id={contentId}
         ref={panelRef}
         aria-hidden={!isOpen}
-        className={`overflow-hidden border-t border-slate-700/40 transition-[height,opacity] duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        className={`overflow-hidden border-t border-edge-subtle transition-[height,opacity] duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
@@ -170,7 +170,7 @@ function HistoryAccordionItem({
             {entry.conversions.map((item) => (
               <div
                 key={`${entry.id}-${item.code}`}
-                className="flex min-w-0 items-center justify-between rounded-xl border border-slate-700/40 bg-slate-900/60 px-3 py-2 text-sm text-slate-200 transition-colors"
+                className="flex min-w-0 items-center justify-between rounded-xl border border-edge-subtle bg-surface-soft px-3 py-2 text-sm text-ink-medium transition-colors"
               >
                 <span className="font-medium">{item.label}</span>
                 <span className="font-semibold">

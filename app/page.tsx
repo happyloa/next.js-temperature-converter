@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChangeEvent } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { HeroSection } from "./components/HeroSection";
 import { HistorySection } from "./components/HistorySection";
@@ -14,10 +14,7 @@ import { useTemperatureConversion } from "./hooks/useTemperatureConversion";
 import { useTheme } from "./components/ThemeProvider";
 import { TEMPERATURE_PRESETS, TEMPERATURE_SCALES } from "./lib/temperature";
 import { formatTemperature, timeFormatter } from "./lib/format";
-import type {
-  TemperaturePreset,
-  TemperatureScaleCode,
-} from "./types/temperature";
+import type { TemperatureScaleCode } from "./types/temperature";
 
 /**
  * Next.js App Router 頁面：整合溫度轉換、歷史紀錄與環境儀表板。

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { cn } from "../lib/utils";
+import { cn, handleRadioGroupKeyDown } from "../lib/utils";
 import { WeatherChart } from "../components/WeatherChart";
 import { WeatherSkeleton } from "../components/skeletons/WeatherSkeleton";
 import { ChartGraphicSkeleton } from "../components/skeletons/ChartSkeleton";
@@ -401,17 +401,27 @@ export default function WeatherPage() {
                 <div
                   role="radiogroup"
                   aria-label="預報天數"
+                  onKeyDown={(event) =>
+                    handleRadioGroupKeyDown(
+                      event,
+                      [7, 14],
+                      forecastDays,
+                      setForecastDays,
+                    )
+                  }
                   className="bg-surface-light flex items-center rounded-xl p-1"
                 >
                   <button
                     role="radio"
                     aria-checked={forecastDays === 7}
+                    data-radio-value={7}
+                    tabIndex={forecastDays === 7 ? 0 : -1}
                     onClick={() => setForecastDays(7)}
                     disabled={forecastLoading}
                     className={cn(
                       "px-4 py-1.5 text-xs font-medium rounded-lg transition-all disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                       forecastDays === 7
-                        ? "bg-accent/20 text-accent"
+                        ? "bg-accent/20 text-accent-ink font-semibold"
                         : "text-ink-subtle hover:text-ink-strong",
                     )}
                   >
@@ -420,12 +430,14 @@ export default function WeatherPage() {
                   <button
                     role="radio"
                     aria-checked={forecastDays === 14}
+                    data-radio-value={14}
+                    tabIndex={forecastDays === 14 ? 0 : -1}
                     onClick={() => setForecastDays(14)}
                     disabled={forecastLoading}
                     className={cn(
                       "px-4 py-1.5 text-xs font-medium rounded-lg transition-all disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                       forecastDays === 14
-                        ? "bg-accent/20 text-accent"
+                        ? "bg-accent/20 text-accent-ink font-semibold"
                         : "text-ink-subtle hover:text-ink-strong",
                     )}
                   >

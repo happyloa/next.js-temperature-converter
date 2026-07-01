@@ -87,7 +87,7 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      <h4 className="shrink-0 text-sm font-medium text-slate-300">
+      <h4 className="shrink-0 text-sm font-medium text-ink-medium">
         {data.length} 日溫度趨勢
       </h4>
       <div className="min-h-0 flex-1 w-full">
@@ -173,7 +173,7 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex items-center justify-center gap-6 text-xs text-slate-400">
+      <div className="flex items-center justify-center gap-6 text-xs text-ink-subtle">
         <span className="flex items-center gap-1">
           <span className="inline-block h-2 w-2 rounded-full bg-red-500" />
           最高溫

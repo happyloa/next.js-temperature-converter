@@ -17,7 +17,7 @@ export function ThemeToggleButton() {
       aria-pressed={theme === "light"}
       className={`focus-visible:outline-accent fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition focus-visible:outline-2 focus-visible:outline-offset-2 ${
         theme === "dark"
-          ? "bg-slate-800 text-slate-100 hover:bg-slate-700"
+          ? "bg-surface-muted text-ink-strong hover:bg-surface-strong"
           : "bg-accent text-accent-ink hover:bg-accent-hover"
       }`}
       title={label}
