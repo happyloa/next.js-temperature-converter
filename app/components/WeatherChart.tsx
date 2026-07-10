@@ -28,13 +28,13 @@ type ChartColors = {
 };
 
 const FALLBACK_COLORS: ChartColors = {
-  grid: "#344149",
-  axisText: "#8fa0a7",
-  axisLine: "#53656f",
-  tooltipBg: "#171c20",
-  tooltipBorder: "#344149",
-  high: "#f59f68",
-  low: "#43c1d1",
+  grid: "#343b38",
+  axisText: "#8f9894",
+  axisLine: "#5d6864",
+  tooltipBg: "#191c1b",
+  tooltipBorder: "#343b38",
+  high: "#c3c8c6",
+  low: "#58b8ad",
 };
 
 const readChartColors = (): ChartColors => {
@@ -48,7 +48,7 @@ const readChartColors = (): ChartColors => {
     axisLine: read("--edge-strong", FALLBACK_COLORS.axisLine),
     tooltipBg: read("--surface-strong", FALLBACK_COLORS.tooltipBg),
     tooltipBorder: read("--edge-subtle", FALLBACK_COLORS.tooltipBorder),
-    high: read("--warm", FALLBACK_COLORS.high),
+    high: read("--ink-medium", FALLBACK_COLORS.high),
     low: read("--accent", FALLBACK_COLORS.low),
   };
 };

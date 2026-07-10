@@ -71,8 +71,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f6f7" },
-    { media: "(prefers-color-scheme: dark)", color: "#101418" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f6f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#111315" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -93,7 +93,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className="font-sans">
         <ThemeProvider>
-          <a href="#main-content" className="skip-link">
+          <a
+            href="#main-content"
+            className="fixed top-3 left-4 z-100 -translate-y-[150%] rounded-md bg-accent px-3 py-2 font-bold text-accent-ink focus:translate-y-0"
+          >
             跳至主要內容
           </a>
           <AppHeader />

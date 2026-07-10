@@ -13,8 +13,8 @@ export default function OpengraphImage() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        backgroundColor: "#101418",
-        color: "#f4f7f8",
+        backgroundColor: "#111315",
+        color: "#f2f4f3",
         padding: "72px 84px",
         fontFamily: "Arial, sans-serif",
       }}
@@ -25,7 +25,7 @@ export default function OpengraphImage() {
           alignItems: "center",
           justifyContent: "space-between",
           fontSize: 28,
-          color: "#9fb0b8",
+          color: "#8f9894",
         }}
       >
         <span>Temperature Studio</span>
@@ -35,7 +35,7 @@ export default function OpengraphImage() {
         <div style={{ display: "flex", fontSize: 86, fontWeight: 700 }}>
           Temperature, made clear.
         </div>
-        <div style={{ display: "flex", fontSize: 34, color: "#b7c5ca" }}>
+        <div style={{ display: "flex", fontSize: 34, color: "#c3c8c6" }}>
           Six scales, global weather and practical context in one workspace.
         </div>
       </div>
@@ -45,11 +45,11 @@ export default function OpengraphImage() {
             key={label}
             style={{
               display: "flex",
-              border: "1px solid #3d5159",
+              border: "1px solid #343b38",
               borderRadius: 8,
               padding: "12px 18px",
               fontSize: 20,
-              color: "#d9e4e8",
+              color: "#f2f4f3",
             }}
           >
             {label}
