@@ -18,7 +18,9 @@ test("temperature conversion remains exact and usable", async ({ page }) => {
   ).toContainText("1,000");
 
   await input.fill("-300");
-  await expect(page.getByText(/不能低於絕對零度/)).toBeVisible();
+  await expect(page.locator("#temperature-input-help")).toContainText(
+    "不能低於絕對零度",
+  );
   await expect(page.getByText("0 / 6")).toBeVisible();
 
   await input.fill("100");

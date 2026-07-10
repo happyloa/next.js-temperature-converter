@@ -1,7 +1,6 @@
 "use client";
 import type { FC } from "react";
 import {
-  ResponsiveContainer,
   LineChart,
   Line,
   XAxis,
@@ -86,88 +85,83 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
         {data.length} 日溫度趨勢
       </h4>
       <div className="min-h-0 flex-1 w-full">
-        <ResponsiveContainer
-          width="100%"
-          height="100%"
-          minWidth={0}
-          minHeight={0}
+        <LineChart
+          responsive
+          style={{ width: "100%", height: "100%" }}
+          data={data}
+          margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
         >
-          <LineChart
-            data={data}
-            margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke={colors.grid}
-              opacity={0.5}
-            />
-            <XAxis
-              dataKey="date"
-              tickFormatter={formatDate}
-              tick={{ fill: colors.axisText, fontSize: 11 }}
-              axisLine={{ stroke: colors.axisLine }}
-              tickLine={{ stroke: colors.axisLine }}
-            />
-            <YAxis
-              tick={{ fill: colors.axisText, fontSize: 11 }}
-              axisLine={{ stroke: colors.axisLine }}
-              tickLine={{ stroke: colors.axisLine }}
-              tickFormatter={(value) => `${value}${unit}`}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: colors.tooltipBg,
-                border: `1px solid ${colors.tooltipBorder}`,
-                borderRadius: "8px",
-                fontSize: "12px",
-              }}
-              labelFormatter={(label) => {
-                const [year, month, day] = `${label}`.split("-").map(Number);
-                const date = new Date(year, month - 1, day);
-                return date.toLocaleDateString("zh-TW", {
-                  month: "short",
-                  day: "numeric",
-                  weekday: "short",
-                });
-              }}
-              formatter={(value, name) => {
-                const numValue = typeof value === "number" ? value : 0;
-                return [
-                  `${numValue.toFixed(1)}${unit}`,
-                  name === "high" ? "最高" : "最低",
-                ];
-              }}
-            />
-            <Line
-              type="monotone"
-              dataKey="high"
-              stroke={colors.high}
-              strokeWidth={2}
-              dot={{ fill: colors.high, strokeWidth: 0, r: 3 }}
-              activeDot={{
-                r: 5,
-                stroke: colors.high,
-                strokeWidth: 2,
-                fill: colors.tooltipBg,
-              }}
-              name="high"
-            />
-            <Line
-              type="monotone"
-              dataKey="low"
-              stroke={colors.low}
-              strokeWidth={2}
-              dot={{ fill: colors.low, strokeWidth: 0, r: 3 }}
-              activeDot={{
-                r: 5,
-                stroke: colors.low,
-                strokeWidth: 2,
-                fill: colors.tooltipBg,
-              }}
-              name="low"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke={colors.grid}
+            opacity={0.5}
+          />
+          <XAxis
+            dataKey="date"
+            tickFormatter={formatDate}
+            tick={{ fill: colors.axisText, fontSize: 11 }}
+            axisLine={{ stroke: colors.axisLine }}
+            tickLine={{ stroke: colors.axisLine }}
+          />
+          <YAxis
+            tick={{ fill: colors.axisText, fontSize: 11 }}
+            axisLine={{ stroke: colors.axisLine }}
+            tickLine={{ stroke: colors.axisLine }}
+            tickFormatter={(value) => `${value}${unit}`}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: colors.tooltipBg,
+              border: `1px solid ${colors.tooltipBorder}`,
+              borderRadius: "8px",
+              fontSize: "12px",
+            }}
+            labelFormatter={(label) => {
+              const [year, month, day] = `${label}`.split("-").map(Number);
+              const date = new Date(year, month - 1, day);
+              return date.toLocaleDateString("zh-TW", {
+                month: "short",
+                day: "numeric",
+                weekday: "short",
+              });
+            }}
+            formatter={(value, name) => {
+              const numValue = typeof value === "number" ? value : 0;
+              return [
+                `${numValue.toFixed(1)}${unit}`,
+                name === "high" ? "最高" : "最低",
+              ];
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="high"
+            stroke={colors.high}
+            strokeWidth={2}
+            dot={{ fill: colors.high, strokeWidth: 0, r: 3 }}
+            activeDot={{
+              r: 5,
+              stroke: colors.high,
+              strokeWidth: 2,
+              fill: colors.tooltipBg,
+            }}
+            name="high"
+          />
+          <Line
+            type="monotone"
+            dataKey="low"
+            stroke={colors.low}
+            strokeWidth={2}
+            dot={{ fill: colors.low, strokeWidth: 0, r: 3 }}
+            activeDot={{
+              r: 5,
+              stroke: colors.low,
+              strokeWidth: 2,
+              fill: colors.tooltipBg,
+            }}
+            name="low"
+          />
+        </LineChart>
       </div>
       <div className="flex items-center justify-center gap-6 text-xs text-ink-subtle">
         <span className="flex items-center gap-1">
