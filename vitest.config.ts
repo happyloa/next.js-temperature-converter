@@ -15,7 +15,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "html"],
       include: ["app/lib/**/*.ts", "app/hooks/**/*.ts"],
-      exclude: ["app/**/*.test.{ts,tsx}"],
+      exclude: ["app/**/*.test.{ts,tsx}", "app/lib/uiStyles.ts"],
       thresholds: {
         statements: 80,
         branches: 70,

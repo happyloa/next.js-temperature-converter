@@ -4,8 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 import { cn, handleRadioGroupKeyDown } from "./utils";
 
 describe("UI utilities", () => {
-  it("merges conditional classes and resolves Tailwind conflicts", () => {
-    expect(cn("px-2", false && "hidden", "px-4")).toBe("px-4");
+  it("merges static and conditional class names", () => {
+    expect(cn("base", false && "hidden", null, undefined, "active")).toBe(
+      "base active",
+    );
   });
 
   it("moves radio selection and focus with arrow keys", () => {

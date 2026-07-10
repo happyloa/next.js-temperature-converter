@@ -1,12 +1,12 @@
 import type { KeyboardEvent } from "react";
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+
+type ClassName = string | false | null | undefined;
 
 /**
- * 合併 Tailwind CSS 類別的公用函式，自動處理衝突。
+ * 合併元件使用的靜態與條件 class name。
  */
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+export function cn(...inputs: ClassName[]): string {
+  return inputs.filter((value): value is string => Boolean(value)).join(" ");
 }
 
 /**

@@ -45,6 +45,12 @@
 | E2E       | Playwright，桌機 Chrome 與 Pixel 7 viewport  |
 | Quality   | ESLint、Prettier、TypeScript、GitHub Actions |
 
+## 依賴原則
+
+正式環境只保留 Next.js、React／React DOM、Lucide 與 Recharts；條件 class 由專案內的小型 helper 處理，不再為此載入額外套件。其餘依賴皆用於編譯、型別、格式或自動化測試，不會進入瀏覽器 runtime bundle。
+
+ESLint 9 與 TypeScript 6 是目前 `eslint-config-next` 內部 parser 支援的最新主版本。ESLint 10 與 TypeScript 7 會產生 peer warning，且 TypeScript 7 會讓 lint parser 啟動失敗，因此暫不升級這兩個不相容的大版本。
+
 ## 開始使用
 
 需求：Node.js 20.9 以上與 npm。
@@ -89,6 +95,7 @@ app/
 │   ├── export.ts                # CSV 匯出
 │   ├── storage.ts               # local/session storage fallback
 │   ├── temperature.ts           # 溫標公式與物理邊界
+│   ├── uiStyles.ts              # 共用 Tailwind utility 組合
 │   ├── weatherApi.ts            # Open-Meteo 存取層
 │   └── weatherPayload.ts        # API 與快取資料轉換/驗證
 ├── weather/page.tsx             # 天氣 Server Page
