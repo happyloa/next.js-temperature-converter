@@ -2,6 +2,7 @@
 
 import { useTheme } from "./ThemeProvider";
 import { Moon, Sun } from "lucide-react";
+import { ui } from "../lib/uiStyles";
 
 /**
  * 導覽列內的主題切換按鈕。
@@ -15,7 +16,7 @@ export function ThemeToggleButton() {
       type="button"
       onClick={toggleTheme}
       aria-label={label}
-      className="icon-button"
+      className={ui.iconButton}
       title={label}
     >
       {theme === "dark" ? (

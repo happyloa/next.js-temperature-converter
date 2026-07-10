@@ -14,7 +14,7 @@ test("temperature conversion remains exact and usable", async ({ page }) => {
     page.getByText("目前輸入超出此滑桿情境，但轉換結果仍使用完整輸入值。"),
   ).toBeVisible();
   await expect(
-    page.locator(".result-row").filter({ hasText: "攝氏" }),
+    page.getByRole("listitem").filter({ hasText: "攝氏" }),
   ).toContainText("1,000");
 
   await input.fill("-300");
@@ -23,10 +23,12 @@ test("temperature conversion remains exact and usable", async ({ page }) => {
 
   await input.fill("100");
   await expect(
-    page.locator(".result-row").filter({ hasText: "華氏" }),
+    page.getByRole("listitem").filter({ hasText: "華氏" }),
   ).toContainText("212");
   await page.getByRole("button", { name: "加入紀錄" }).click();
-  await expect(page.locator(".history-item")).toHaveCount(1);
+  await expect(
+    page.getByRole("region", { name: "轉換紀錄" }).locator("details"),
+  ).toHaveCount(1);
 
   const html = page.locator("html");
   const initialTheme = await html.getAttribute("data-theme");

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { LoaderCircle, LocateFixed, Search } from "lucide-react";
 
 import { cn } from "../../lib/utils";
+import { ui } from "../../lib/uiStyles";
 import { WEATHER_PRESETS } from "../../lib/weather";
 import type { GeoApiLocation } from "../../lib/weatherApi";
 
@@ -67,12 +68,16 @@ export function WeatherSearch({
   };
 
   return (
-    <div className="weather-search-block">
-      <form onSubmit={onSubmit} className="weather-search-form" role="search">
+    <div className="min-w-0">
+      <form
+        onSubmit={onSubmit}
+        className="relative grid min-w-0 grid-cols-[1.25rem_minmax(0,1fr)_auto_auto] items-center gap-1.5 rounded-lg border border-edge-strong bg-surface-strong p-1.5 focus-within:border-accent"
+        role="search"
+      >
         <label htmlFor="weather-search" className="sr-only">
           搜尋全球城市
         </label>
-        <Search className="weather-search-icon" aria-hidden />
+        <Search className="ml-1.5 h-4 w-4 text-ink-subtle" aria-hidden />
         <input
           id="weather-search"
           type="search"
@@ -96,16 +101,19 @@ export function WeatherSearch({
               ? `weather-suggestion-${activeSuggestion}`
               : undefined
           }
-          className="weather-search-input"
+          className="w-full min-w-0 border-0 bg-transparent px-1 py-2 text-sm text-ink-strong outline-0"
         />
         {suggestionsLoading ? (
-          <LoaderCircle className="weather-search-loader" aria-hidden />
+          <LoaderCircle
+            className="h-4 w-4 animate-spin text-ink-subtle"
+            aria-hidden
+          />
         ) : null}
         <button
           type="button"
           onClick={onGeolocate}
           disabled={geolocating || loading}
-          className="icon-button"
+          className={ui.iconButton}
           aria-label="使用目前位置"
           title="使用目前位置"
         >
@@ -115,7 +123,11 @@ export function WeatherSearch({
             <LocateFixed className="h-4 w-4" aria-hidden />
           )}
         </button>
-        <button type="submit" disabled={loading} className="primary-button">
+        <button
+          type="submit"
+          disabled={loading}
+          className={cn(ui.button, ui.primaryButton)}
+        >
           <Search className="h-4 w-4" aria-hidden />
           <span className="hidden sm:inline">查詢</span>
         </button>
@@ -124,7 +136,7 @@ export function WeatherSearch({
           <ul
             id="weather-suggestions"
             role="listbox"
-            className="suggestion-menu"
+            className="absolute top-[calc(100%+0.35rem)] right-0 left-0 z-50 overflow-hidden rounded-lg border border-edge-subtle bg-surface-strong p-1.5 shadow-[var(--shadow)]"
           >
             {suggestions.map((location, index) => (
               <li
@@ -132,7 +144,7 @@ export function WeatherSearch({
                 key={location.id ?? `${location.name}-${location.latitude}`}
                 role="option"
                 aria-selected={activeSuggestion === index}
-                className="suggestion-option"
+                className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2.5 py-2 text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong aria-selected:bg-surface-soft aria-selected:text-ink-strong"
                 onMouseEnter={() => setActiveSuggestion(index)}
                 onMouseDown={(event) => {
                   event.preventDefault();
@@ -140,8 +152,8 @@ export function WeatherSearch({
                   setSuggestionsOpen(false);
                 }}
               >
-                <strong>{location.name}</strong>
-                <span>
+                <strong className="text-ink-strong">{location.name}</strong>
+                <span className="text-right text-xs text-ink-subtle">
                   {[location.admin1, location.country]
                     .filter(Boolean)
                     .join(" · ")}
@@ -152,28 +164,33 @@ export function WeatherSearch({
         ) : null}
       </form>
 
-      <div className="city-presets" aria-label="常用城市">
+      <div
+        className="mt-2.5 flex min-w-0 gap-2 overflow-x-auto px-0.5 pt-0.5 pb-1 [scrollbar-width:thin]"
+        aria-label="常用城市"
+      >
         {featured.map((preset) => (
           <button
             key={preset.query}
             type="button"
             onClick={() => onPreset(preset.query)}
             className={cn(
-              "city-preset",
-              (query === preset.query || query === preset.label) &&
-                "city-preset--active",
+              "inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border bg-surface-strong px-3 py-2 text-xs font-semibold transition-colors hover:border-accent hover:text-ink-strong",
+              query === preset.query || query === preset.label
+                ? "border-accent text-ink-strong"
+                : "border-edge-subtle text-ink-medium",
             )}
           >
             {preset.label}
           </button>
         ))}
-        <label className="more-city-select">
+        <label className="shrink-0">
           <span className="sr-only">更多常用城市</span>
           <select
             value=""
             onChange={(event) => {
               if (event.target.value) onPreset(event.target.value);
             }}
+            className="min-h-9 rounded-lg border border-edge-subtle bg-surface-strong py-1.5 pr-7 pl-2.5 text-xs font-semibold text-ink-medium"
           >
             <option value="">更多城市</option>
             {more.map((preset) => (

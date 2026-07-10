@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { ui } from "./lib/uiStyles";
+import { cn } from "./lib/utils";
 
 /**
  * App Router 錯誤邊界：捕捉路由區段內未處理的例外，
@@ -36,11 +38,11 @@ export default function Error({
         <button
           type="button"
           onClick={() => reset()}
-          className="primary-button"
+          className={cn(ui.button, ui.primaryButton)}
         >
           重試
         </button>
-        <Link href="/" className="secondary-button">
+        <Link href="/" className={cn(ui.button, ui.secondaryButton)}>
           返回首頁
         </Link>
       </div>

@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { CalendarDays } from "lucide-react";
 
+import { ui } from "../../lib/uiStyles";
 import { cn, handleRadioGroupKeyDown } from "../../lib/utils";
 import type { DailyForecast } from "../../types/weather";
 import { ChartGraphicSkeleton } from "../skeletons/ChartSkeleton";
@@ -27,17 +28,17 @@ export function WeatherForecast({
 }) {
   return (
     <section
-      className="forecast-section"
+      className={cn(ui.panel, "p-4 sm:p-5")}
       aria-labelledby="forecast-title"
       aria-busy={loading}
     >
-      <div className="section-heading-row forecast-heading">
+      <div className={cn(ui.headingRow, "items-start")}>
         <div>
-          <p className="section-kicker">FORECAST</p>
-          <h2 id="forecast-title" className="section-title">
+          <p className={ui.kicker}>FORECAST</p>
+          <h2 id="forecast-title" className={ui.sectionTitle}>
             溫度趨勢
           </h2>
-          <p className="field-help">未來 {days} 天的每日高低溫</p>
+          <p className={ui.fieldHelp}>未來 {days} 天的每日高低溫</p>
         </div>
         <div
           role="radiogroup"
@@ -45,7 +46,7 @@ export function WeatherForecast({
           onKeyDown={(event) =>
             handleRadioGroupKeyDown(event, [7, 14], days, onDaysChange)
           }
-          className="range-mode-control"
+          className={ui.rangeControl}
         >
           {[7, 14].map((option) => (
             <button
@@ -58,8 +59,8 @@ export function WeatherForecast({
               onClick={() => onDaysChange(option as 7 | 14)}
               disabled={loading}
               className={cn(
-                "range-mode-button",
-                days === option && "range-mode-button--active",
+                ui.rangeButton,
+                days === option ? ui.rangeButtonActive : "text-ink-subtle",
               )}
             >
               {option} 天
@@ -68,12 +69,15 @@ export function WeatherForecast({
         </div>
       </div>
 
-      <div className="forecast-mobile-list">
+      <div className="mt-3.5 grid gap-px overflow-hidden rounded-lg border border-edge-subtle bg-edge-subtle md:hidden">
         {data.map((day) => (
-          <div key={day.date} className="forecast-day">
+          <div
+            key={day.date}
+            className="grid grid-cols-[1.25rem_minmax(0,1fr)_auto] items-center gap-2.5 bg-surface-medium p-3 text-xs text-ink-medium"
+          >
             <CalendarDays className="h-4 w-4" aria-hidden />
             <span>{formatForecastDate(day.date)}</span>
-            <strong>
+            <strong className="text-ink-strong [font-variant-numeric:tabular-nums]">
               {Math.round(day.high)}
               {unit} / {Math.round(day.low)}
               {unit}
@@ -82,7 +86,7 @@ export function WeatherForecast({
         ))}
       </div>
 
-      <div className="forecast-chart">
+      <div className="mt-4 hidden h-96 md:block">
         {loading ? (
           <ChartGraphicSkeleton />
         ) : (

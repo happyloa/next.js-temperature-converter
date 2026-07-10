@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Check, Share2, X } from "lucide-react";
 
 import { copyText } from "../lib/clipboard";
+import { ui } from "../lib/uiStyles";
 import { cn } from "../lib/utils";
 
 export function ShareButton({
@@ -49,9 +50,12 @@ export function ShareButton({
       type="button"
       onClick={handleShare}
       className={cn(
-        "secondary-button",
-        status === "copied" && "status-button--success",
-        status === "error" && "status-button--error",
+        ui.button,
+        status === "copied"
+          ? ui.successButton
+          : status === "error"
+            ? ui.dangerButton
+            : ui.secondaryButton,
         className,
       )}
       aria-label="分享轉換結果"

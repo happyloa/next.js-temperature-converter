@@ -12,6 +12,8 @@ import {
 
 import { copyText } from "../lib/clipboard";
 import { historyToCsv } from "../lib/export";
+import { ui } from "../lib/uiStyles";
+import { cn } from "../lib/utils";
 import type { HistoryEntry } from "../types/history";
 
 export function ExportButton({ history }: { history: HistoryEntry[] }) {
@@ -67,7 +69,7 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
   if (!history.length) return null;
 
   return (
-    <div className="menu-root">
+    <div className="relative">
       <button
         ref={triggerRef}
         type="button"
@@ -75,7 +77,7 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-controls={menuId}
-        className="secondary-button"
+        className={cn(ui.button, ui.secondaryButton)}
       >
         {status === "success" ? (
           <Check className="h-4 w-4" aria-hidden />
@@ -97,15 +99,20 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
         <>
           <button
             type="button"
-            className="menu-backdrop"
+            className="fixed inset-0 z-45 border-0 bg-transparent"
             aria-label="關閉匯出選單"
             onClick={() => closeMenu()}
           />
-          <div id={menuId} role="menu" className="action-menu">
+          <div
+            id={menuId}
+            role="menu"
+            className="absolute top-[calc(100%+0.35rem)] left-0 z-50 min-w-40 overflow-hidden rounded-lg border border-edge-subtle bg-surface-strong p-1.5 shadow-[var(--shadow)]"
+          >
             <button
               ref={firstItemRef}
               type="button"
               role="menuitem"
+              className="flex w-full items-center gap-2 rounded-md bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong"
               onClick={() =>
                 download(
                   `\uFEFF${historyToCsv(history)}`,
@@ -120,6 +127,7 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
             <button
               type="button"
               role="menuitem"
+              className="flex w-full items-center gap-2 rounded-md bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong"
               onClick={() =>
                 download(
                   JSON.stringify(history, null, 2),
@@ -134,6 +142,7 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
             <button
               type="button"
               role="menuitem"
+              className="flex w-full items-center gap-2 rounded-md bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong"
               onClick={async () => {
                 try {
                   await copyText(historyToCsv(history));

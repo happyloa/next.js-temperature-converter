@@ -3,6 +3,8 @@
 import { AlertCircle, RefreshCw } from "lucide-react";
 
 import { useWeatherDashboard } from "../../hooks/useWeatherDashboard";
+import { ui } from "../../lib/uiStyles";
+import { cn } from "../../lib/utils";
 import { WeatherSkeleton } from "../skeletons/WeatherSkeleton";
 import { CurrentConditions } from "./CurrentConditions";
 import { WeatherForecast } from "./WeatherForecast";
@@ -32,13 +34,13 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
   } = useWeatherDashboard(defaultQuery);
 
   return (
-    <main id="main-content" className="page-shell">
-      <div className="weather-workspace">
-        <header className="weather-page-header">
+    <main id="main-content" className={ui.pageShell}>
+      <div className={ui.workspace}>
+        <header className="mb-5 grid gap-5 min-[900px]:grid-cols-[minmax(18rem,0.8fr)_minmax(28rem,1.2fr)] min-[900px]:items-start">
           <div>
-            <p className="section-kicker">GLOBAL WEATHER</p>
-            <h1 className="page-title">城市天氣與環境</h1>
-            <p className="page-description">
+            <p className={ui.kicker}>GLOBAL WEATHER</p>
+            <h1 className={ui.pageTitle}>城市天氣與環境</h1>
+            <p className={ui.description}>
               查詢即時天氣、空氣品質、紫外線與未來溫度趨勢。
             </p>
           </div>
@@ -67,16 +69,27 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
         </div>
 
         {weatherError ? (
-          <div className="error-banner" role="alert">
+          <div
+            className="mb-4 flex items-center gap-3 rounded-lg border border-error-border bg-error-bg p-3 text-error-ink max-[760px]:flex-col max-[760px]:items-stretch"
+            role="alert"
+          >
             <AlertCircle className="h-5 w-5 shrink-0" aria-hidden />
-            <div>
+            <div className="min-w-0 flex-1 text-[0.8125rem]">
               <strong>{weatherError}</strong>
-              {weatherData ? <p>目前仍保留上一次成功取得的資料。</p> : null}
+              {weatherData ? (
+                <p className="text-xs opacity-80">
+                  目前仍保留上一次成功取得的資料。
+                </p>
+              ) : null}
             </div>
             <button
               type="button"
               onClick={() => void fetchWeather(weatherQuery, forecastDays)}
-              className="secondary-button"
+              className={cn(
+                ui.button,
+                ui.secondaryButton,
+                "max-[760px]:self-start",
+              )}
             >
               <RefreshCw className="h-4 w-4" aria-hidden />
               重試
@@ -87,26 +100,33 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
         {weatherLoading && !weatherData ? (
           <WeatherSkeleton />
         ) : weatherData ? (
-          <div className="weather-content">
+          <div className="flex min-w-0 flex-col gap-5">
             <CurrentConditions data={weatherData} />
             <WeatherMetrics data={weatherData} />
             <WeatherForecast
               data={weatherData.dailyForecast}
               unit={weatherData.dailyTemperatureUnit}
               days={forecastDays}
-              loading={forecastLoading}
+              loading={forecastLoading || weatherLoading}
               onDaysChange={setForecastDays}
             />
           </div>
         ) : (
-          <div className="empty-state weather-empty-state">
+          <div
+            className={cn(ui.emptyState, "grid min-h-64 place-items-center")}
+          >
             輸入城市名稱或使用目前位置，開始查看環境資料。
           </div>
         )}
 
-        <footer className="data-attribution">
+        <footer className="mt-5 text-center text-[0.6875rem] text-ink-subtle">
           <span>Weather data by </span>
-          <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">
+          <a
+            href="https://open-meteo.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="text-accent underline underline-offset-2"
+          >
             Open-Meteo
           </a>
           <span> · Air quality data by CAMS ENSEMBLE</span>

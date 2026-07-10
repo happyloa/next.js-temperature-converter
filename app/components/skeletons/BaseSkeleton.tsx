@@ -1,11 +1,14 @@
-"use client";
+import type { HTMLAttributes } from "react";
 
 import { cn } from "../../lib/utils";
 
-type BaseSkeletonProps = React.HTMLAttributes<HTMLDivElement>;
+type BaseSkeletonProps = HTMLAttributes<HTMLDivElement>;
 
 export function BaseSkeleton({ className, ...props }: BaseSkeletonProps) {
   return (
-    <div className={cn("skeleton-shimmer rounded-md", className)} {...props} />
+    <div
+      className={cn("animate-pulse rounded-md bg-surface-muted", className)}
+      {...props}
+    />
   );
 }

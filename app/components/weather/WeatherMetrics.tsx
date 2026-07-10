@@ -8,9 +8,22 @@ import {
 } from "lucide-react";
 
 import { formatOptionalMetric } from "../../lib/format";
+import { ui } from "../../lib/uiStyles";
 import { cn } from "../../lib/utils";
 import { getEuropeanAqiLevel, getUvLevel } from "../../lib/weather";
+import type { WeatherLevel } from "../../lib/weather";
 import type { WeatherData } from "../../types/weather";
+
+const metricTileClass =
+  "relative grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 bg-surface-medium p-3.5";
+
+const statusToneClass: Record<WeatherLevel["tone"], string> = {
+  good: "border-accent bg-surface-soft text-accent",
+  fair: "border-edge-strong bg-surface-soft text-ink-medium",
+  moderate: "border-edge-strong bg-surface-soft text-ink-medium",
+  poor: "border-error-border bg-error-bg text-error-ink",
+  danger: "border-error-border bg-error-bg text-error-ink",
+};
 
 export function WeatherMetrics({ data }: { data: WeatherData }) {
   const uv = getUvLevel(data.uvIndex);
@@ -42,37 +55,53 @@ export function WeatherMetrics({ data }: { data: WeatherData }) {
   ];
 
   return (
-    <section className="metrics-section" aria-labelledby="environment-title">
-      <div className="section-heading-row">
+    <section
+      className={cn(ui.panel, "p-4 sm:p-5")}
+      aria-labelledby="environment-title"
+    >
+      <div className={ui.headingRow}>
         <div>
-          <p className="section-kicker">ENVIRONMENT</p>
-          <h2 id="environment-title" className="section-title">
+          <p className={ui.kicker}>ENVIRONMENT</p>
+          <h2 id="environment-title" className={ui.sectionTitle}>
             環境指標
           </h2>
         </div>
       </div>
 
-      <div className="metric-grid">
+      <div className="mt-3.5 grid min-w-0 grid-cols-1 gap-px overflow-hidden rounded-lg border border-edge-subtle bg-edge-subtle sm:grid-cols-2 min-[900px]:grid-cols-3">
         {metrics.map((metric) => {
           const Icon = metric.icon;
           return (
-            <div key={metric.label} className="metric-tile">
+            <div key={metric.label} className={metricTileClass}>
               <Icon className="h-5 w-5 text-accent" aria-hidden />
-              <span>{metric.label}</span>
-              <strong>{metric.value}</strong>
-              <small>{metric.note}</small>
+              <span className="text-xs text-ink-medium">{metric.label}</span>
+              <strong className="text-right text-lg text-ink-strong [font-variant-numeric:tabular-nums] [overflow-wrap:anywhere]">
+                {metric.value}
+              </strong>
+              <small className="col-start-2 col-end-[-1] text-[0.6875rem] text-ink-subtle">
+                {metric.note}
+              </small>
             </div>
           );
         })}
 
-        <div className="metric-tile metric-tile--status">
-          <SunMedium className="h-5 w-5 text-warm" aria-hidden />
-          <span>紫外線指數</span>
-          <strong>{formatOptionalMetric(data.uvIndex)}</strong>
-          <span className={cn("status-badge", `status-badge--${uv.tone}`)}>
+        <div className={metricTileClass}>
+          <SunMedium className="h-5 w-5 text-accent" aria-hidden />
+          <span className="text-xs text-ink-medium">紫外線指數</span>
+          <strong className="text-right text-lg text-ink-strong [font-variant-numeric:tabular-nums]">
+            {formatOptionalMetric(data.uvIndex)}
+          </strong>
+          <span
+            className={cn(
+              "col-start-3 row-start-2 justify-self-end rounded-full border px-2 py-0.5 text-[0.6875rem] font-[750]",
+              statusToneClass[uv.tone],
+            )}
+          >
             {uv.label}
           </span>
-          <small>{uv.guidance}</small>
+          <small className="col-start-2 col-end-3 row-start-2 text-[0.6875rem] text-ink-subtle">
+            {uv.guidance}
+          </small>
         </div>
 
         <AirQualityMetric data={data} />
@@ -84,25 +113,34 @@ export function WeatherMetrics({ data }: { data: WeatherData }) {
 function AirQualityMetric({ data }: { data: WeatherData }) {
   if (!data.airQuality) {
     return (
-      <div className="metric-tile metric-tile--wide">
+      <div className={cn(metricTileClass, "min-[900px]:col-span-2")}>
         <Waves className="h-5 w-5 text-accent" aria-hidden />
-        <span>European AQI</span>
-        <strong>--</strong>
-        <small>目前沒有空氣品質資料</small>
+        <span className="text-xs text-ink-medium">European AQI</span>
+        <strong className="text-right text-lg text-ink-strong">--</strong>
+        <small className="col-start-2 col-end-[-1] text-[0.6875rem] text-ink-subtle">
+          目前沒有空氣品質資料
+        </small>
       </div>
     );
   }
 
   const level = getEuropeanAqiLevel(data.airQuality.aqi);
   return (
-    <div className="metric-tile metric-tile--wide">
+    <div className={cn(metricTileClass, "min-[900px]:col-span-2")}>
       <Waves className="h-5 w-5 text-accent" aria-hidden />
-      <span>European AQI</span>
-      <strong>{data.airQuality.aqi}</strong>
-      <span className={cn("status-badge", `status-badge--${level.tone}`)}>
+      <span className="text-xs text-ink-medium">European AQI</span>
+      <strong className="text-right text-lg text-ink-strong [font-variant-numeric:tabular-nums]">
+        {data.airQuality.aqi}
+      </strong>
+      <span
+        className={cn(
+          "col-start-3 row-start-2 justify-self-end rounded-full border px-2 py-0.5 text-[0.6875rem] font-[750]",
+          statusToneClass[level.tone],
+        )}
+      >
         {level.label}
       </span>
-      <div className="air-quality-details">
+      <div className="col-start-2 col-end-3 row-start-2 flex flex-wrap gap-x-4 gap-y-2 text-[0.6875rem] text-ink-subtle [&_b]:text-ink-strong">
         <span>
           PM2.5{" "}
           <b>
@@ -122,7 +160,9 @@ function AirQualityMetric({ data }: { data: WeatherData }) {
           </b>
         </span>
       </div>
-      <small>{level.guidance}</small>
+      <small className="col-start-2 col-end-[-1] row-start-3 text-[0.6875rem] text-ink-subtle">
+        {level.guidance}
+      </small>
     </div>
   );
 }
