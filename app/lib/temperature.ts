@@ -7,6 +7,8 @@ import type {
   TemperatureScaleCode,
   ThermalMood,
 } from "../types/temperature";
+import type { ThermalInsight } from "../types/insight";
+import { formatTemperature } from "./format";
 
 /**
  * 物理常數：絕對零度（單位：K）。
@@ -126,10 +128,8 @@ export const decimalPattern = /^-?\d*(\.\d*)?$/;
 /**
  * 取得指定代碼的溫標設定。
  */
-export const getScale = (
-  code: TemperatureScaleCode,
-): TemperatureScale | undefined =>
-  TEMPERATURE_SCALES.find((item) => item.code === code);
+export const getScale = (code: TemperatureScaleCode): TemperatureScale =>
+  TEMPERATURE_SCALES.find((item) => item.code === code)!;
 
 export const getTemperatureRange = (
   scale: TemperatureScale,
@@ -235,6 +235,42 @@ export const getThermalMood = (celsiusValue: number): ThermalMood => {
     description: "已達極端高溫範圍，這裡的換算結果僅供單位與尺度比較。",
     emoji: "🌋",
   };
+};
+
+export const getThermalInsights = (
+  celsiusValue: number,
+  mood = getThermalMood(celsiusValue),
+): ThermalInsight[] => {
+  if (!Number.isFinite(celsiusValue)) return [];
+
+  const freezeDelta = celsiusValue;
+  const boilDelta = celsiusValue - 100;
+
+  return [
+    { icon: mood.emoji, title: mood.title, description: mood.description },
+    {
+      icon: freezeDelta >= 0 ? "💧" : "🧊",
+      title:
+        freezeDelta >= 0
+          ? `比冰點高 ${formatTemperature(Math.abs(freezeDelta))}°C`
+          : `比冰點低 ${formatTemperature(Math.abs(freezeDelta))}°C`,
+      description:
+        freezeDelta >= 0
+          ? "以純水、標準氣壓為基準；實際相態仍會受壓力與溶質影響。"
+          : "以純水、標準氣壓為基準；低於冰點不代表所有液體都會結凍。",
+    },
+    {
+      icon: boilDelta >= 0 ? "♨️" : "🌡️",
+      title:
+        boilDelta >= 0
+          ? `超過沸點 ${formatTemperature(Math.abs(boilDelta))}°C`
+          : `距離沸點還差 ${formatTemperature(Math.abs(boilDelta))}°C`,
+      description:
+        boilDelta >= 0
+          ? "高於純水的標準沸點；實際沸點與相態仍取決於壓力與成分。"
+          : "以純水、標準氣壓為基準；海拔與溶質都會改變實際沸點。",
+    },
+  ];
 };
 
 /**

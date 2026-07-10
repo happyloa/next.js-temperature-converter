@@ -183,75 +183,63 @@ export function useWeatherDashboard(defaultQuery: string) {
     [],
   );
 
-  const handleWeatherQueryChange = useCallback((value: string) => {
+  const handleWeatherQueryChange = (value: string) => {
     setWeatherQuery(value);
     setWeatherError(null);
-  }, []);
+  };
 
-  const handleWeatherSubmit = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      void fetchWeather(weatherQuery, forecastDays);
-    },
-    [fetchWeather, forecastDays, weatherQuery],
-  );
+  const handleWeatherSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void fetchWeather(weatherQuery, forecastDays);
+  };
 
-  const handleWeatherPreset = useCallback(
-    (preset: string) => {
-      setWeatherQuery(preset);
-      void fetchWeather(preset, forecastDays);
-    },
-    [fetchWeather, forecastDays],
-  );
+  const handleWeatherPreset = (preset: string) => {
+    setWeatherQuery(preset);
+    void fetchWeather(preset, forecastDays);
+  };
 
-  const handleSuggestionSelect = useCallback(
-    (location: GeoApiLocation) => {
-      setWeatherQuery(location.name);
-      void fetchWeather(location.name, forecastDays, location);
-    },
-    [fetchWeather, forecastDays],
-  );
+  const handleSuggestionSelect = (location: GeoApiLocation) => {
+    setWeatherQuery(location.name);
+    void fetchWeather(location.name, forecastDays, location);
+  };
 
-  const handleForecastDaysChange = useCallback(
-    async (days: 7 | 14) => {
-      if (days === forecastDays) return;
-      setForecastDaysState(days);
+  const handleForecastDaysChange = async (days: 7 | 14) => {
+    if (days === forecastDays) return;
+    setForecastDaysState(days);
 
-      if (!weatherData?.coordinates) return;
-      requestControllerRef.current?.abort();
-      const controller = new AbortController();
-      requestControllerRef.current = controller;
-      setForecastLoading(true);
-      setWeatherError(null);
+    if (!weatherData?.coordinates) return;
+    requestControllerRef.current?.abort();
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
+    setForecastLoading(true);
+    setWeatherError(null);
 
-      try {
-        const forecast = await fetchForecast(
-          weatherData.coordinates.latitude,
-          weatherData.coordinates.longitude,
-          weatherData.timezone || "auto",
-          days,
-          controller.signal,
-        );
-        const nextData = mergeWeatherForecast(weatherData, forecast);
-        setWeatherData(nextData);
-        persistWeather({ query: weatherQuery, data: nextData });
-      } catch (error) {
-        if (
-          !controller.signal.aborted &&
-          !(error instanceof DOMException && error.name === "AbortError")
-        ) {
-          setWeatherError("無法更新預報天數，目前仍顯示先前資料。");
-        }
-      } finally {
-        if (requestControllerRef.current === controller) {
-          setForecastLoading(false);
-        }
+    try {
+      const forecast = await fetchForecast(
+        weatherData.coordinates.latitude,
+        weatherData.coordinates.longitude,
+        weatherData.timezone || "auto",
+        days,
+        controller.signal,
+      );
+      const nextData = mergeWeatherForecast(weatherData, forecast);
+      setWeatherData(nextData);
+      persistWeather({ query: committedQueryRef.current, data: nextData });
+    } catch (error) {
+      if (
+        !controller.signal.aborted &&
+        !(error instanceof DOMException && error.name === "AbortError")
+      ) {
+        setWeatherError("無法更新預報天數，目前仍顯示先前資料。");
       }
-    },
-    [forecastDays, persistWeather, weatherData, weatherQuery],
-  );
+    } finally {
+      if (requestControllerRef.current === controller) {
+        setForecastLoading(false);
+      }
+    }
+  };
 
-  const handleGeolocate = useCallback(async () => {
+  const handleGeolocate = async () => {
     if (!("geolocation" in navigator)) {
       setWeatherError("您的瀏覽器不支援地理位置功能");
       return;
@@ -292,7 +280,7 @@ export function useWeatherDashboard(defaultQuery: string) {
     } finally {
       setGeolocating(false);
     }
-  }, [fetchWeather, forecastDays]);
+  };
 
   return {
     weatherQuery,

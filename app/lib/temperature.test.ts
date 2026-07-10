@@ -6,15 +6,14 @@ import {
   getMinimumTemperature,
   getScale,
   getTemperatureRange,
+  getThermalInsights,
   getThermalMood,
 } from "./temperature";
 
 describe("temperature conversion", () => {
   it("converts the Celsius freezing point into every supported scale", () => {
     const celsius = getScale("celsius");
-    expect(celsius).toBeDefined();
-
-    const results = createConversions(celsius!, 0);
+    const results = createConversions(celsius, 0);
     const valueFor = (code: string) =>
       results.find((item) => item.code === code)?.result;
 
@@ -33,8 +32,8 @@ describe("temperature conversion", () => {
   });
 
   it("returns physical minimums and scenario-specific slider ranges", () => {
-    const celsius = getScale("celsius")!;
-    const fahrenheit = getScale("fahrenheit")!;
+    const celsius = getScale("celsius");
+    const fahrenheit = getScale("fahrenheit");
 
     expect(getMinimumTemperature(celsius)).toBeCloseTo(-273.15);
     expect(getMinimumTemperature(fahrenheit)).toBeCloseTo(-459.67);
@@ -56,7 +55,16 @@ describe("temperature conversion", () => {
     expect(getThermalMood(Number.NaN).title).toBe("等待輸入");
   });
 
+  it("builds comparison insights only for finite temperatures", () => {
+    expect(getThermalInsights(25).map((item) => item.title)).toEqual([
+      "舒適區間",
+      "比冰點高 25°C",
+      "距離沸點還差 75°C",
+    ]);
+    expect(getThermalInsights(Number.NaN)).toEqual([]);
+  });
+
   it("returns no conversions for a non-finite value", () => {
-    expect(createConversions(getScale("celsius")!, Number.NaN)).toEqual([]);
+    expect(createConversions(getScale("celsius"), Number.NaN)).toEqual([]);
   });
 });

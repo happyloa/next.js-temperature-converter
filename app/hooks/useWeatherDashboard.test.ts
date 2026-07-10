@@ -145,6 +145,7 @@ describe("useWeatherDashboard", () => {
     await waitFor(() => expect(result.current.weatherData).not.toBeNull());
     vi.clearAllMocks();
     mockFetchForecast.mockResolvedValue(createForecast(14));
+    act(() => result.current.handleWeatherQueryChange("Tokyo"));
 
     await act(async () => {
       await result.current.setForecastDays(14);
@@ -164,6 +165,10 @@ describe("useWeatherDashboard", () => {
     );
     expect(mockSearchLocation).not.toHaveBeenCalled();
     expect(mockFetchAirQuality).not.toHaveBeenCalled();
+    expect(
+      JSON.parse(localStorage.getItem("weather-dashboard-state") ?? "null")
+        .query,
+    ).toBe("Taipei");
   });
 
   it("keeps the last successful data when a refresh fails", async () => {

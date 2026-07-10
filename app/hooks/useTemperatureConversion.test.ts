@@ -51,4 +51,19 @@ describe("useTemperatureConversion", () => {
     act(() => result.current.handleRawInputChange(""));
     expect(result.current.createHistoryEntry()).toBeNull();
   });
+
+  it("restores the default scale, value, and slider scenario", () => {
+    const { result } = renderHook(() => useTemperatureConversion());
+
+    act(() => {
+      result.current.setRangeMode("science");
+      result.current.handleScaleChange("fahrenheit");
+      result.current.handleRawInputChange("451");
+      result.current.handleReset();
+    });
+
+    expect(result.current.scale).toBe("celsius");
+    expect(result.current.rawInput).toBe("25");
+    expect(result.current.rangeMode).toBe("daily");
+  });
 });
