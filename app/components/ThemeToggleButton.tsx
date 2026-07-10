@@ -1,9 +1,10 @@
 "use client";
 
 import { useTheme } from "./ThemeProvider";
+import { Moon, Sun } from "lucide-react";
 
 /**
- * 固定在畫面右下角的主題切換按鈕。
+ * 導覽列內的主題切換按鈕。
  */
 export function ThemeToggleButton() {
   const { theme, toggleTheme } = useTheme();
@@ -14,17 +15,14 @@ export function ThemeToggleButton() {
       type="button"
       onClick={toggleTheme}
       aria-label={label}
-      aria-pressed={theme === "light"}
-      className={`focus-visible:outline-accent fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition focus-visible:outline-2 focus-visible:outline-offset-2 ${
-        theme === "dark"
-          ? "bg-surface-muted text-ink-strong hover:bg-surface-strong"
-          : "bg-accent text-accent-ink hover:bg-accent-hover"
-      }`}
+      className="icon-button"
       title={label}
     >
-      <span className="text-2xl" role="img" aria-hidden="true">
-        {theme === "dark" ? "🌙" : "☀️"}
-      </span>
+      {theme === "dark" ? (
+        <Sun className="h-4 w-4" aria-hidden />
+      ) : (
+        <Moon className="h-4 w-4" aria-hidden />
+      )}
     </button>
   );
 }

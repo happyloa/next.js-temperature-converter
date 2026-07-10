@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
 import type { FC } from "react";
 import {
   ResponsiveContainer,
@@ -29,13 +28,13 @@ type ChartColors = {
 };
 
 const FALLBACK_COLORS: ChartColors = {
-  grid: "#334155",
-  axisText: "#94a3b8",
-  axisLine: "#475569",
-  tooltipBg: "#1e293b",
-  tooltipBorder: "#334155",
-  high: "#ef4444",
-  low: "#3b82f6",
+  grid: "#344149",
+  axisText: "#8fa0a7",
+  axisLine: "#53656f",
+  tooltipBg: "#171c20",
+  tooltipBorder: "#344149",
+  high: "#f59f68",
+  low: "#43c1d1",
 };
 
 const readChartColors = (): ChartColors => {
@@ -44,13 +43,13 @@ const readChartColors = (): ChartColors => {
     styles.getPropertyValue(name).trim() || fallback;
 
   return {
-    grid: read("--border-subtle", FALLBACK_COLORS.grid),
-    axisText: read("--text-subtle", FALLBACK_COLORS.axisText),
-    axisLine: read("--border-strong", FALLBACK_COLORS.axisLine),
+    grid: read("--edge-subtle", FALLBACK_COLORS.grid),
+    axisText: read("--ink-subtle", FALLBACK_COLORS.axisText),
+    axisLine: read("--edge-strong", FALLBACK_COLORS.axisLine),
     tooltipBg: read("--surface-strong", FALLBACK_COLORS.tooltipBg),
-    tooltipBorder: read("--border-subtle", FALLBACK_COLORS.tooltipBorder),
-    high: "#ef4444",
-    low: read("--button-primary-bg", FALLBACK_COLORS.low),
+    tooltipBorder: read("--edge-subtle", FALLBACK_COLORS.tooltipBorder),
+    high: read("--warm", FALLBACK_COLORS.high),
+    low: read("--accent", FALLBACK_COLORS.low),
   };
 };
 
@@ -58,35 +57,31 @@ const readChartColors = (): ChartColors => {
  * Weather trend chart showing 7-day temperature forecast.
  */
 export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
-  const [mounted, setMounted] = useState(false);
   const { theme } = useTheme();
-  const [colors, setColors] = useState<ChartColors>(FALLBACK_COLORS);
+  const colors = readChartColors();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    setColors(readChartColors());
-  }, [mounted, theme]);
-
-  if (!mounted || data.length === 0) {
+  if (data.length === 0) {
     return (
-      <div className="border-edge-subtle bg-surface-light text-ink-subtle flex h-full min-h-64 items-center justify-center rounded-2xl border border-dashed text-sm">
-        {!mounted ? "載入圖表..." : "暫無預報資料"}
+      <div className="flex h-full min-h-64 items-center justify-center rounded-lg border border-dashed border-edge-subtle bg-surface-light text-sm text-ink-subtle">
+        暫無預報資料
       </div>
     );
   }
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
     const weekday = date.toLocaleDateString("zh-TW", { weekday: "short" });
     return `${date.getMonth() + 1}/${date.getDate()}(${weekday.replace("週", "")})`;
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3">
+    <div
+      className="flex h-full min-h-0 flex-col gap-3"
+      role="img"
+      aria-label={`${data.length} 日最高溫與最低溫折線圖`}
+      data-chart-theme={theme}
+    >
       <h4 className="shrink-0 text-sm font-medium text-ink-medium">
         {data.length} 日溫度趨勢
       </h4>
@@ -123,11 +118,12 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
               contentStyle={{
                 backgroundColor: colors.tooltipBg,
                 border: `1px solid ${colors.tooltipBorder}`,
-                borderRadius: "12px",
+                borderRadius: "8px",
                 fontSize: "12px",
               }}
               labelFormatter={(label) => {
-                const date = new Date(label);
+                const [year, month, day] = `${label}`.split("-").map(Number);
+                const date = new Date(year, month - 1, day);
                 return date.toLocaleDateString("zh-TW", {
                   month: "short",
                   day: "numeric",
@@ -175,11 +171,17 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
       </div>
       <div className="flex items-center justify-center gap-6 text-xs text-ink-subtle">
         <span className="flex items-center gap-1">
-          <span className="inline-block h-2 w-2 rounded-full bg-red-500" />
+          <span
+            className="inline-block h-2 w-2 rounded-full"
+            style={{ backgroundColor: colors.high }}
+          />
           最高溫
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
+          <span
+            className="inline-block h-2 w-2 rounded-full"
+            style={{ backgroundColor: colors.low }}
+          />
           最低溫
         </span>
       </div>

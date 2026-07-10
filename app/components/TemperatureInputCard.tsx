@@ -1,12 +1,15 @@
 import type { ChangeEventHandler, MouseEventHandler } from "react";
+import { Check, Copy, Plus, RotateCcw, Thermometer } from "lucide-react";
 
+import { cn, handleRadioGroupKeyDown } from "../lib/utils";
 import type {
   TemperatureConversion,
+  TemperatureRangeMode,
+  TemperatureRangeOption,
   TemperatureScale,
   TemperatureScaleCode,
   ThermalMood,
 } from "../types/temperature";
-import { cn, handleRadioGroupKeyDown } from "../lib/utils";
 import { ShareButton } from "./ShareButton";
 
 type TemperatureInputCardProps = {
@@ -22,19 +25,22 @@ type TemperatureInputCardProps = {
   sliderRange: { min: number; max: number };
   sliderValue: number;
   sliderStep: number;
+  sliderOutOfRange: boolean;
+  rangeMode: TemperatureRangeMode;
+  rangeOptions: TemperatureRangeOption[];
+  onRangeModeChange: (mode: TemperatureRangeMode) => void;
+  validationError: string | null;
   onSliderChange: ChangeEventHandler<HTMLInputElement>;
   conversions: TemperatureConversion[];
   copiedScale: TemperatureScaleCode | null;
   onCopy: (text: string, code: TemperatureScaleCode) => void | Promise<void>;
   mood: ThermalMood | null;
   relativeSolarProgress: number;
+  solarTemperatureRatio: number;
   showSolarProgress: boolean;
   formatTemperature: (value: number) => string;
 };
 
-/**
- * 溫度輸入主卡片，整合切換按鈕、輸入欄位與轉換結果。
- */
 export function TemperatureInputCard({
   scale,
   scales,
@@ -48,166 +54,264 @@ export function TemperatureInputCard({
   sliderRange,
   sliderValue,
   sliderStep,
+  sliderOutOfRange,
+  rangeMode,
+  rangeOptions,
+  onRangeModeChange,
+  validationError,
   onSliderChange,
   conversions,
   copiedScale,
   onCopy,
   mood,
   relativeSolarProgress,
+  solarTemperatureRatio,
   showSolarProgress,
   formatTemperature,
 }: TemperatureInputCardProps) {
-  // Generate share text from conversions
-  const shareText =
-    conversions.length > 0
-      ? conversions
-          .map((c) => `${c.label}: ${formatTemperature(c.result)} ${c.symbol}`)
-          .join("\n")
-      : undefined;
+  const shareText = conversions
+    .map(
+      (conversion) =>
+        `${conversion.label}: ${formatTemperature(conversion.result)} ${conversion.symbol}`,
+    )
+    .join("\n");
+  const resultSummary = conversions.length
+    ? `轉換完成，共 ${conversions.length} 種溫標結果。`
+    : (validationError ?? "等待有效的溫度輸入。");
 
   return (
-    <section className="w-full min-w-0 space-y-8 rounded-3xl border border-edge-subtle bg-surface-medium p-5 shadow-glass backdrop-blur sm:p-6 md:p-8">
-      <TemperatureCardHeader
-        onReset={onReset}
-        onAddHistory={onAddHistory}
-        canAddHistory={canAddHistory}
-        shareText={shareText}
-      />
+    <section className="tool-panel" aria-labelledby="converter-title">
+      <header className="tool-header">
+        <div>
+          <p className="section-kicker">CONVERTER</p>
+          <h2 id="converter-title" className="tool-title">
+            輸入與結果
+          </h2>
+          <p className="tool-description">
+            選擇輸入溫標並填入數值，其他五種尺度會即時更新。
+          </p>
+        </div>
+        <div className="tool-actions">
+          <ShareButton
+            title="溫度工作室 - 轉換結果"
+            text={shareText || "使用溫度工作室進行溫度轉換"}
+          />
+          <button type="button" onClick={onReset} className="secondary-button">
+            <RotateCcw className="h-4 w-4" aria-hidden />
+            重設
+          </button>
+          <button
+            type="button"
+            onClick={onAddHistory}
+            disabled={!canAddHistory}
+            className="primary-button"
+          >
+            <Plus className="h-4 w-4" aria-hidden />
+            加入紀錄
+          </button>
+        </div>
+      </header>
 
-      <TemperatureScaleSelector
+      <ScaleSelector
         activeScale={scale}
         scales={scales}
         onScaleChange={onScaleChange}
       />
 
-      <div className="space-y-5">
-        <TemperatureValueField
-          rawInput={rawInput}
-          onInputChange={onInputChange}
-          activeSymbol={activeSymbol}
+      <div className="input-workspace">
+        <label className="value-field">
+          <span className="field-label">輸入數值</span>
+          <span
+            className={cn(
+              "value-input-shell",
+              validationError && "value-input-shell--error",
+            )}
+          >
+            <Thermometer className="h-5 w-5 shrink-0 text-accent" aria-hidden />
+            <input
+              type="text"
+              inputMode="decimal"
+              value={rawInput}
+              onChange={onInputChange}
+              placeholder="例如 25"
+              aria-invalid={Boolean(validationError)}
+              aria-describedby="temperature-input-help"
+              className="value-input"
+            />
+            <span className="value-symbol">{activeSymbol ?? ""}</span>
+          </span>
+        </label>
+        <p
+          id="temperature-input-help"
+          role={validationError ? "alert" : undefined}
+          className={cn("field-help", validationError && "field-help--error")}
+        >
+          {validationError ?? "可直接輸入小數；物理下限為絕對零度。"}
+        </p>
+
+        <div className="range-toolbar">
+          <div>
+            <span className="field-label">滑桿範圍</span>
+            <p className="field-help">
+              {formatTemperature(sliderRange.min)} 至{" "}
+              {formatTemperature(sliderRange.max)} {activeSymbol}
+            </p>
+          </div>
+          <div
+            role="radiogroup"
+            aria-label="滑桿使用情境"
+            className="range-mode-control"
+            onKeyDown={(event) =>
+              handleRadioGroupKeyDown(
+                event,
+                rangeOptions.map((item) => item.code),
+                rangeMode,
+                onRangeModeChange,
+              )
+            }
+          >
+            {rangeOptions.map((option) => (
+              <button
+                key={option.code}
+                type="button"
+                role="radio"
+                aria-checked={rangeMode === option.code}
+                data-radio-value={option.code}
+                tabIndex={rangeMode === option.code ? 0 : -1}
+                title={option.description}
+                onClick={() => onRangeModeChange(option.code)}
+                className={cn(
+                  "range-mode-button",
+                  rangeMode === option.code && "range-mode-button--active",
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <input
+          type="range"
+          min={sliderRange.min}
+          max={sliderRange.max}
+          step={sliderStep}
+          value={sliderValue}
+          onChange={onSliderChange}
+          aria-label={`溫度滑桿，單位 ${activeSymbol ?? ""}`}
+          className="temperature-range"
         />
-        <TemperatureSliderControl
-          sliderRange={sliderRange}
-          sliderValue={sliderValue}
-          sliderStep={sliderStep}
-          onSliderChange={onSliderChange}
-          formatTemperature={formatTemperature}
-        />
+        {sliderOutOfRange ? (
+          <p className="field-help">
+            目前輸入超出此滑桿情境，但轉換結果仍使用完整輸入值。
+          </p>
+        ) : null}
       </div>
 
-      <ConversionResultGrid
-        activeScale={scale}
-        conversions={conversions}
-        copiedScale={copiedScale}
-        onCopy={onCopy}
-        mood={mood}
-        formatTemperature={formatTemperature}
-      />
+      <div className="result-section">
+        <div className="section-heading-row">
+          <div>
+            <p className="section-kicker">RESULTS</p>
+            <h2 className="section-title">即時轉換結果</h2>
+          </div>
+          <span className="result-count">{conversions.length} / 6</span>
+        </div>
+        <div className="sr-only" role="status" aria-live="polite">
+          {resultSummary}
+        </div>
+        {conversions.length ? (
+          <ul className="result-list">
+            {conversions.map((conversion) => (
+              <li
+                key={conversion.code}
+                className={cn(
+                  "result-row",
+                  conversion.code === scale && "result-row--active",
+                )}
+              >
+                <div className="result-label">
+                  <span>{conversion.label}</span>
+                  {conversion.code === "celsius" && mood ? (
+                    <small>{mood.title}</small>
+                  ) : null}
+                </div>
+                <strong className="result-value">
+                  {formatTemperature(conversion.result)}
+                  <span>{conversion.symbol}</span>
+                </strong>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onCopy(
+                      `${formatTemperature(conversion.result)} ${conversion.symbol}`,
+                      conversion.code,
+                    )
+                  }
+                  className="icon-button"
+                  aria-label={`複製${conversion.label}結果`}
+                  title={`複製${conversion.label}結果`}
+                >
+                  {copiedScale === conversion.code ? (
+                    <Check className="h-4 w-4 text-success-ink" aria-hidden />
+                  ) : (
+                    <Copy className="h-4 w-4" aria-hidden />
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="empty-state">輸入有效溫度後顯示六種換算結果。</div>
+        )}
+      </div>
 
-      <SolarProgressPanel
-        relativeSolarProgress={relativeSolarProgress}
-        showSolarProgress={showSolarProgress}
-        formatTemperature={formatTemperature}
-      />
+      <div className="comparison-panel">
+        <div className="section-heading-row">
+          <div>
+            <h2 className="section-title">絕對溫度比較</h2>
+            <p className="field-help">以 Kelvin 比較太陽光球層約 5,778 K</p>
+          </div>
+          <strong>
+            {showSolarProgress
+              ? `${formatTemperature(solarTemperatureRatio)}%`
+              : "--"}
+          </strong>
+        </div>
+        <div
+          className="comparison-track"
+          role="progressbar"
+          aria-label="相對於太陽表面絕對溫度"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(relativeSolarProgress)}
+        >
+          <span style={{ width: `${relativeSolarProgress}%` }} />
+        </div>
+        <p className="field-help">
+          此比例只比較絕對溫度，不代表物體總能量或接觸安全性。
+        </p>
+      </div>
     </section>
   );
 }
 
-type TemperatureCardHeaderProps = {
-  onReset: MouseEventHandler<HTMLButtonElement>;
-  onAddHistory: MouseEventHandler<HTMLButtonElement>;
-  canAddHistory: boolean;
-  shareText?: string;
-};
-
-/**
- * 卡片標題與操作列，包含重設與加入紀錄兩個主要動作。
- */
-function TemperatureCardHeader({
-  onReset,
-  onAddHistory,
-  canAddHistory,
-  shareText,
-}: TemperatureCardHeaderProps) {
-  return (
-    <header className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:*:min-w-0">
-      <div className="space-y-4">
-        <h2 className="text-heading text-ink-strong">輸入溫度</h2>
-        <p className="max-w-xl text-sm leading-relaxed text-ink-medium">
-          選擇想要輸入的溫標後填入數值，系統會即時計算其他尺度並提供安全洞察與轉換紀錄。
-        </p>
-      </div>
-      <div className="flex flex-wrap justify-end gap-3">
-        <ShareButton
-          title="溫度工作室 - 轉換結果"
-          text={shareText || "使用溫度工作室進行溫度轉換"}
-        />
-        <button
-          type="button"
-          onClick={onReset}
-          className="theme-outline-button"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="h-4 w-4"
-            aria-hidden="true"
-          >
-            <path
-              fillRule="evenodd"
-              d="M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903h-3.183a.75.75 0 100 1.5h4.992a.75.75 0 00.75-.75V4.356a.75.75 0 00-1.5 0v3.18l-1.9-1.9A9 9 0 003.306 9.67a.75.75 0 101.45.388zm15.408 3.352a.75.75 0 00-.919.53 7.5 7.5 0 01-12.548 3.364l-1.902-1.903h3.183a.75.75 0 000-1.5H2.984a.75.75 0 00-.75.75v4.992a.75.75 0 001.5 0v-3.18l1.9 1.9a9 9 0 0015.059-4.035.75.75 0 00-.53-.918z"
-              clipRule="evenodd"
-            />
-          </svg>
-          重設
-        </button>
-        <button
-          type="button"
-          onClick={onAddHistory}
-          disabled={!canAddHistory}
-          className="theme-primary-button px-6"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="h-4 w-4"
-            aria-hidden="true"
-          >
-            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-          </svg>
-          加入紀錄
-        </button>
-      </div>
-    </header>
-  );
-}
-
-type TemperatureScaleSelectorProps = {
-  activeScale: TemperatureScaleCode;
-  scales: TemperatureScale[];
-  onScaleChange: (code: TemperatureScaleCode) => void;
-};
-
-/**
- * 溫標切換群組，採 segment 按鈕呈現。
- */
-function TemperatureScaleSelector({
+function ScaleSelector({
   activeScale,
   scales,
   onScaleChange,
-}: TemperatureScaleSelectorProps) {
-  const scaleCodes = scales.map((item) => item.code);
-
+}: {
+  activeScale: TemperatureScaleCode;
+  scales: TemperatureScale[];
+  onScaleChange: (code: TemperatureScaleCode) => void;
+}) {
+  const codes = scales.map((item) => item.code);
   return (
     <div
       role="radiogroup"
-      aria-label="選擇溫標"
+      aria-label="選擇輸入溫標"
       onKeyDown={(event) =>
-        handleRadioGroupKeyDown(event, scaleCodes, activeScale, onScaleChange)
+        handleRadioGroupKeyDown(event, codes, activeScale, onScaleChange)
       }
-      className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
+      className="scale-selector"
     >
       {scales.map((item) => (
         <button
@@ -219,225 +323,14 @@ function TemperatureScaleSelector({
           tabIndex={activeScale === item.code ? 0 : -1}
           onClick={() => onScaleChange(item.code)}
           className={cn(
-            "theme-segment",
-            activeScale === item.code ? "theme-segment--active" : "",
+            "scale-button",
+            activeScale === item.code && "scale-button--active",
           )}
         >
-          {item.label}
+          <span>{item.symbol}</span>
+          <small>{item.label.split(" (")[0]}</small>
         </button>
       ))}
-    </div>
-  );
-}
-
-type TemperatureValueFieldProps = {
-  rawInput: string;
-  onInputChange: ChangeEventHandler<HTMLInputElement>;
-  activeSymbol?: string;
-};
-
-/**
- * 輸入欄位，支援鍵盤輸入與手機數字鍵盤。
- */
-function TemperatureValueField({
-  rawInput,
-  onInputChange,
-  activeSymbol,
-}: TemperatureValueFieldProps) {
-  return (
-    <label className="flex flex-col gap-2 text-left">
-      <span className="text-sm font-semibold text-ink-medium">輸入數值</span>
-      <div className="focus-within:border-accent focus-within:ring-accent/40 flex items-center gap-3 rounded-2xl border border-edge-subtle bg-surface-medium px-4 py-3 text-lg font-semibold text-ink-strong focus-within:ring-2">
-        <span className="text-xl">🌡️</span>
-        <input
-          type="text"
-          inputMode="decimal"
-          value={rawInput}
-          onChange={onInputChange}
-          placeholder="輸入溫度值"
-          className="flex-1 bg-transparent text-base font-semibold outline-none sm:text-lg"
-        />
-        <span className="text-sm font-semibold text-ink-subtle">
-          {activeSymbol ?? ""}
-        </span>
-      </div>
-    </label>
-  );
-}
-
-type TemperatureSliderControlProps = {
-  sliderRange: { min: number; max: number };
-  sliderValue: number;
-  sliderStep: number;
-  onSliderChange: ChangeEventHandler<HTMLInputElement>;
-  formatTemperature: (value: number) => string;
-};
-
-/**
- * 範圍滑桿，提供更直覺的溫度調整方式。
- */
-function TemperatureSliderControl({
-  sliderRange,
-  sliderValue,
-  sliderStep,
-  onSliderChange,
-  formatTemperature,
-}: TemperatureSliderControlProps) {
-  return (
-    <label className="flex flex-col gap-2">
-      <span className="text-sm font-semibold text-ink-medium">
-        範圍滑桿（{formatTemperature(sliderRange.min)} ~{" "}
-        {formatTemperature(sliderRange.max)}）
-      </span>
-      <input
-        type="range"
-        min={sliderRange.min}
-        max={sliderRange.max}
-        step={sliderStep}
-        value={sliderValue}
-        onChange={onSliderChange}
-        className="accent-accent h-2 w-full cursor-grab appearance-none rounded-full bg-surface-muted active:cursor-grabbing"
-      />
-    </label>
-  );
-}
-
-type ConversionResultGridProps = {
-  activeScale: TemperatureScaleCode;
-  conversions: TemperatureConversion[];
-  copiedScale: TemperatureScaleCode | null;
-  onCopy: (text: string, code: TemperatureScaleCode) => void | Promise<void>;
-  mood: ThermalMood | null;
-  formatTemperature: (value: number) => string;
-};
-
-/**
- * 將所有溫標的換算結果以卡片形式呈現；目前輸入的溫標會以較大的字級突顯。
- */
-function ConversionResultGrid({
-  activeScale,
-  conversions,
-  copiedScale,
-  onCopy,
-  mood,
-  formatTemperature,
-}: ConversionResultGridProps) {
-  return (
-    <section className="space-y-4" aria-live="polite">
-      <h3 className="text-heading text-ink-strong">即時轉換結果</h3>
-      <ul className="grid gap-4 sm:grid-cols-2 list-none m-0 p-0">
-        {conversions.map((item) => (
-          <li key={item.code} className="list-none">
-            <ConversionResultCard
-              conversion={item}
-              isPrimary={item.code === activeScale}
-              copiedScale={copiedScale}
-              onCopy={onCopy}
-              mood={mood}
-              formatTemperature={formatTemperature}
-            />
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-type ConversionResultCardProps = {
-  conversion: TemperatureConversion;
-  isPrimary: boolean;
-  copiedScale: TemperatureScaleCode | null;
-  onCopy: (text: string, code: TemperatureScaleCode) => void | Promise<void>;
-  mood: ThermalMood | null;
-  formatTemperature: (value: number) => string;
-};
-
-function ConversionResultCard({
-  conversion,
-  isPrimary,
-  copiedScale,
-  onCopy,
-  mood,
-  formatTemperature,
-}: ConversionResultCardProps) {
-  return (
-    <div
-      className={cn(
-        "relative min-w-0 overflow-hidden rounded-3xl border p-5 transition-colors",
-        isPrimary
-          ? "border-accent/40 bg-accent/10"
-          : "border-edge-subtle bg-surface-soft",
-      )}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-2">
-          <span className="text-xs uppercase tracking-wide text-ink-medium/80">
-            {conversion.label}
-          </span>
-          <p
-            className={cn(
-              "font-bold leading-none tracking-tight text-ink-strong",
-              isPrimary ? "text-4xl sm:text-5xl" : "text-2xl sm:text-3xl",
-            )}
-          >
-            {formatTemperature(conversion.result)} {conversion.symbol}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() =>
-            onCopy(`${formatTemperature(conversion.result)}`, conversion.code)
-          }
-          className={cn(
-            "theme-outline-button theme-outline-button--small",
-            copiedScale === conversion.code
-              ? "theme-outline-button--success"
-              : "",
-          )}
-        >
-          {copiedScale === conversion.code ? "已複製" : "複製"}
-        </button>
-      </div>
-      {conversion.code === "celsius" && mood ? (
-        <p className="mt-3 text-sm text-ink-medium/80">{mood.title}</p>
-      ) : null}
-    </div>
-  );
-}
-
-type SolarProgressPanelProps = {
-  relativeSolarProgress: number;
-  showSolarProgress: boolean;
-  formatTemperature: (value: number) => string;
-};
-
-/**
- * 顯示當前溫度相對於太陽表面的比例，提供視覺化的熱能概念。
- */
-function SolarProgressPanel({
-  relativeSolarProgress,
-  showSolarProgress,
-  formatTemperature,
-}: SolarProgressPanelProps) {
-  return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3 text-ink-medium">
-        <span className="text-xl">📈</span>
-        <h3 className="text-base font-semibold sm:text-lg">
-          相對於太陽表面的能量比例
-        </h3>
-      </div>
-      <div className="h-2 w-full overflow-hidden rounded-full border border-edge-subtle bg-surface-muted">
-        <div
-          className="h-full bg-orange-500"
-          style={{ width: `${relativeSolarProgress}%` }}
-        />
-      </div>
-      <p className="text-xs text-ink-subtle">
-        {showSolarProgress
-          ? `目前為太陽表面溫度的 ${formatTemperature(relativeSolarProgress)}%`
-          : "輸入溫度以分析熱能比例"}
-      </p>
     </div>
   );
 }

@@ -2,13 +2,10 @@
 
 import { cn } from "../../lib/utils";
 
-interface BaseSkeletonProps extends React.HTMLAttributes<HTMLDivElement> {}
+type BaseSkeletonProps = React.HTMLAttributes<HTMLDivElement>;
 
 export function BaseSkeleton({ className, ...props }: BaseSkeletonProps) {
   return (
-    <div
-      className={cn("skeleton-shimmer rounded-md", className)}
-      {...props}
-    />
+    <div className={cn("skeleton-shimmer rounded-md", className)} {...props} />
   );
 }

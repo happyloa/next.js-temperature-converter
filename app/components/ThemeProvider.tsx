@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  startTransition,
   useCallback,
   useContext,
   useEffect,
@@ -20,29 +21,45 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("dark");
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem("theme-preference") as Theme | null;
-    if (stored === "dark" || stored === "light") {
-      setThemeState(stored);
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setThemeState("dark");
-    } else {
-      setThemeState("light");
+    let resolvedTheme: Theme;
+    try {
+      const stored = localStorage.getItem("theme-preference") as Theme | null;
+      if (stored === "dark" || stored === "light") {
+        resolvedTheme = stored;
+      } else {
+        resolvedTheme = window.matchMedia("(prefers-color-scheme: dark)")
+          .matches
+          ? "dark"
+          : "light";
+      }
+    } catch {
+      resolvedTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
     }
-  }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme-preference", theme);
-  }, [theme, mounted]);
+    document.documentElement.setAttribute("data-theme", resolvedTheme);
+    document.documentElement.dataset.hydrated = "true";
+    try {
+      localStorage.setItem("theme-preference", resolvedTheme);
+    } catch {
+      // Storage can be unavailable in strict privacy contexts.
+    }
+    startTransition(() => setThemeState(resolvedTheme));
+  }, []);
 
   const toggleTheme = useCallback(() => {
-    setThemeState((prev) => (prev === "dark" ? "light" : "dark"));
-  }, []);
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setThemeState(nextTheme);
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    try {
+      localStorage.setItem("theme-preference", nextTheme);
+    } catch {
+      // The selected theme still applies for the current session.
+    }
+  }, [theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

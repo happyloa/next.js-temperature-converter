@@ -1,17 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
-import { ThemeToggleButton } from "./components/ThemeToggleButton";
 import { AppHeader } from "./components/AppHeader";
-
-const notoSansTC = Noto_Sans_TC({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-noto-sans-tc",
-  display: "swap",
-});
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -25,7 +16,10 @@ export const metadata: Metadata = {
     template: "%s | 溫度工作室",
   },
   description:
-    "現代化的溫度轉換工作室，支援攝氏、華氏、絕對溫標與進階單位並提供情境洞察與歷史紀錄。即時天氣資訊與 7 日預報，讓溫度轉換更具情境背景。",
+    "支援六種溫標即時轉換、常用情境、歷史紀錄，以及全球城市天氣、空氣品質與 14 日溫度預報。",
+  alternates: {
+    canonical: "/",
+  },
 
   // Open Graph 設定（分享圖由 app/opengraph-image.tsx 自動產生並帶入 metadata）
   openGraph: {
@@ -34,15 +28,14 @@ export const metadata: Metadata = {
     url: siteUrl,
     siteName: "溫度工作室",
     title: "溫度工作室 | 多尺度智慧轉換",
-    description:
-      "支援六種溫標即時轉換、全球天氣資訊、7 日趨勢圖表與環境儀表板。支援語音輸入，快捷鍵操作。",
+    description: "六種溫標即時轉換、全球城市天氣、空氣品質與 14 日溫度趨勢。",
   },
 
   // Twitter 卡片設定
   twitter: {
     card: "summary_large_image",
     title: "溫度工作室 | 多尺度智慧轉換",
-    description: "六種溫標即時轉換、全球天氣資訊與環境儀表板。支援語音輸入。",
+    description: "六種溫標即時轉換、全球城市天氣與空氣品質資訊。",
   },
 
   // 基礎 SEO 設定
@@ -78,8 +71,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f6f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#101418" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -89,13 +82,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html
-      lang="zh-TW"
-      suppressHydrationWarning
-      className={notoSansTC.variable}
-    >
+    <html lang="zh-TW" suppressHydrationWarning>
       <head>
-        <link rel="canonical" href={siteUrl} />
         <script
           dangerouslySetInnerHTML={{
             __html:
@@ -105,9 +93,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className="font-sans">
         <ThemeProvider>
+          <a href="#main-content" className="skip-link">
+            跳至主要內容
+          </a>
           <AppHeader />
           {children}
-          <ThemeToggleButton />
         </ThemeProvider>
       </body>
     </html>

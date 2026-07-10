@@ -19,12 +19,15 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="flex w-full flex-col items-center justify-center gap-6 px-4 py-32 text-center">
+    <main
+      id="main-content"
+      className="flex w-full flex-col items-center justify-center gap-6 px-4 py-32 text-center"
+    >
       <span className="text-5xl" aria-hidden="true">
         ⚠️
       </span>
       <div className="space-y-2">
-        <h1 className="text-heading text-ink-strong">發生了一些問題</h1>
+        <h1 className="text-xl font-bold text-ink-strong">發生了一些問題</h1>
         <p className="text-ink-medium max-w-md text-sm leading-relaxed">
           頁面暫時無法正常運作，請稍後再試，或返回首頁重新開始。
         </p>
@@ -33,11 +36,11 @@ export default function Error({
         <button
           type="button"
           onClick={() => reset()}
-          className="theme-primary-button px-6"
+          className="primary-button"
         >
           重試
         </button>
-        <Link href="/" className="theme-outline-button">
+        <Link href="/" className="secondary-button">
           返回首頁
         </Link>
       </div>
