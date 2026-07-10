@@ -2,14 +2,24 @@ export type StorageName = "local" | "session";
 
 type NamedStorage = { name: StorageName; storage: Storage };
 
-const getStorages = (): NamedStorage[] => [
-  { name: "local", storage: window.localStorage },
-  { name: "session", storage: window.sessionStorage },
-];
+const getStorage = (name: StorageName): NamedStorage | null => {
+  try {
+    return {
+      name,
+      storage: name === "local" ? window.localStorage : window.sessionStorage,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const getStorages = (): NamedStorage[] =>
+  ([getStorage("local"), getStorage("session")] as const).filter(
+    (item): item is NamedStorage => item !== null,
+  );
 
 const withPreferred = (preferred: StorageName): NamedStorage[] => {
-  const [first, second] = getStorages();
-  return preferred === "session" ? [second, first] : [first, second];
+  return getStorages().sort((item) => (item.name === preferred ? -1 : 1));
 };
 
 const isQuotaExceededError = (error: unknown): boolean => {
@@ -61,20 +71,38 @@ export function writeWithFallback(
 ): StorageName | null {
   if (typeof window === "undefined") return null;
 
-  for (const { name, storage } of withPreferred(preferred)) {
-    try {
-      if (payload === null) {
+  const storages = withPreferred(preferred);
+
+  if (payload === null) {
+    let succeededWith: StorageName | null = null;
+    for (const { name, storage } of storages) {
+      try {
         storage.removeItem(key);
-      } else {
-        storage.setItem(key, payload);
+        succeededWith ??= name;
+      } catch (error) {
+        console.error(`Failed to clear ${key} from ${name}Storage`, error);
+      }
+    }
+    return succeededWith;
+  }
+
+  for (const { name, storage } of storages) {
+    try {
+      storage.setItem(key, payload);
+
+      for (const alternative of storages) {
+        if (alternative.name === name) continue;
+        try {
+          alternative.storage.removeItem(key);
+        } catch {
+          // The successful storage remains authoritative even if cleanup fails.
+        }
       }
       return name;
     } catch (error) {
-      if (isQuotaExceededError(error)) {
-        continue;
+      if (!isQuotaExceededError(error)) {
+        console.error(`Failed to persist ${key} in ${name}Storage`, error);
       }
-      console.error(`Failed to persist ${key}`, error);
-      return null;
     }
   }
 

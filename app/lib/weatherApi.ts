@@ -3,6 +3,7 @@
  */
 
 export type GeoApiLocation = {
+  id?: number;
   name: string;
   latitude: number;
   longitude: number;
@@ -76,10 +77,23 @@ export async function searchLocation(
   query: string,
   signal?: AbortSignal,
 ): Promise<GeoApiLocation> {
+  const results = await searchLocations(query, 1, signal);
+  if (!results.length) {
+    throw new Error("找不到對應的地點，請嘗試輸入更完整的名稱。");
+  }
+
+  return results[0];
+}
+
+export async function searchLocations(
+  query: string,
+  count = 5,
+  signal?: AbortSignal,
+): Promise<GeoApiLocation[]> {
   const response = await fetch(
     `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
       query,
-    )}&count=1&language=zh&format=json`,
+    )}&count=${count}&language=zh&format=json`,
     { signal },
   );
 
@@ -88,28 +102,7 @@ export async function searchLocation(
   }
 
   const data = (await response.json()) as GeoApiResponse;
-  if (!data?.results?.length) {
-    throw new Error("找不到對應的地點，請嘗試輸入更完整的名稱。");
-  }
-
-  return data.results[0];
-}
-
-/**
- * 依座標反查地點名稱，用於瀏覽器地理定位；找不到或請求失敗時回傳 null。
- */
-export async function reverseGeocode(
-  latitude: number,
-  longitude: number,
-): Promise<string | null> {
-  const response = await fetch(
-    `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&count=1&language=zh&format=json`,
-  );
-
-  if (!response.ok) return null;
-
-  const data = (await response.json()) as GeoApiResponse;
-  return data?.results?.[0]?.name ?? null;
+  return data?.results ?? [];
 }
 
 /**
@@ -153,7 +146,9 @@ export async function fetchAirQuality(
     if (!response.ok) return null;
     return (await response.json()) as AirQualityApiResponse;
   } catch (error) {
-    console.error("fetchAirQuality", error);
+    if (!(error instanceof DOMException && error.name === "AbortError")) {
+      console.error("fetchAirQuality", error);
+    }
     return null;
   }
 }

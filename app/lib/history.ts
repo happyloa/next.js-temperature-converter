@@ -48,9 +48,9 @@ const isHistoryEntry = (value: unknown): value is HistoryEntry => {
 /**
  * 將儲存內容轉回型別安全的歷史紀錄陣列。
  */
-export const parseHistoryPayload = (value: unknown): HistoryEntry[] => {
+export const parseHistoryPayload = (value: unknown): HistoryEntry[] | null => {
   if (!Array.isArray(value)) {
-    return [];
+    return null;
   }
 
   return value.filter(isHistoryEntry);

@@ -3,11 +3,12 @@
 import { useCallback, useMemo, useState } from "react";
 
 import {
-  ABSOLUTE_ZERO_K,
   SOLAR_SURFACE_K,
   createConversions,
   decimalPattern,
+  getMinimumTemperature,
   getScale,
+  getTemperatureRange,
   getThermalMood,
 } from "../lib/temperature";
 import { clamp, formatTemperature, toInputString } from "../lib/format";
@@ -16,6 +17,7 @@ import type { ThermalInsight } from "../types/insight";
 import type {
   TemperatureConversion,
   TemperaturePreset,
+  TemperatureRangeMode,
   TemperatureScale,
   TemperatureScaleCode,
 } from "../types/temperature";
@@ -30,28 +32,39 @@ export function useTemperatureConversion(
   const [scale, setScale] = useState<TemperatureScaleCode>(initialScale);
   const [value, setValue] = useState<number>(25);
   const [rawInput, setRawInput] = useState<string>("25");
+  const [rangeMode, setRangeMode] = useState<TemperatureRangeMode>("daily");
 
   const activeScale = useMemo<TemperatureScale | undefined>(
     () => getScale(scale),
     [scale],
   );
 
-  const sliderRange = useMemo(() => {
+  const minimumValue = useMemo(() => {
     if (!activeScale) {
-      return { min: -273.15, max: 6000 } as const;
+      return -273.15;
     }
-    const min = activeScale.fromKelvin(ABSOLUTE_ZERO_K);
-    const max = activeScale.fromKelvin(SOLAR_SURFACE_K);
-    return {
-      min: Number.isFinite(min) ? min : -273.15,
-      max: Number.isFinite(max) ? max : 6000,
-    } as const;
+    return getMinimumTemperature(activeScale);
   }, [activeScale]);
 
+  const validationError = useMemo(() => {
+    if (!Number.isFinite(value) || !activeScale) return null;
+    if (value < minimumValue - 1e-9) {
+      return `不能低於絕對零度（${formatTemperature(minimumValue)} ${activeScale.symbol}）`;
+    }
+    return null;
+  }, [activeScale, minimumValue, value]);
+
+  const sliderRange = useMemo(() => {
+    if (!activeScale) {
+      return { min: -50, max: 60, step: 0.25 } as const;
+    }
+    return getTemperatureRange(activeScale, rangeMode);
+  }, [activeScale, rangeMode]);
+
   const conversions = useMemo<TemperatureConversion[]>(() => {
-    if (!activeScale) return [];
+    if (!activeScale || validationError) return [];
     return createConversions(activeScale, value);
-  }, [activeScale, value]);
+  }, [activeScale, validationError, value]);
 
   const celsiusValue = useMemo(() => {
     const celsiusScale = conversions.find((item) => item.code === "celsius");
@@ -85,8 +98,8 @@ export function useTemperatureConversion(
             : `比冰點低 ${formatTemperature(Math.abs(freezeDelta))}°C`,
         description:
           freezeDelta >= 0
-            ? "水已無結冰之虞，可放心使用一般液體或水冷系統。"
-            : "已低於水的冰點，需留意結霜、結凍與管線破裂風險。",
+            ? "以純水、標準氣壓為基準；實際相態仍會受壓力與溶質影響。"
+            : "以純水、標準氣壓為基準；低於冰點不代表所有液體都會結凍。",
       },
       {
         icon: boilDelta >= 0 ? "♨️" : "🌡️",
@@ -96,8 +109,8 @@ export function useTemperatureConversion(
             : `距離沸點還差 ${formatTemperature(Math.abs(boilDelta))}°C`,
         description:
           boilDelta >= 0
-            ? "此溫度可能產生大量蒸汽，請使用耐壓容器或安全閥。"
-            : "尚未沸騰，可持續加熱或維持溫度以達期望的實驗狀態。",
+            ? "高於純水的標準沸點；實際沸點與相態仍取決於壓力與成分。"
+            : "以純水、標準氣壓為基準；海拔與溶質都會改變實際沸點。",
       },
     ];
   }, [celsiusValue, mood]);
@@ -127,32 +140,28 @@ export function useTemperatureConversion(
     [activeScale, scale, value],
   );
 
-  const handleRawInputChange = useCallback(
-    (nextValue: string) => {
-      if (!decimalPattern.test(nextValue)) return;
-      setRawInput(nextValue);
+  const handleRawInputChange = useCallback((nextValue: string) => {
+    if (!decimalPattern.test(nextValue)) return;
+    setRawInput(nextValue);
 
-      if (
-        nextValue === "" ||
-        nextValue === "-" ||
-        nextValue === "-." ||
-        nextValue === "."
-      ) {
-        setValue(Number.NaN);
-        return;
-      }
+    if (
+      nextValue === "" ||
+      nextValue === "-" ||
+      nextValue === "-." ||
+      nextValue === "."
+    ) {
+      setValue(Number.NaN);
+      return;
+    }
 
-      const numeric = Number(nextValue);
-      if (Number.isNaN(numeric)) {
-        setValue(Number.NaN);
-        return;
-      }
+    const numeric = Number(nextValue);
+    if (Number.isNaN(numeric)) {
+      setValue(Number.NaN);
+      return;
+    }
 
-      const clamped = clamp(numeric, sliderRange.min, sliderRange.max);
-      setValue(clamped);
-    },
-    [sliderRange.max, sliderRange.min],
-  );
+    setValue(numeric);
+  }, []);
 
   const handleSliderChange = useCallback((numeric: number) => {
     if (!Number.isFinite(numeric)) return;
@@ -205,18 +214,25 @@ export function useTemperatureConversion(
     ? clamp(value, sliderRange.min, sliderRange.max)
     : clamp(25, sliderRange.min, sliderRange.max);
 
-  const sliderStep = (sliderRange.max - sliderRange.min) / 400 || 1;
+  const sliderStep = sliderRange.step;
 
-  const relativeSolarProgress = Number.isFinite(kelvinValue)
-    ? clamp((kelvinValue / SOLAR_SURFACE_K) * 100, 0, 130)
+  const sliderOutOfRange =
+    Number.isFinite(value) &&
+    (value < sliderRange.min || value > sliderRange.max);
+
+  const solarTemperatureRatio = Number.isFinite(kelvinValue)
+    ? Math.max((kelvinValue / SOLAR_SURFACE_K) * 100, 0)
     : 0;
+
+  const relativeSolarProgress = clamp(solarTemperatureRatio, 0, 100);
 
   const showSolarProgress = Number.isFinite(kelvinValue);
 
   const canAddHistory =
     Number.isFinite(value) &&
     Number.isFinite(celsiusValue) &&
-    conversions.length > 0;
+    conversions.length > 0 &&
+    !validationError;
 
   return {
     scale,
@@ -229,9 +245,14 @@ export function useTemperatureConversion(
     sliderRange,
     sliderValue,
     sliderStep,
+    sliderOutOfRange,
+    rangeMode,
+    setRangeMode,
+    validationError,
     mood,
     insights,
     relativeSolarProgress,
+    solarTemperatureRatio,
     showSolarProgress,
     canAddHistory,
     handleScaleChange,

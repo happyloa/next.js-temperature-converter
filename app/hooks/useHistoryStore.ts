@@ -21,10 +21,7 @@ export function useHistoryStore() {
   const storageRef = useRef<"local" | "session">("local");
 
   useEffect(() => {
-    const restored = readWithFallback(HISTORY_STORAGE_KEY, (raw) => {
-      const parsed = parseHistoryPayload(raw);
-      return parsed.length ? parsed : null;
-    });
+    const restored = readWithFallback(HISTORY_STORAGE_KEY, parseHistoryPayload);
 
     if (restored) {
       startTransition(() => setHistory(restored.data));

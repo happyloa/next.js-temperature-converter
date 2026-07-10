@@ -21,7 +21,7 @@ export type DailyForecast = {
 };
 
 /**
- * 整合 Open-Meteo 與 World Time API 後得到的天氣儀表板資料結構。
+ * 整合 Open-Meteo 預報、地理與空氣品質資料後的儀表板資料結構。
  */
 export type WeatherData = {
   location: string;

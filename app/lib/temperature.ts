@@ -1,6 +1,8 @@
 import type {
   TemperatureConversion,
   TemperaturePreset,
+  TemperatureRangeMode,
+  TemperatureRangeOption,
   TemperatureScale,
   TemperatureScaleCode,
   ThermalMood,
@@ -15,6 +17,33 @@ export const ABSOLUTE_ZERO_K = 0;
  * 物理常數：太陽表面溫度（單位：K），作為滑桿與視覺化的上限參考。
  */
 export const SOLAR_SURFACE_K = 5778;
+
+export const TEMPERATURE_RANGE_OPTIONS: TemperatureRangeOption[] = [
+  {
+    code: "daily",
+    label: "日常",
+    description: "居家、戶外與冷藏環境",
+    minKelvin: 223.15,
+    maxKelvin: 333.15,
+    stepCount: 440,
+  },
+  {
+    code: "cooking",
+    label: "烹飪",
+    description: "冷凍、沖泡與烤箱溫度",
+    minKelvin: 223.15,
+    maxKelvin: 573.15,
+    stepCount: 700,
+  },
+  {
+    code: "science",
+    label: "科學",
+    description: "絕對零度至太陽表面",
+    minKelvin: ABSOLUTE_ZERO_K,
+    maxKelvin: SOLAR_SURFACE_K,
+    stepCount: 1000,
+  },
+];
 
 /**
  * 溫標代碼清單，方便驗證外部輸入。
@@ -102,6 +131,27 @@ export const getScale = (
 ): TemperatureScale | undefined =>
   TEMPERATURE_SCALES.find((item) => item.code === code);
 
+export const getTemperatureRange = (
+  scale: TemperatureScale,
+  mode: TemperatureRangeMode,
+) => {
+  const option =
+    TEMPERATURE_RANGE_OPTIONS.find((item) => item.code === mode) ??
+    TEMPERATURE_RANGE_OPTIONS[0];
+  const normalize = (value: number) => Number(value.toFixed(8));
+  const min = normalize(scale.fromKelvin(option.minKelvin));
+  const max = normalize(scale.fromKelvin(option.maxKelvin));
+
+  return {
+    min,
+    max,
+    step: normalize((max - min) / option.stepCount) || 1,
+  };
+};
+
+export const getMinimumTemperature = (scale: TemperatureScale): number =>
+  scale.fromKelvin(ABSOLUTE_ZERO_K);
+
 /**
  * 依照攝氏值回傳對應的熱感情境文字。
  */
@@ -122,34 +172,51 @@ export const getThermalMood = (celsiusValue: number): ThermalMood => {
     };
   }
 
-  if (celsiusValue <= -10) {
+  if (celsiusValue < 0) {
     return {
-      title: "冰封邊緣",
-      description: "容易結冰與金屬脆化，戶外作業請備妥保暖設備與防凍液。",
+      title: "冰點以下",
+      description: "低於純水在標準氣壓下的冰點，戶外環境可能出現結霜或結冰。",
       emoji: "❄️",
     };
   }
 
-  if (celsiusValue < 30) {
+  if (celsiusValue < 10) {
+    return {
+      title: "偏冷環境",
+      description: "屬於明顯偏冷的日常環境，長時間停留時應留意保暖。",
+      emoji: "🧥",
+    };
+  }
+
+  if (celsiusValue <= 26) {
     return {
       title: "舒適區間",
-      description: "介於常見生活與實驗室環境，適合一般測試或培養操作。",
+      description:
+        "接近常見室內活動溫度，實際體感仍會受濕度、風速與個人狀況影響。",
       emoji: "🙂",
+    };
+  }
+
+  if (celsiusValue < 35) {
+    return {
+      title: "偏暖環境",
+      description: "環境已偏暖，體感會隨濕度、日照與通風條件明顯變化。",
+      emoji: "🌤️",
     };
   }
 
   if (celsiusValue < 60) {
     return {
-      title: "溫熱注意",
-      description: "人體長時間暴露會感到不適，建議做好散熱與水分補充。",
-      emoji: "🌤️",
+      title: "高溫區間",
+      description: "已高於一般環境溫度，不宜僅依數值推斷接觸或暴露安全性。",
+      emoji: "🌡️",
     };
   }
 
   if (celsiusValue < 100) {
     return {
       title: "沸點逼近",
-      description: "接近水沸點，請注意蒸汽與壓力變化，避免密閉容器。",
+      description: "接近純水在標準氣壓下的沸點；實際沸點會隨氣壓與溶質改變。",
       emoji: "♨️",
     };
   }
@@ -157,14 +224,15 @@ export const getThermalMood = (celsiusValue: number): ThermalMood => {
   if (celsiusValue < 500) {
     return {
       title: "高熱作業",
-      description: "屬於工業或烹飪高溫範圍，需使用隔熱手套與耐熱材質。",
+      description:
+        "屬於烹飪或工業常見的高溫範圍，安全條件需依材料與設備規格判斷。",
       emoji: "🔥",
     };
   }
 
   return {
     title: "極端高能",
-    description: "溫度已達熔爐、熔岩或天文觀測等等級，請使用專業防護。",
+    description: "已達極端高溫範圍，這裡的換算結果僅供單位與尺度比較。",
     emoji: "🌋",
   };
 };
@@ -180,6 +248,7 @@ export const createConversions = (
   const kelvin = scale.toKelvin(value);
   return TEMPERATURE_SCALES.map((targetScale) => ({
     ...targetScale,
-    result: targetScale.fromKelvin(kelvin),
+    result:
+      targetScale.code === scale.code ? value : targetScale.fromKelvin(kelvin),
   }));
 };

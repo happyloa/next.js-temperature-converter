@@ -3,12 +3,9 @@
  * 使用繁體中文註解方便未來維護與分享專案時閱讀。
  */
 export type TemperatureScaleCode =
-  | "celsius"
-  | "fahrenheit"
-  | "kelvin"
-  | "rankine"
-  | "reaumur"
-  | "newton";
+  "celsius" | "fahrenheit" | "kelvin" | "rankine" | "reaumur" | "newton";
+
+export type TemperatureRangeMode = "daily" | "cooking" | "science";
 
 export type TemperatureScale = {
   code: TemperatureScaleCode;
@@ -40,4 +37,13 @@ export type TemperaturePreset = {
   value: number;
   scale: TemperatureScaleCode;
   emoji: string;
+};
+
+export type TemperatureRangeOption = {
+  code: TemperatureRangeMode;
+  label: string;
+  description: string;
+  minKelvin: number;
+  maxKelvin: number;
+  stepCount: number;
 };
