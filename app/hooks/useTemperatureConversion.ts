@@ -80,12 +80,15 @@ export function useTemperatureConversion(
     setRawInput(toInputString(preset.value));
   };
 
-  const createHistoryEntry = (): HistoryEntry | null => {
+  const createHistoryEntry = ({
+    id,
+    timestamp,
+  }: Pick<HistoryEntry, "id" | "timestamp">): HistoryEntry | null => {
     if (!conversions.length) return null;
 
     return {
-      id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-      timestamp: new Date().toISOString(),
+      id,
+      timestamp,
       scale,
       scaleLabel: activeScale.label,
       scaleSymbol: activeScale.symbol,

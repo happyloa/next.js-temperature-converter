@@ -22,7 +22,11 @@ export function TemperatureStudioClient() {
   );
 
   const handleAddHistory = () => {
-    const entry = converter.createHistoryEntry();
+    const now = new Date();
+    const entry = converter.createHistoryEntry({
+      id: `${now.getTime()}-${Math.random().toString(16).slice(2, 8)}`,
+      timestamp: now.toISOString(),
+    });
     if (entry) addHistoryEntry(entry);
   };
 

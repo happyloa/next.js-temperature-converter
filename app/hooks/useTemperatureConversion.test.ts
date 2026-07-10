@@ -4,6 +4,11 @@ import { describe, expect, it } from "vitest";
 import { useTemperatureConversion } from "./useTemperatureConversion";
 
 describe("useTemperatureConversion", () => {
+  const historyMetadata = {
+    id: "test-entry",
+    timestamp: "2026-01-01T00:00:00.000Z",
+  };
+
   it("keeps text input values outside the selected slider range", () => {
     const { result } = renderHook(() => useTemperatureConversion());
 
@@ -43,13 +48,14 @@ describe("useTemperatureConversion", () => {
   it("only creates history entries for valid conversions", () => {
     const { result } = renderHook(() => useTemperatureConversion());
 
-    expect(result.current.createHistoryEntry()).toMatchObject({
+    expect(result.current.createHistoryEntry(historyMetadata)).toMatchObject({
+      ...historyMetadata,
       scale: "celsius",
       value: 25,
     });
 
     act(() => result.current.handleRawInputChange(""));
-    expect(result.current.createHistoryEntry()).toBeNull();
+    expect(result.current.createHistoryEntry(historyMetadata)).toBeNull();
   });
 
   it("restores the default scale, value, and slider scenario", () => {

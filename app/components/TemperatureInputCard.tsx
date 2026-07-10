@@ -9,7 +9,6 @@ import {
 import { ui } from "../lib/uiStyles";
 import { cn, handleRadioGroupKeyDown } from "../lib/utils";
 import type {
-  TemperatureConversion,
   TemperatureScale,
   TemperatureScaleCode,
 } from "../types/temperature";
