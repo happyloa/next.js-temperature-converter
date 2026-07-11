@@ -1,18 +1,15 @@
-import { Check, Copy, Plus, RotateCcw, Thermometer } from "lucide-react";
+import { Plus, RotateCcw, Thermometer } from "lucide-react";
 
 import type { useTemperatureConversion } from "../hooks/useTemperatureConversion";
 import { formatTemperature } from "../lib/format";
-import {
-  TEMPERATURE_RANGE_OPTIONS,
-  TEMPERATURE_SCALES,
-} from "../lib/temperature";
+import { TEMPERATURE_RANGE_OPTIONS } from "../lib/temperature";
 import { ui } from "../lib/uiStyles";
 import { cn, handleRadioGroupKeyDown } from "../lib/utils";
-import type {
-  TemperatureScale,
-  TemperatureScaleCode,
-} from "../types/temperature";
+import type { TemperatureScaleCode } from "../types/temperature";
 import { ShareButton } from "./ShareButton";
+import { ConversionResults } from "./temperature/ConversionResults";
+import { ScaleSelector } from "./temperature/ScaleSelector";
+import { SolarComparison } from "./temperature/SolarComparison";
 
 type TemperatureInputCardProps = {
   converter: ReturnType<typeof useTemperatureConversion>;
@@ -55,9 +52,6 @@ export function TemperatureInputCard({
         `${conversion.label}: ${formatTemperature(conversion.result)} ${conversion.symbol}`,
     )
     .join("\n");
-  const resultSummary = conversions.length
-    ? `轉換完成，共 ${conversions.length} 種溫標結果。`
-    : (validationError ?? "等待有效的溫度輸入。");
 
   return (
     <section
@@ -104,11 +98,7 @@ export function TemperatureInputCard({
         </div>
       </header>
 
-      <ScaleSelector
-        activeScale={scale}
-        scales={TEMPERATURE_SCALES}
-        onScaleChange={handleScaleChange}
-      />
+      <ScaleSelector activeScale={scale} onScaleChange={handleScaleChange} />
 
       <div className="mt-5 border-t border-edge-subtle pt-5">
         <label className="block min-w-0">
@@ -203,143 +193,20 @@ export function TemperatureInputCard({
         ) : null}
       </div>
 
-      <div className="mt-5 border-t border-edge-subtle pt-5">
-        <div className={ui.headingRow}>
-          <div>
-            <p className={ui.kicker}>RESULTS</p>
-            <h2 className={ui.sectionTitle}>即時轉換結果</h2>
-          </div>
-          <span className={ui.count}>{conversions.length} / 6</span>
-        </div>
-        <div className="sr-only" role="status" aria-live="polite">
-          {resultSummary}
-        </div>
-        {conversions.length ? (
-          <ul className="mt-3 list-none">
-            {conversions.map((conversion) => (
-              <li
-                key={conversion.code}
-                className={cn(
-                  "grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(7rem,auto)_2.25rem] items-center gap-3 border-t border-edge-subtle py-3 first:border-t-0 max-[430px]:grid-cols-[minmax(0,1fr)_minmax(5.5rem,auto)_2.25rem] max-[430px]:gap-2",
-                  conversion.code === scale && "bg-surface-soft",
-                )}
-              >
-                <div className="flex min-w-0 flex-col text-[0.8125rem] text-ink-medium">
-                  <span>{conversion.label}</span>
-                  {conversion.code === "celsius" && mood ? (
-                    <small className="text-[0.6875rem] text-ink-subtle">
-                      {mood.title}
-                    </small>
-                  ) : null}
-                </div>
-                <strong className="text-right text-lg text-ink-strong [font-variant-numeric:tabular-nums] [overflow-wrap:anywhere] max-[430px]:text-[0.9375rem]">
-                  {formatTemperature(conversion.result)}
-                  <span className="ml-1 text-xs text-ink-subtle">
-                    {conversion.symbol}
-                  </span>
-                </strong>
-                <button
-                  type="button"
-                  onClick={() =>
-                    onCopy(
-                      `${formatTemperature(conversion.result)} ${conversion.symbol}`,
-                      conversion.code,
-                    )
-                  }
-                  className={ui.iconButton}
-                  aria-label={`複製${conversion.label}結果`}
-                  title={`複製${conversion.label}結果`}
-                >
-                  {copiedScale === conversion.code ? (
-                    <Check className="h-4 w-4 text-accent" aria-hidden />
-                  ) : (
-                    <Copy className="h-4 w-4" aria-hidden />
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className={ui.emptyState}>輸入有效溫度後顯示六種換算結果。</div>
-        )}
-      </div>
+      <ConversionResults
+        scale={scale}
+        conversions={conversions}
+        copiedScale={copiedScale}
+        validationError={validationError}
+        mood={mood}
+        onCopy={onCopy}
+      />
 
-      <div className="mt-5 border-t border-edge-subtle pt-5">
-        <div className={ui.headingRow}>
-          <div>
-            <h2 className={ui.sectionTitle}>絕對溫度比較</h2>
-            <p className={ui.fieldHelp}>以 Kelvin 比較太陽光球層約 5,778 K</p>
-          </div>
-          <strong className="text-accent [font-variant-numeric:tabular-nums]">
-            {showSolarProgress
-              ? `${formatTemperature(solarTemperatureRatio)}%`
-              : "--"}
-          </strong>
-        </div>
-        <div
-          className="mt-3 h-1.5 w-full overflow-hidden rounded bg-surface-muted"
-          role="progressbar"
-          aria-label="相對於太陽表面絕對溫度"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(relativeSolarProgress)}
-        >
-          <span
-            className="block h-full bg-accent"
-            style={{ width: `${relativeSolarProgress}%` }}
-          />
-        </div>
-        <p className={ui.fieldHelp}>
-          此比例只比較絕對溫度，不代表物體總能量或接觸安全性。
-        </p>
-      </div>
+      <SolarComparison
+        progress={relativeSolarProgress}
+        ratio={solarTemperatureRatio}
+        showProgress={showSolarProgress}
+      />
     </section>
-  );
-}
-
-function ScaleSelector({
-  activeScale,
-  scales,
-  onScaleChange,
-}: {
-  activeScale: TemperatureScaleCode;
-  scales: TemperatureScale[];
-  onScaleChange: (code: TemperatureScaleCode) => void;
-}) {
-  const codes = scales.map((item) => item.code);
-  return (
-    <div
-      role="radiogroup"
-      aria-label="選擇輸入溫標"
-      onKeyDown={(event) =>
-        handleRadioGroupKeyDown(event, codes, activeScale, onScaleChange)
-      }
-      className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-6"
-    >
-      {scales.map((item) => (
-        <button
-          key={item.code}
-          type="button"
-          role="radio"
-          aria-checked={activeScale === item.code}
-          data-radio-value={item.code}
-          tabIndex={activeScale === item.code ? 0 : -1}
-          onClick={() => onScaleChange(item.code)}
-          className={cn(
-            "flex min-h-13 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg border bg-surface-medium transition-colors hover:border-accent",
-            activeScale === item.code
-              ? "border-accent bg-surface-soft text-ink-strong"
-              : "border-edge-subtle text-ink-medium",
-          )}
-        >
-          <span className="text-[0.9375rem] font-[750] text-ink-strong">
-            {item.symbol}
-          </span>
-          <small className="max-w-full overflow-hidden text-[0.6875rem] text-ellipsis whitespace-nowrap">
-            {item.label.split(" (")[0]}
-          </small>
-        </button>
-      ))}
-    </div>
   );
 }
