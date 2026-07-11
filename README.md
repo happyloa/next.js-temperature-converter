@@ -29,6 +29,7 @@
 - 桌機採工作區與側欄配置，手機改為單欄資訊流，並避免水平溢位。
 - 深淺色主題使用系統字體，不依賴遠端字型載入。
 - 溫標、滑桿情境、預報天數與城市建議皆支援鍵盤操作與 ARIA 語意。
+- Production 回應包含 CSP、frame、referrer、content type 與 permissions 安全標頭。
 - 包含 skip link、狀態播報、錯誤邊界、Open Graph 圖、sitemap、robots 與 Web App Manifest。
 
 ## 技術組成
@@ -42,12 +43,12 @@
 | Chart     | Recharts，僅在用戶端延遲載入                 |
 | Data      | Open-Meteo Geocoding、Forecast、Air Quality  |
 | Unit test | Vitest、Testing Library、jsdom、V8 coverage  |
-| E2E       | Playwright，桌機 Chrome 與 Pixel 7 viewport  |
+| E2E       | Playwright、axe，桌機 Chrome 與 Pixel 7      |
 | Quality   | ESLint、Prettier、TypeScript、GitHub Actions |
 
 ## 依賴原則
 
-正式環境只保留 Next.js、React／React DOM、Lucide 與 Recharts；條件 class 由專案內的小型 helper 處理，不再為此載入額外套件。其餘依賴皆用於編譯、型別、格式或自動化測試，不會進入瀏覽器 runtime bundle。
+正式環境只保留 Next.js、React／React DOM、Lucide 與 Recharts；條件 class 由專案內的小型 helper 處理，不再為此載入額外套件。其餘依賴皆用於編譯、型別、格式或自動化測試，axe 只在 Playwright E2E 中執行，不會進入瀏覽器 runtime bundle。
 
 ESLint 9 與 TypeScript 6 是目前 `eslint-config-next` 內部 parser 支援的最新主版本。ESLint 10 與 TypeScript 7 會產生 peer warning，且 TypeScript 7 會讓 lint parser 啟動失敗，因此暫不升級這兩個不相容的大版本。
 
@@ -68,10 +69,10 @@ npm run dev
 npm run format:check   # 格式檢查
 npm run lint           # ESLint
 npm run typecheck      # TypeScript
-npm run test           # 50+ 項單元與 hook 測試
+npm run test           # 70+ 項單元與 hook 測試
 npm run test:coverage  # 含全域 coverage 門檻
 npm run build          # Production build
-npm run test:e2e       # 自動啟動 port 3100，跑桌機與手機情境
+npm run test:e2e       # port 3100 桌機/手機流程、響應式與 axe 掃描
 npm run check          # 除 E2E 外的完整 CI 品質門檻
 ```
 
@@ -82,6 +83,7 @@ Windows 本機若未安裝 Playwright Chromium，E2E 預設使用 Microsoft Edge
 ```text
 app/
 ├── components/
+│   ├── temperature/             # 溫標選擇、結果與絕對溫度比較
 │   ├── weather/                 # 天氣搜尋、現況、指標與預報元件
 │   ├── skeletons/               # 穩定版面尺寸的載入狀態
 │   ├── TemperatureStudioClient.tsx
@@ -89,10 +91,12 @@ app/
 ├── hooks/
 │   ├── useHistoryStore.ts
 │   ├── useTemperatureConversion.ts
+│   ├── useWeatherSuggestions.ts # debounce、取消與建議狀態
 │   └── useWeatherDashboard.ts
 ├── lib/
 │   ├── clipboard.ts             # Clipboard API 與安全 fallback
 │   ├── export.ts                # CSV 匯出
+│   ├── geolocation.ts           # 瀏覽器定位與錯誤訊息
 │   ├── storage.ts               # local/session storage fallback
 │   ├── temperature.ts           # 溫標公式與物理邊界
 │   ├── uiStyles.ts              # 共用 Tailwind utility 組合
