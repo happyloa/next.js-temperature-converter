@@ -9,12 +9,15 @@ import {
 } from "react";
 import type { FormEvent } from "react";
 
+import {
+  getGeolocationErrorMessage,
+  requestCurrentPosition,
+} from "../lib/geolocation";
 import { readWithFallback, writeWithFallback } from "../lib/storage";
 import {
   fetchAirQuality,
   fetchForecast,
   searchLocation,
-  searchLocations,
 } from "../lib/weatherApi";
 import type { GeoApiLocation } from "../lib/weatherApi";
 import {
@@ -23,9 +26,9 @@ import {
   parseWeatherPayload,
 } from "../lib/weatherPayload";
 import type { WeatherData } from "../types/weather";
+import { useWeatherSuggestions } from "./useWeatherSuggestions";
 
 const WEATHER_STORAGE_KEY = "weather-dashboard-state";
-const SUGGESTION_DELAY_MS = 350;
 
 export function useWeatherDashboard(defaultQuery: string) {
   const [weatherQuery, setWeatherQuery] = useState(defaultQuery);
@@ -35,14 +38,16 @@ export function useWeatherDashboard(defaultQuery: string) {
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [forecastDays, setForecastDaysState] = useState<7 | 14>(7);
   const [geolocating, setGeolocating] = useState(false);
-  const [suggestions, setSuggestions] = useState<GeoApiLocation[]>([]);
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [committedQuery, setCommittedQuery] = useState(defaultQuery);
 
   const requestControllerRef = useRef<AbortController | null>(null);
-  const suggestionControllerRef = useRef<AbortController | null>(null);
   const storageRef = useRef<"local" | "session">("local");
-  const committedQueryRef = useRef(defaultQuery);
+  const {
+    suggestions,
+    suggestionsLoading,
+    suggestionsOpen,
+    setSuggestionsOpen,
+  } = useWeatherSuggestions(weatherQuery, committedQuery);
 
   const persistWeather = useCallback(
     (payload: { query: string; data: WeatherData }) => {
@@ -90,10 +95,9 @@ export function useWeatherDashboard(defaultQuery: string) {
         ]);
 
         const nextData = buildWeatherData(location, forecast, airQuality);
-        committedQueryRef.current = trimmed;
+        setCommittedQuery(trimmed);
         setWeatherQuery(trimmed);
         setWeatherData(nextData);
-        setSuggestions([]);
         persistWeather({ query: trimmed, data: nextData });
       } catch (error) {
         if (
@@ -114,7 +118,7 @@ export function useWeatherDashboard(defaultQuery: string) {
         }
       }
     },
-    [persistWeather],
+    [persistWeather, setSuggestionsOpen],
   );
 
   useEffect(() => {
@@ -124,9 +128,9 @@ export function useWeatherDashboard(defaultQuery: string) {
       startTransition(() => {
         setWeatherQuery(restored.data.query);
         setWeatherData(restored.data.data);
+        setCommittedQuery(restored.data.query);
       });
       storageRef.current = restored.name;
-      committedQueryRef.current = restored.data.query;
     }
 
     const initialRequest = window.setTimeout(() => {
@@ -136,52 +140,7 @@ export function useWeatherDashboard(defaultQuery: string) {
     return () => window.clearTimeout(initialRequest);
   }, [defaultQuery, fetchWeather]);
 
-  useEffect(() => {
-    const trimmed = weatherQuery.trim();
-    suggestionControllerRef.current?.abort();
-
-    if (trimmed.length < 2 || trimmed === committedQueryRef.current) {
-      startTransition(() => {
-        setSuggestions([]);
-        setSuggestionsLoading(false);
-      });
-      return;
-    }
-
-    const timer = window.setTimeout(async () => {
-      const controller = new AbortController();
-      suggestionControllerRef.current = controller;
-      setSuggestionsLoading(true);
-
-      try {
-        const nextSuggestions = await searchLocations(
-          trimmed,
-          5,
-          controller.signal,
-        );
-        setSuggestions(nextSuggestions);
-        setSuggestionsOpen(true);
-      } catch (error) {
-        if (!(error instanceof DOMException && error.name === "AbortError")) {
-          console.error("searchLocations", error);
-        }
-      } finally {
-        if (suggestionControllerRef.current === controller) {
-          setSuggestionsLoading(false);
-        }
-      }
-    }, SUGGESTION_DELAY_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [weatherQuery]);
-
-  useEffect(
-    () => () => {
-      requestControllerRef.current?.abort();
-      suggestionControllerRef.current?.abort();
-    },
-    [],
-  );
+  useEffect(() => () => requestControllerRef.current?.abort(), []);
 
   const handleWeatherQueryChange = (value: string) => {
     setWeatherQuery(value);
@@ -224,7 +183,7 @@ export function useWeatherDashboard(defaultQuery: string) {
       );
       const nextData = mergeWeatherForecast(weatherData, forecast);
       setWeatherData(nextData);
-      persistWeather({ query: committedQueryRef.current, data: nextData });
+      persistWeather({ query: committedQuery, data: nextData });
     } catch (error) {
       if (
         !controller.signal.aborted &&
@@ -249,15 +208,7 @@ export function useWeatherDashboard(defaultQuery: string) {
     setWeatherError(null);
 
     try {
-      const position = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 300000,
-          });
-        },
-      );
+      const position = await requestCurrentPosition(navigator.geolocation);
       const { latitude, longitude } = position.coords;
       const location: GeoApiLocation = {
         name: "目前位置",
@@ -267,16 +218,7 @@ export function useWeatherDashboard(defaultQuery: string) {
       setWeatherQuery(location.name);
       await fetchWeather(location.name, forecastDays, location);
     } catch (error) {
-      const code = (error as GeolocationPositionError | undefined)?.code;
-      if (code === 1) {
-        setWeatherError("位置存取權限被拒絕，請在瀏覽器設定中允許");
-      } else if (code === 2) {
-        setWeatherError("無法取得位置資訊");
-      } else if (code === 3) {
-        setWeatherError("取得位置逾時，請再試一次");
-      } else {
-        setWeatherError("取得位置時發生錯誤");
-      }
+      setWeatherError(getGeolocationErrorMessage(error));
     } finally {
       setGeolocating(false);
     }

@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   fetchAirQuality,
@@ -78,12 +78,24 @@ const mockSearchLocation = vi.mocked(searchLocation);
 const mockSearchLocations = vi.mocked(searchLocations);
 const mockFetchForecast = vi.mocked(fetchForecast);
 const mockFetchAirQuality = vi.mocked(fetchAirQuality);
+const originalGeolocation = Object.getOwnPropertyDescriptor(
+  navigator,
+  "geolocation",
+);
 
 beforeEach(() => {
   mockSearchLocation.mockReset().mockResolvedValue(taipei);
   mockSearchLocations.mockReset().mockResolvedValue([tokyo]);
   mockFetchForecast.mockReset().mockResolvedValue(createForecast());
   mockFetchAirQuality.mockReset().mockResolvedValue(null);
+});
+
+afterEach(() => {
+  if (originalGeolocation) {
+    Object.defineProperty(navigator, "geolocation", originalGeolocation);
+  } else {
+    Reflect.deleteProperty(navigator, "geolocation");
+  }
 });
 
 describe("useWeatherDashboard", () => {
@@ -185,5 +197,106 @@ describe("useWeatherDashboard", () => {
     await waitFor(() => expect(result.current.weatherError).toBe("offline"));
     expect(result.current.weatherData).toEqual(previousData);
     consoleSpy.mockRestore();
+  });
+
+  it("rejects an empty submitted query without making a request", async () => {
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+    vi.clearAllMocks();
+
+    act(() => result.current.handleWeatherQueryChange("   "));
+    const preventDefault = vi.fn();
+    act(() => result.current.handleWeatherSubmit({ preventDefault } as never));
+
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(result.current.weatherError).toBe("請輸入地點名稱");
+    expect(mockSearchLocation).not.toHaveBeenCalled();
+    expect(mockFetchForecast).not.toHaveBeenCalled();
+  });
+
+  it("uses a selected suggestion without geocoding it again", async () => {
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+    vi.clearAllMocks();
+
+    act(() => result.current.handleSuggestionSelect(tokyo));
+
+    await waitFor(() =>
+      expect(result.current.weatherData?.location).toBe("Tokyo · Japan"),
+    );
+    expect(mockSearchLocation).not.toHaveBeenCalled();
+    expect(mockFetchForecast).toHaveBeenCalledWith(
+      tokyo.latitude,
+      tokyo.longitude,
+      tokyo.timezone,
+      7,
+      expect.any(AbortSignal),
+    );
+  });
+
+  it("does not reload an already selected forecast range", async () => {
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+    vi.clearAllMocks();
+
+    await act(() => result.current.setForecastDays(7));
+
+    expect(mockFetchForecast).not.toHaveBeenCalled();
+    expect(result.current.forecastDays).toBe(7);
+  });
+
+  it("keeps existing forecast data when a range update fails", async () => {
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+    const previousForecast = result.current.weatherData?.dailyForecast;
+    mockFetchForecast.mockRejectedValueOnce(new Error("offline"));
+
+    await act(() => result.current.setForecastDays(14));
+
+    expect(result.current.weatherError).toBe(
+      "無法更新預報天數，目前仍顯示先前資料。",
+    );
+    expect(result.current.weatherData?.dailyForecast).toEqual(previousForecast);
+    expect(result.current.forecastLoading).toBe(false);
+  });
+
+  it("reports unsupported geolocation without starting a request", async () => {
+    Reflect.deleteProperty(navigator, "geolocation");
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+    vi.clearAllMocks();
+
+    await act(() => result.current.handleGeolocate());
+
+    expect(result.current.weatherError).toBe("您的瀏覽器不支援地理位置功能");
+    expect(mockFetchForecast).not.toHaveBeenCalled();
+  });
+
+  it("loads weather for the browser's current coordinates", async () => {
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: (resolve: PositionCallback) =>
+          resolve({
+            coords: { latitude: 24.15, longitude: 120.68 },
+          } as GeolocationPosition),
+      },
+    });
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+    vi.clearAllMocks();
+
+    await act(() => result.current.handleGeolocate());
+
+    expect(result.current.weatherQuery).toBe("目前位置");
+    expect(mockSearchLocation).not.toHaveBeenCalled();
+    expect(mockFetchForecast).toHaveBeenCalledWith(
+      24.15,
+      120.68,
+      "auto",
+      7,
+      expect.any(AbortSignal),
+    );
+    expect(result.current.geolocating).toBe(false);
   });
 });
