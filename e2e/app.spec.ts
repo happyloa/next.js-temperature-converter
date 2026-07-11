@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 
 test("temperature conversion remains exact and usable", async ({ page }) => {
   await page.goto("/");
@@ -38,6 +39,7 @@ test("temperature conversion remains exact and usable", async ({ page }) => {
   await expect(html).not.toHaveAttribute("data-theme", initialTheme ?? "");
 
   await expectPageNotToOverflow(page);
+  await expectNoSeriousAccessibilityViolations(page);
 });
 
 test("weather search avoids duplicate full requests", async ({ page }) => {
@@ -75,6 +77,7 @@ test("weather search avoids duplicate full requests", async ({ page }) => {
   expect(requests.geocodeLookup).toBe(1);
 
   await expectPageNotToOverflow(page);
+  await expectNoSeriousAccessibilityViolations(page);
 });
 
 async function expectPageNotToOverflow(page: Page) {
@@ -83,6 +86,17 @@ async function expectPageNotToOverflow(page: Page) {
     scrollWidth: document.documentElement.scrollWidth,
   }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+}
+
+async function expectNoSeriousAccessibilityViolations(page: Page) {
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  const violations = results.violations.filter(
+    ({ impact }) => impact === "serious" || impact === "critical",
+  );
+
+  expect(violations).toEqual([]);
 }
 
 async function expectWeatherLayout(page: Page) {

@@ -41,6 +41,10 @@ export function WeatherSearch({
   const featured = WEATHER_PRESETS.slice(0, 6);
   const more = WEATHER_PRESETS.slice(6);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const closeSuggestions = () => {
+    setSuggestionsOpen(false);
+    setActiveSuggestion(-1);
+  };
 
   const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (!suggestions.length) return;
@@ -58,12 +62,12 @@ export function WeatherSearch({
     if (event.key === "Enter" && suggestionsOpen && activeSuggestion >= 0) {
       event.preventDefault();
       onSuggestionSelect(suggestions[activeSuggestion]);
-      setSuggestionsOpen(false);
+      closeSuggestions();
       return;
     }
 
     if (event.key === "Escape") {
-      setSuggestionsOpen(false);
+      closeSuggestions();
     }
   };
 
@@ -87,7 +91,7 @@ export function WeatherSearch({
             onQueryChange(event.target.value);
           }}
           onFocus={() => suggestions.length && setSuggestionsOpen(true)}
-          onBlur={() => setSuggestionsOpen(false)}
+          onBlur={closeSuggestions}
           onKeyDown={handleSearchKeyDown}
           autoComplete="off"
           placeholder="輸入城市，例如 Taipei"
@@ -97,7 +101,7 @@ export function WeatherSearch({
           aria-expanded={suggestionsOpen}
           aria-controls="weather-suggestions"
           aria-activedescendant={
-            activeSuggestion >= 0
+            suggestionsOpen && activeSuggestion >= 0
               ? `weather-suggestion-${activeSuggestion}`
               : undefined
           }
@@ -127,6 +131,7 @@ export function WeatherSearch({
           type="submit"
           disabled={loading}
           className={cn(ui.button, ui.primaryButton)}
+          aria-label="查詢天氣"
         >
           <Search className="h-4 w-4" aria-hidden />
           <span className="hidden sm:inline">查詢</span>
@@ -149,7 +154,7 @@ export function WeatherSearch({
                 onMouseDown={(event) => {
                   event.preventDefault();
                   onSuggestionSelect(location);
-                  setSuggestionsOpen(false);
+                  closeSuggestions();
                 }}
               >
                 <strong className="text-ink-strong">{location.name}</strong>

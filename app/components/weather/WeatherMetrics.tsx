@@ -68,7 +68,7 @@ export function WeatherMetrics({ data }: { data: WeatherData }) {
         </div>
       </div>
 
-      <div className="mt-3.5 grid min-w-0 grid-cols-1 gap-px overflow-hidden rounded-lg border border-edge-subtle bg-edge-subtle sm:grid-cols-2 min-[900px]:grid-cols-3">
+      <div className="mt-3.5 grid min-w-0 grid-cols-1 gap-px overflow-hidden rounded-lg border border-edge-subtle bg-edge-subtle sm:grid-cols-2 lg:grid-cols-3">
         {metrics.map((metric) => {
           const Icon = metric.icon;
           return (
