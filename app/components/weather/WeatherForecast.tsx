@@ -32,7 +32,12 @@ export function WeatherForecast({
       aria-labelledby="forecast-title"
       aria-busy={loading}
     >
-      <div className={cn(ui.headingRow, "items-start")}>
+      <div
+        className={cn(
+          ui.headingRow,
+          "items-start max-[760px]:flex-col max-[760px]:gap-3",
+        )}
+      >
         <div>
           <p className={ui.kicker}>FORECAST</p>
           <h2 id="forecast-title" className={ui.sectionTitle}>

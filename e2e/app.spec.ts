@@ -48,6 +48,7 @@ test("weather search avoids duplicate full requests", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Taipei · Taiwan" }),
   ).toBeVisible();
+  await expectWeatherLayout(page);
   expect(requests.forecast).toBe(1);
   expect(requests.airQuality).toBe(1);
   expect(requests.geocodeLookup).toBe(1);
@@ -82,6 +83,38 @@ async function expectPageNotToOverflow(page: Page) {
     scrollWidth: document.documentElement.scrollWidth,
   }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+}
+
+async function expectWeatherLayout(page: Page) {
+  const viewportWidth = page.viewportSize()?.width ?? 0;
+  const titleBox = await page
+    .getByRole("heading", { name: "溫度趨勢" })
+    .boundingBox();
+  const rangeBox = await page
+    .getByRole("radiogroup", { name: "預報天數" })
+    .boundingBox();
+
+  expect(titleBox).not.toBeNull();
+  expect(rangeBox).not.toBeNull();
+  if (viewportWidth <= 760 && titleBox && rangeBox) {
+    expect(titleBox.y + titleBox.height).toBeLessThanOrEqual(rangeBox.y);
+  }
+
+  if (viewportWidth >= 900) {
+    const metricBoxes = await page
+      .locator('section[aria-labelledby="environment-title"] > div')
+      .nth(1)
+      .locator(":scope > div")
+      .evaluateAll((elements) =>
+        elements.map((element) => {
+          const box = element.getBoundingClientRect();
+          return { top: box.top, left: box.left };
+        }),
+      );
+
+    expect(metricBoxes).toHaveLength(6);
+    expect(Math.abs(metricBoxes[3].top - metricBoxes[5].top)).toBeLessThan(1);
+  }
 }
 
 async function mockWeatherApis(page: Page) {

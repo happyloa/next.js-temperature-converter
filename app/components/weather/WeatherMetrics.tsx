@@ -113,7 +113,7 @@ export function WeatherMetrics({ data }: { data: WeatherData }) {
 function AirQualityMetric({ data }: { data: WeatherData }) {
   if (!data.airQuality) {
     return (
-      <div className={cn(metricTileClass, "min-[900px]:col-span-2")}>
+      <div className={metricTileClass}>
         <Waves className="h-5 w-5 text-accent" aria-hidden />
         <span className="text-xs text-ink-medium">European AQI</span>
         <strong className="text-right text-lg text-ink-strong">--</strong>
@@ -126,7 +126,7 @@ function AirQualityMetric({ data }: { data: WeatherData }) {
 
   const level = getEuropeanAqiLevel(data.airQuality.aqi);
   return (
-    <div className={cn(metricTileClass, "min-[900px]:col-span-2")}>
+    <div className={metricTileClass}>
       <Waves className="h-5 w-5 text-accent" aria-hidden />
       <span className="text-xs text-ink-medium">European AQI</span>
       <strong className="text-right text-lg text-ink-strong [font-variant-numeric:tabular-nums]">
