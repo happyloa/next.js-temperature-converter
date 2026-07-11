@@ -29,7 +29,7 @@ afterEach(() => {
 describe("useWeatherSuggestions", () => {
   it("ignores short and already committed queries", async () => {
     const { result, rerender } = renderHook(
-      ({ query, committed }) => useWeatherSuggestions(query, committed),
+      ({ query, committed }) => useWeatherSuggestions(query, committed, true),
       { initialProps: { query: "T", committed: "Taipei" } },
     );
 
@@ -44,7 +44,7 @@ describe("useWeatherSuggestions", () => {
 
   it("debounces searches and opens matching suggestions", async () => {
     const { result } = renderHook(() =>
-      useWeatherSuggestions("Tokyo", "Taipei"),
+      useWeatherSuggestions("Tokyo", "Taipei", true),
     );
 
     await act(() => vi.advanceTimersByTimeAsync(349));
@@ -63,7 +63,7 @@ describe("useWeatherSuggestions", () => {
 
   it("closes stale results after the query is committed", async () => {
     const { result, rerender } = renderHook(
-      ({ committed }) => useWeatherSuggestions("Tokyo", committed),
+      ({ committed }) => useWeatherSuggestions("Tokyo", committed, true),
       { initialProps: { committed: "Taipei" } },
     );
     await act(() => vi.advanceTimersByTimeAsync(350));
@@ -82,7 +82,7 @@ describe("useWeatherSuggestions", () => {
       .mockImplementation(() => undefined);
     mockSearchLocations.mockRejectedValueOnce(new Error("offline"));
     const { result } = renderHook(() =>
-      useWeatherSuggestions("Tokyo", "Taipei"),
+      useWeatherSuggestions("Tokyo", "Taipei", true),
     );
 
     await act(() => vi.advanceTimersByTimeAsync(350));
@@ -108,7 +108,7 @@ describe("useWeatherSuggestions", () => {
         }),
     );
     const { rerender } = renderHook(
-      ({ query }) => useWeatherSuggestions(query, "Taipei"),
+      ({ query }) => useWeatherSuggestions(query, "Taipei", true),
       { initialProps: { query: "Tokyo" } },
     );
 
@@ -116,5 +116,17 @@ describe("useWeatherSuggestions", () => {
     rerender({ query: "Osaka" });
 
     expect(requestSignal?.aborted).toBe(true);
+  });
+
+  it("does not search when the query was changed programmatically", async () => {
+    const { result } = renderHook(() =>
+      useWeatherSuggestions("Kaohsiung", "Taipei", false),
+    );
+
+    await act(() => vi.runAllTimersAsync());
+
+    expect(mockSearchLocations).not.toHaveBeenCalled();
+    expect(result.current.suggestions).toEqual([]);
+    expect(result.current.suggestionsOpen).toBe(false);
   });
 });

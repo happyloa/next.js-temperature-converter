@@ -39,6 +39,7 @@ export function useWeatherDashboard(defaultQuery: string) {
   const [forecastDays, setForecastDaysState] = useState<7 | 14>(7);
   const [geolocating, setGeolocating] = useState(false);
   const [committedQuery, setCommittedQuery] = useState(defaultQuery);
+  const [suggestionsEnabled, setSuggestionsEnabled] = useState(false);
 
   const requestControllerRef = useRef<AbortController | null>(null);
   const storageRef = useRef<"local" | "session">("local");
@@ -47,7 +48,7 @@ export function useWeatherDashboard(defaultQuery: string) {
     suggestionsLoading,
     suggestionsOpen,
     setSuggestionsOpen,
-  } = useWeatherSuggestions(weatherQuery, committedQuery);
+  } = useWeatherSuggestions(weatherQuery, committedQuery, suggestionsEnabled);
 
   const persistWeather = useCallback(
     (payload: { query: string; data: WeatherData }) => {
@@ -77,6 +78,7 @@ export function useWeatherDashboard(defaultQuery: string) {
       setWeatherLoading(true);
       setForecastLoading(false);
       setWeatherError(null);
+      setSuggestionsEnabled(false);
       setSuggestionsOpen(false);
 
       try {
@@ -145,6 +147,7 @@ export function useWeatherDashboard(defaultQuery: string) {
   const handleWeatherQueryChange = (value: string) => {
     setWeatherQuery(value);
     setWeatherError(null);
+    setSuggestionsEnabled(true);
   };
 
   const handleWeatherSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -206,6 +209,8 @@ export function useWeatherDashboard(defaultQuery: string) {
 
     setGeolocating(true);
     setWeatherError(null);
+    setSuggestionsEnabled(false);
+    setSuggestionsOpen(false);
 
     try {
       const position = await requestCurrentPosition(navigator.geolocation);

@@ -56,7 +56,18 @@ test("weather search avoids duplicate full requests", async ({ page }) => {
   expect(requests.geocodeLookup).toBe(1);
 
   const search = page.getByRole("combobox", { name: "搜尋全球城市" });
+  const searchForm = page.getByRole("search");
+  const initialFormBox = await searchForm.boundingBox();
   await search.fill("Tokyo");
+  await expect(search).toHaveAttribute("aria-busy", "true");
+  const loadingFormBox = await searchForm.boundingBox();
+  expect(initialFormBox).not.toBeNull();
+  expect(loadingFormBox).not.toBeNull();
+  if (initialFormBox && loadingFormBox) {
+    expect(
+      Math.abs(initialFormBox.height - loadingFormBox.height),
+    ).toBeLessThan(1);
+  }
   await expect(page.getByRole("option", { name: /Tokyo/ })).toBeVisible();
   expect(requests.suggestions).toBe(1);
   expect(requests.forecast).toBe(1);
@@ -78,6 +89,35 @@ test("weather search avoids duplicate full requests", async ({ page }) => {
 
   await expectPageNotToOverflow(page);
   await expectNoSeriousAccessibilityViolations(page);
+});
+
+test("city presets do not open location suggestions", async ({ page }) => {
+  const requests = await mockWeatherApis(page);
+  await page.goto("/weather");
+  await expect(
+    page.getByRole("heading", { name: "Taipei · Taiwan" }),
+  ).toBeVisible();
+
+  const searchForm = page.getByRole("search");
+  const initialFormBox = await searchForm.boundingBox();
+  await page.getByRole("button", { name: "高雄", exact: true }).click();
+
+  await expect(
+    page.getByRole("combobox", { name: "搜尋全球城市" }),
+  ).toHaveValue("Kaohsiung");
+  await expect.poll(() => requests.forecast).toBe(2);
+  await page.waitForTimeout(450);
+
+  expect(requests.suggestions).toBe(0);
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+  const finalFormBox = await searchForm.boundingBox();
+  expect(initialFormBox).not.toBeNull();
+  expect(finalFormBox).not.toBeNull();
+  if (initialFormBox && finalFormBox) {
+    expect(Math.abs(initialFormBox.height - finalFormBox.height)).toBeLessThan(
+      1,
+    );
+  }
 });
 
 async function expectPageNotToOverflow(page: Page) {
@@ -145,6 +185,10 @@ async function mockWeatherApis(page: Page) {
     const isTokyo = url.searchParams.get("name")?.toLowerCase() === "tokyo";
     if (isSuggestion) requests.suggestions += 1;
     else requests.geocodeLookup += 1;
+
+    if (isSuggestion) {
+      await new Promise((resolve) => setTimeout(resolve, 120));
+    }
 
     await route.fulfill({
       contentType: "application/json",

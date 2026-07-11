@@ -7,7 +7,11 @@ import type { GeoApiLocation } from "../lib/weatherApi";
 
 const SUGGESTION_DELAY_MS = 350;
 
-export function useWeatherSuggestions(query: string, committedQuery: string) {
+export function useWeatherSuggestions(
+  query: string,
+  committedQuery: string,
+  enabled: boolean,
+) {
   const [suggestions, setSuggestions] = useState<GeoApiLocation[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
@@ -17,7 +21,7 @@ export function useWeatherSuggestions(query: string, committedQuery: string) {
     const trimmed = query.trim();
     controllerRef.current?.abort();
 
-    if (trimmed.length < 2 || trimmed === committedQuery) {
+    if (!enabled || trimmed.length < 2 || trimmed === committedQuery) {
       startTransition(() => {
         setSuggestions([]);
         setSuggestionsLoading(false);
@@ -47,7 +51,7 @@ export function useWeatherSuggestions(query: string, committedQuery: string) {
     }, SUGGESTION_DELAY_MS);
 
     return () => window.clearTimeout(timer);
-  }, [committedQuery, query]);
+  }, [committedQuery, enabled, query]);
 
   useEffect(() => () => controllerRef.current?.abort(), []);
 

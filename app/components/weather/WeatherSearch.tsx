@@ -82,37 +82,40 @@ export function WeatherSearch({
           搜尋全球城市
         </label>
         <Search className="ml-1.5 h-4 w-4 text-ink-subtle" aria-hidden />
-        <input
-          id="weather-search"
-          type="search"
-          value={query}
-          onChange={(event) => {
-            setActiveSuggestion(-1);
-            onQueryChange(event.target.value);
-          }}
-          onFocus={() => suggestions.length && setSuggestionsOpen(true)}
-          onBlur={closeSuggestions}
-          onKeyDown={handleSearchKeyDown}
-          autoComplete="off"
-          placeholder="輸入城市，例如 Taipei"
-          role="combobox"
-          aria-autocomplete="list"
-          aria-haspopup="listbox"
-          aria-expanded={suggestionsOpen}
-          aria-controls="weather-suggestions"
-          aria-activedescendant={
-            suggestionsOpen && activeSuggestion >= 0
-              ? `weather-suggestion-${activeSuggestion}`
-              : undefined
-          }
-          className="w-full min-w-0 border-0 bg-transparent px-1 py-2 text-sm text-ink-strong outline-0"
-        />
-        {suggestionsLoading ? (
-          <LoaderCircle
-            className="h-4 w-4 animate-spin text-ink-subtle"
-            aria-hidden
+        <div className="relative min-w-0">
+          <input
+            id="weather-search"
+            type="search"
+            value={query}
+            onChange={(event) => {
+              setActiveSuggestion(-1);
+              onQueryChange(event.target.value);
+            }}
+            onFocus={() => suggestions.length && setSuggestionsOpen(true)}
+            onBlur={closeSuggestions}
+            onKeyDown={handleSearchKeyDown}
+            autoComplete="off"
+            placeholder="輸入城市，例如 Taipei"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-haspopup="listbox"
+            aria-expanded={suggestionsOpen}
+            aria-controls="weather-suggestions"
+            aria-busy={suggestionsLoading}
+            aria-activedescendant={
+              suggestionsOpen && activeSuggestion >= 0
+                ? `weather-suggestion-${activeSuggestion}`
+                : undefined
+            }
+            className="w-full min-w-0 border-0 bg-transparent px-1 py-2 pr-7 text-sm text-ink-strong outline-0"
           />
-        ) : null}
+          {suggestionsLoading ? (
+            <LoaderCircle
+              className="absolute top-1/2 right-1 h-4 w-4 -translate-y-1/2 animate-spin text-ink-subtle"
+              aria-hidden
+            />
+          ) : null}
+        </div>
         <button
           type="button"
           onClick={onGeolocate}
