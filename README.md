@@ -69,7 +69,7 @@ npm run dev
 npm run format:check   # 格式檢查
 npm run lint           # ESLint
 npm run typecheck      # TypeScript
-npm run test           # 70+ 項單元與 hook 測試
+npm run test           # 85 項單元與 hook 測試
 npm run test:coverage  # 含全域 coverage 門檻
 npm run build          # Production build
 npm run test:e2e       # port 3100 桌機/手機流程、響應式與 axe 掃描
@@ -94,6 +94,7 @@ app/
 │   ├── useWeatherSuggestions.ts # debounce、取消與建議狀態
 │   └── useWeatherDashboard.ts
 ├── lib/
+│   ├── async.ts                 # 非同步取消判斷
 │   ├── clipboard.ts             # Clipboard API 與安全 fallback
 │   ├── export.ts                # CSV 匯出
 │   ├── geolocation.ts           # 瀏覽器定位與錯誤訊息
@@ -118,4 +119,4 @@ e2e/                             # Playwright 桌機/手機流程
 | `NEXT_PUBLIC_GOOGLE_VERIFICATION` | Google Search Console 驗證碼，可選。                      |
 | `PLAYWRIGHT_CHANNEL`              | 覆寫本機 E2E 瀏覽器 channel，可選。                       |
 
-天氣與空氣品質資料來源為 [Open-Meteo](https://open-meteo.com/)；空氣品質模型來自 CAMS ENSEMBLE。所有環境指標僅供資訊參考。
+天氣與空氣品質資料來源為 [Open-Meteo](https://open-meteo.com/)；空氣品質模型來自 CAMS ENSEMBLE。API 請求具備逾時、取消與回應資料驗證，空氣品質失敗時不會阻塞主要天氣內容。所有環境指標僅供資訊參考。

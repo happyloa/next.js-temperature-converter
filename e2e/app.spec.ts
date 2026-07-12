@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 test("temperature conversion remains exact and usable", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
 
@@ -187,7 +188,7 @@ async function mockWeatherApis(page: Page) {
     else requests.geocodeLookup += 1;
 
     if (isSuggestion) {
-      await new Promise((resolve) => setTimeout(resolve, 120));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
     await route.fulfill({
