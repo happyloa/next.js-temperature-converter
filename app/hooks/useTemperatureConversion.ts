@@ -27,17 +27,23 @@ export function useTemperatureConversion(
   const [rawInput, setRawInput] = useState<string>("25");
   const [rangeMode, setRangeMode] = useState<TemperatureRangeMode>("daily");
 
-  const value = Number.parseFloat(rawInput);
+  const value = rawInput.trim() ? Number(rawInput) : Number.NaN;
   const activeScale = getScale(scale);
   const minimumValue = getMinimumTemperature(activeScale);
-  const validationError =
-    Number.isFinite(value) && value < minimumValue - 1e-9
-      ? `不能低於絕對零度（${formatTemperature(minimumValue)} ${activeScale.symbol}）`
-      : null;
+  let validationError =
+    rawInput && !Number.isFinite(value)
+      ? "請輸入可計算的有限數值。"
+      : Number.isFinite(value) && value < minimumValue - 1e-9
+        ? `不能低於絕對零度（${formatTemperature(minimumValue)} ${activeScale.symbol}）`
+        : null;
   const sliderRange = getTemperatureRange(activeScale, rangeMode);
-  const conversions = !validationError
+  let conversions = !validationError
     ? createConversions(activeScale, value)
     : [];
+  if (conversions.some((item) => !Number.isFinite(item.result))) {
+    validationError = "數值過大，無法完成所有溫標換算。";
+    conversions = [];
+  }
   const resultFor = (code: TemperatureScaleCode) =>
     conversions.find((item) => item.code === code)?.result ?? Number.NaN;
   const celsiusValue = resultFor("celsius");
@@ -84,7 +90,13 @@ export function useTemperatureConversion(
     id,
     timestamp,
   }: Pick<HistoryEntry, "id" | "timestamp">): HistoryEntry | null => {
-    if (!conversions.length) return null;
+    if (
+      !conversions.length ||
+      !Number.isFinite(value) ||
+      conversions.some((item) => !Number.isFinite(item.result))
+    ) {
+      return null;
+    }
 
     return {
       id,
@@ -118,7 +130,10 @@ export function useTemperatureConversion(
 
   const showSolarProgress = Number.isFinite(kelvinValue);
 
-  const canAddHistory = conversions.length > 0;
+  const canAddHistory =
+    conversions.length > 0 &&
+    Number.isFinite(value) &&
+    conversions.every((item) => Number.isFinite(item.result));
 
   return {
     scale,

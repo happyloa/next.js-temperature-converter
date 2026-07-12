@@ -115,6 +115,7 @@ export function TemperatureInputCard({
               inputMode="decimal"
               value={rawInput}
               onChange={(event) => handleRawInputChange(event.target.value)}
+              maxLength={64}
               placeholder="例如 25"
               aria-invalid={Boolean(validationError)}
               aria-describedby="temperature-input-help"

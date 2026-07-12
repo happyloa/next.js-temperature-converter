@@ -1,7 +1,11 @@
 export async function copyText(text: string): Promise<void> {
   if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Permission and browser-policy failures can still use the legacy path.
+    }
   }
 
   if (typeof document === "undefined") {
@@ -18,7 +22,9 @@ export async function copyText(text: string): Promise<void> {
 
   let succeeded = false;
   try {
-    succeeded = document.execCommand("copy");
+    succeeded =
+      typeof document.execCommand === "function" &&
+      document.execCommand("copy");
   } finally {
     textarea.remove();
   }

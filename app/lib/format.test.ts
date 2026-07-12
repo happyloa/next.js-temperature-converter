@@ -12,7 +12,11 @@ import {
 describe("format helpers", () => {
   it("formats and normalizes temperature values", () => {
     expect(formatTemperature(1234.567)).toBe("1,234.57");
-    expect(toInputString(1.234567)).toBe("1.2346");
+    expect(toInputString(1.234567)).toBe("1.234567");
+    expect(toInputString(1.2345678901234)).toBe("1.234567890123");
+    expect(toInputString(76.99999999999994)).toBe("77");
+    expect(toInputString(1e-7)).toBe("0.0000001");
+    expect(toInputString(1e21)).toBe("1000000000000000000000");
     expect(toInputString(Number.NaN)).toBe("");
     expect(clamp(20, 0, 10)).toBe(10);
     expect(clamp(-5, 0, 10)).toBe(0);

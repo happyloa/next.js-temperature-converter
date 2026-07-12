@@ -39,6 +39,19 @@ describe("history payload and export", () => {
     expect(parseHistoryPayload({})).toBeNull();
   });
 
+  it("filters invalid dates and non-finite numeric values", () => {
+    expect(
+      parseHistoryPayload([
+        { ...historyEntry, timestamp: "not-a-date" },
+        { ...historyEntry, value: Number.POSITIVE_INFINITY },
+        {
+          ...historyEntry,
+          conversions: [{ ...historyEntry.conversions[0], result: Number.NaN }],
+        },
+      ]),
+    ).toEqual([]);
+  });
+
   it("exports raw numeric values without locale thousands separators", () => {
     const csv = historyToCsv([historyEntry]);
 

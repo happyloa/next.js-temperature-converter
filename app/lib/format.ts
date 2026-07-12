@@ -13,12 +13,31 @@ export const timeFormatter = new Intl.DateTimeFormat("zh-TW", {
 });
 
 /**
- * 將數值轉成輸入框可用的文字，避免出現科學記號。
+ * 將數值轉成輸入框可用的文字，保留實用精度並避免科學記號。
  */
 export const toInputString = (value: number): string => {
   if (!Number.isFinite(value)) return "";
-  const trimmed = Number(value.toFixed(4));
-  return `${trimmed}`;
+  const precise = Number.parseFloat(value.toPrecision(13));
+  const nearestInteger = Math.round(precise);
+  const stable =
+    Math.abs(precise - nearestInteger) <=
+    Number.EPSILON * Math.max(1, Math.abs(precise)) * 8
+      ? nearestInteger
+      : precise;
+  const normalized = `${stable}`;
+  const match = normalized.match(/^(-?)(\d+)(?:\.(\d+))?e([+-]?\d+)$/i);
+  if (!match) return normalized;
+
+  const [, sign, integer, fraction = "", exponentText] = match;
+  const digits = `${integer}${fraction}`;
+  const decimalIndex = integer.length + Number(exponentText);
+  if (decimalIndex <= 0) {
+    return `${sign}0.${"0".repeat(-decimalIndex)}${digits}`;
+  }
+  if (decimalIndex >= digits.length) {
+    return `${sign}${digits}${"0".repeat(decimalIndex - digits.length)}`;
+  }
+  return `${sign}${digits.slice(0, decimalIndex)}.${digits.slice(decimalIndex)}`;
 };
 
 /**
