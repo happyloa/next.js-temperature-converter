@@ -66,8 +66,8 @@ export function buildWeatherData(
     uvIndexUnit: forecast.current_units?.uv_index ?? "",
     weatherCode: forecast.current.weather_code,
     isDay: forecast.current.is_day === 1,
-    dailyHigh: forecast.daily?.temperature_2m_max?.[0] ?? Number.NaN,
-    dailyLow: forecast.daily?.temperature_2m_min?.[0] ?? Number.NaN,
+    dailyHigh: forecast.daily.temperature_2m_max[0],
+    dailyLow: forecast.daily.temperature_2m_min[0],
     dailyTemperatureUnit: forecast.daily_units?.temperature_2m_max ?? "°C",
     airQuality: airQualityCurrent
       ? {
@@ -83,10 +83,10 @@ export function buildWeatherData(
     localTime: now.toISOString(),
     utcOffset: utcOffsetString,
     dayOfWeek: dayOfWeekIndex,
-    dailyForecast: (forecast.daily?.time ?? []).map((date, index) => ({
+    dailyForecast: forecast.daily.time.map((date, index) => ({
       date,
-      high: forecast.daily?.temperature_2m_max?.[index] ?? 0,
-      low: forecast.daily?.temperature_2m_min?.[index] ?? 0,
+      high: forecast.daily.temperature_2m_max[index],
+      low: forecast.daily.temperature_2m_min[index],
     })),
   };
 }
@@ -104,14 +104,14 @@ export function mergeWeatherForecast(
       typeof forecast.utc_offset_seconds === "number"
         ? formatOffset(forecast.utc_offset_seconds)
         : current.utcOffset,
-    dailyHigh: forecast.daily?.temperature_2m_max?.[0] ?? Number.NaN,
-    dailyLow: forecast.daily?.temperature_2m_min?.[0] ?? Number.NaN,
+    dailyHigh: forecast.daily.temperature_2m_max[0],
+    dailyLow: forecast.daily.temperature_2m_min[0],
     dailyTemperatureUnit:
       forecast.daily_units?.temperature_2m_max ?? current.dailyTemperatureUnit,
-    dailyForecast: (forecast.daily?.time ?? []).map((date, index) => ({
+    dailyForecast: forecast.daily.time.map((date, index) => ({
       date,
-      high: forecast.daily?.temperature_2m_max?.[index] ?? Number.NaN,
-      low: forecast.daily?.temperature_2m_min?.[index] ?? Number.NaN,
+      high: forecast.daily.temperature_2m_max[index],
+      low: forecast.daily.temperature_2m_min[index],
     })),
   };
 }
@@ -129,10 +129,14 @@ function formatOffset(offsetSeconds: number): string {
  */
 export function parseWeatherPayload(
   value: unknown,
-): { query: string; data: WeatherData } | null {
+): { query: string; data: WeatherData; forecastDays: 7 | 14 } | null {
   if (!value || typeof value !== "object") return null;
 
-  const record = value as { query?: unknown; data?: unknown };
+  const record = value as {
+    query?: unknown;
+    data?: unknown;
+    forecastDays?: unknown;
+  };
   if (
     typeof record.query !== "string" ||
     !record.data ||
@@ -148,14 +152,19 @@ export function parseWeatherPayload(
     "dailyLow",
   ];
   const hasValidOptionalNumbers = optionalNumberFields.every(
-    (field) => typeof data[field] === "number" || data[field] === null,
+    (field) =>
+      (typeof data[field] === "number" &&
+        Number.isFinite(data[field] as number)) ||
+      data[field] === null,
   );
   const hasValidCoordinates =
     data.coordinates === null ||
     (data.coordinates !== undefined &&
       typeof data.coordinates === "object" &&
       typeof data.coordinates.latitude === "number" &&
-      typeof data.coordinates.longitude === "number");
+      Number.isFinite(data.coordinates.latitude) &&
+      typeof data.coordinates.longitude === "number" &&
+      Number.isFinite(data.coordinates.longitude));
   const hasValidAdministrative =
     Array.isArray(data.administrative) &&
     data.administrative.every((item) => typeof item === "string");
@@ -166,20 +175,30 @@ export function parseWeatherPayload(
         item &&
         typeof item === "object" &&
         typeof item.date === "string" &&
+        !Number.isNaN(Date.parse(`${item.date}T00:00:00`)) &&
         typeof item.high === "number" &&
-        typeof item.low === "number",
+        Number.isFinite(item.high) &&
+        typeof item.low === "number" &&
+        Number.isFinite(item.low),
     );
+  const forecastLength = Array.isArray(data.dailyForecast)
+    ? data.dailyForecast.length
+    : 0;
   const hasValidAirQuality =
     data.airQuality === null ||
     data.airQuality === undefined ||
     (typeof data.airQuality === "object" &&
       typeof data.airQuality.aqi === "number" &&
+      Number.isFinite(data.airQuality.aqi) &&
       typeof data.airQuality.aqiUnit === "string" &&
       typeof data.airQuality.pm25 === "number" &&
+      Number.isFinite(data.airQuality.pm25) &&
       typeof data.airQuality.pm25Unit === "string" &&
       typeof data.airQuality.pm10 === "number" &&
+      Number.isFinite(data.airQuality.pm10) &&
       typeof data.airQuality.pm10Unit === "string" &&
-      typeof data.airQuality.time === "string");
+      typeof data.airQuality.time === "string" &&
+      !Number.isNaN(Date.parse(data.airQuality.time)));
 
   if (
     typeof data.location !== "string" ||
@@ -187,20 +206,28 @@ export function parseWeatherPayload(
     typeof data.timezone !== "string" ||
     typeof data.timezoneAbbreviation !== "string" ||
     typeof data.observationTime !== "string" ||
+    Number.isNaN(Date.parse(data.observationTime)) ||
     typeof data.temperature !== "number" ||
+    !Number.isFinite(data.temperature) ||
     typeof data.temperatureUnit !== "string" ||
     typeof data.apparentTemperature !== "number" ||
+    !Number.isFinite(data.apparentTemperature) ||
     typeof data.apparentTemperatureUnit !== "string" ||
     typeof data.humidity !== "number" ||
+    !Number.isFinite(data.humidity) ||
     typeof data.humidityUnit !== "string" ||
     typeof data.windSpeed !== "number" ||
+    !Number.isFinite(data.windSpeed) ||
     typeof data.windSpeedUnit !== "string" ||
     typeof data.pressureUnit !== "string" ||
     typeof data.precipitation !== "number" ||
+    !Number.isFinite(data.precipitation) ||
     typeof data.precipitationUnit !== "string" ||
     typeof data.uvIndex !== "number" ||
+    !Number.isFinite(data.uvIndex) ||
     typeof data.uvIndexUnit !== "string" ||
     typeof data.weatherCode !== "number" ||
+    !Number.isFinite(data.weatherCode) ||
     typeof data.isDay !== "boolean" ||
     !hasValidOptionalNumbers ||
     typeof data.dailyTemperatureUnit !== "string" ||
@@ -209,19 +236,29 @@ export function parseWeatherPayload(
     !hasValidAirQuality ||
     (data.localTime !== null &&
       data.localTime !== undefined &&
-      typeof data.localTime !== "string") ||
+      (typeof data.localTime !== "string" ||
+        Number.isNaN(Date.parse(data.localTime)))) ||
     (data.utcOffset !== null &&
       data.utcOffset !== undefined &&
       typeof data.utcOffset !== "string") ||
     (data.dayOfWeek !== null &&
       data.dayOfWeek !== undefined &&
-      typeof data.dayOfWeek !== "number")
+      (typeof data.dayOfWeek !== "number" ||
+        !Number.isInteger(data.dayOfWeek) ||
+        data.dayOfWeek < 0 ||
+        data.dayOfWeek > 6))
   ) {
     return null;
   }
 
   return {
     query: record.query,
+    forecastDays:
+      record.forecastDays === 7 || record.forecastDays === 14
+        ? record.forecastDays
+        : forecastLength > 7
+          ? 14
+          : 7,
     data: {
       ...data,
       pressure: typeof data.pressure === "number" ? data.pressure : Number.NaN,

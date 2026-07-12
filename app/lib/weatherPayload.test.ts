@@ -112,12 +112,50 @@ describe("weather payload", () => {
 
   it("accepts valid cached data and rejects incomplete payloads", () => {
     const data = buildWeatherData(location, forecast, airQuality);
-    const serialized = JSON.parse(JSON.stringify({ query: "Taipei", data }));
+    const serialized = JSON.parse(
+      JSON.stringify({ query: "Taipei", data, forecastDays: 14 }),
+    );
 
     expect(parseWeatherPayload(serialized)?.data.location).toBe(
       "Taipei · Taiwan",
     );
+    expect(parseWeatherPayload(serialized)?.forecastDays).toBe(14);
     expect(parseWeatherPayload({ query: "Taipei", data: {} })).toBeNull();
     expect(parseWeatherPayload(null)).toBeNull();
+  });
+
+  it("infers legacy forecast ranges and rejects unsafe cached values", () => {
+    const dates = Array.from(
+      { length: 14 },
+      (_, index) => `2026-07-${String(10 + index).padStart(2, "0")}`,
+    );
+    const legacyData = buildWeatherData(
+      location,
+      {
+        ...forecast,
+        daily: {
+          time: dates,
+          temperature_2m_max: dates.map(() => 32),
+          temperature_2m_min: dates.map(() => 25),
+        },
+      },
+      airQuality,
+    );
+
+    expect(
+      parseWeatherPayload({ query: "Taipei", data: legacyData })?.forecastDays,
+    ).toBe(14);
+    expect(
+      parseWeatherPayload({
+        query: "Taipei",
+        data: { ...legacyData, temperature: Number.POSITIVE_INFINITY },
+      }),
+    ).toBeNull();
+    expect(
+      parseWeatherPayload({
+        query: "Taipei",
+        data: { ...legacyData, observationTime: "not-a-date" },
+      }),
+    ).toBeNull();
   });
 });

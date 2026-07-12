@@ -7,7 +7,11 @@ import {
   searchLocation,
   searchLocations,
 } from "../lib/weatherApi";
-import type { ForecastApiResponse, GeoApiLocation } from "../lib/weatherApi";
+import type {
+  AirQualityApiResponse,
+  ForecastApiResponse,
+  GeoApiLocation,
+} from "../lib/weatherApi";
 import { useWeatherDashboard } from "./useWeatherDashboard";
 
 vi.mock("../lib/weatherApi", () => ({
@@ -33,6 +37,15 @@ const tokyo: GeoApiLocation = {
   latitude: 35.68,
   longitude: 139.76,
   timezone: "Asia/Tokyo",
+};
+
+const airQuality: AirQualityApiResponse = {
+  current: {
+    european_aqi: 42,
+    pm2_5: 12.5,
+    pm10: 24,
+    time: "2026-07-10T12:00",
+  },
 };
 
 const createForecast = (days = 7): ForecastApiResponse => ({
@@ -152,6 +165,53 @@ describe("useWeatherDashboard", () => {
     expect(mockFetchAirQuality).toHaveBeenCalledTimes(1);
   });
 
+  it("does not let a completed request overwrite newer input", async () => {
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+    const previousData = result.current.weatherData;
+    vi.clearAllMocks();
+    mockSearchLocation.mockResolvedValue(tokyo);
+
+    let resolveForecast: ((value: ForecastApiResponse) => void) | undefined;
+    mockFetchForecast.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveForecast = resolve;
+        }),
+    );
+    act(() => result.current.handleWeatherPreset("Tokyo"));
+    await waitFor(() => expect(mockFetchForecast).toHaveBeenCalledOnce());
+
+    act(() => result.current.handleWeatherQueryChange("Osaka"));
+    await act(async () => resolveForecast?.(createForecast()));
+
+    expect(result.current.weatherQuery).toBe("Osaka");
+    expect(result.current.weatherData).toEqual(previousData);
+    expect(result.current.weatherLoading).toBe(false);
+  });
+
+  it("renders forecast before optional air quality finishes", async () => {
+    let resolveAirQuality:
+      ((value: AirQualityApiResponse | null) => void) | undefined;
+    mockFetchAirQuality.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveAirQuality = resolve;
+        }),
+    );
+
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+
+    expect(result.current.weatherLoading).toBe(false);
+    expect(result.current.weatherData?.airQuality).toBeNull();
+
+    await act(async () => resolveAirQuality?.(airQuality));
+    await waitFor(() =>
+      expect(result.current.weatherData?.airQuality?.aqi).toBe(42),
+    );
+  });
+
   it("updates forecast days without repeating geocoding or air-quality calls", async () => {
     const { result } = renderHook(() => useWeatherDashboard("Taipei"));
     await waitFor(() => expect(result.current.weatherData).not.toBeNull());
@@ -178,9 +238,11 @@ describe("useWeatherDashboard", () => {
     expect(mockSearchLocation).not.toHaveBeenCalled();
     expect(mockFetchAirQuality).not.toHaveBeenCalled();
     expect(
-      JSON.parse(localStorage.getItem("weather-dashboard-state") ?? "null")
-        .query,
-    ).toBe("Taipei");
+      JSON.parse(localStorage.getItem("weather-dashboard-state") ?? "null"),
+    ).toMatchObject({
+      query: "Taipei",
+      forecastDays: 14,
+    });
   });
 
   it("keeps the last successful data when a refresh fails", async () => {
@@ -194,7 +256,11 @@ describe("useWeatherDashboard", () => {
 
     act(() => result.current.handleWeatherPreset("Tokyo"));
 
-    await waitFor(() => expect(result.current.weatherError).toBe("offline"));
+    await waitFor(() =>
+      expect(result.current.weatherError).toBe(
+        "無法取得天氣資訊，請稍後再試。",
+      ),
+    );
     expect(result.current.weatherData).toEqual(previousData);
     consoleSpy.mockRestore();
   });
@@ -257,6 +323,7 @@ describe("useWeatherDashboard", () => {
       "無法更新預報天數，目前仍顯示先前資料。",
     );
     expect(result.current.weatherData?.dailyForecast).toEqual(previousForecast);
+    expect(result.current.forecastDays).toBe(7);
     expect(result.current.forecastLoading).toBe(false);
   });
 
@@ -298,5 +365,45 @@ describe("useWeatherDashboard", () => {
       expect.any(AbortSignal),
     );
     expect(result.current.geolocating).toBe(false);
+  });
+
+  it("ignores a location result after another city is selected", async () => {
+    let resolvePosition: PositionCallback | undefined;
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: (resolve: PositionCallback) => {
+          resolvePosition = resolve;
+        },
+      },
+    });
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+    vi.clearAllMocks();
+
+    act(() => void result.current.handleGeolocate());
+    await waitFor(() => expect(result.current.geolocating).toBe(true));
+
+    mockSearchLocation.mockResolvedValue(tokyo);
+    act(() => result.current.handleWeatherPreset("Tokyo"));
+    await waitFor(() =>
+      expect(result.current.weatherData?.location).toBe("Tokyo · Japan"),
+    );
+
+    await act(async () =>
+      resolvePosition?.({
+        coords: { latitude: 24.15, longitude: 120.68 },
+      } as GeolocationPosition),
+    );
+
+    expect(result.current.weatherQuery).toBe("Tokyo");
+    expect(result.current.weatherData?.location).toBe("Tokyo · Japan");
+    expect(mockFetchForecast).not.toHaveBeenCalledWith(
+      24.15,
+      120.68,
+      "auto",
+      expect.anything(),
+      expect.anything(),
+    );
   });
 });

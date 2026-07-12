@@ -76,6 +76,55 @@ describe("useWeatherSuggestions", () => {
     expect(result.current.suggestionsOpen).toBe(false);
   });
 
+  it("keeps empty results closed", async () => {
+    mockSearchLocations.mockResolvedValueOnce([]);
+    const { result } = renderHook(() =>
+      useWeatherSuggestions("Missing", "Taipei", true),
+    );
+
+    await act(() => vi.advanceTimersByTimeAsync(350));
+
+    expect(result.current.suggestions).toEqual([]);
+    expect(result.current.suggestionsOpen).toBe(false);
+  });
+
+  it("does not reopen after blur while a request is pending", async () => {
+    let resolveRequest: ((locations: GeoApiLocation[]) => void) | undefined;
+    mockSearchLocations.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRequest = resolve;
+        }),
+    );
+    const { result } = renderHook(() =>
+      useWeatherSuggestions("Tokyo", "Taipei", true),
+    );
+    await act(() => vi.advanceTimersByTimeAsync(350));
+
+    act(() => result.current.setSuggestionsOpen(false));
+    await act(async () => resolveRequest?.([tokyo]));
+
+    expect(result.current.suggestions).toEqual([tokyo]);
+    expect(result.current.suggestionsOpen).toBe(false);
+
+    act(() => result.current.setSuggestionsOpen(true));
+    expect(result.current.suggestionsOpen).toBe(true);
+  });
+
+  it("clears old suggestions as soon as the query changes", async () => {
+    const { result, rerender } = renderHook(
+      ({ query }) => useWeatherSuggestions(query, "Taipei", true),
+      { initialProps: { query: "Tokyo" } },
+    );
+    await act(() => vi.advanceTimersByTimeAsync(350));
+    expect(result.current.suggestions).toEqual([tokyo]);
+
+    rerender({ query: "Osaka" });
+
+    expect(result.current.suggestions).toEqual([]);
+    expect(result.current.suggestionsOpen).toBe(false);
+  });
+
   it("logs non-abort failures and returns to the idle state", async () => {
     const consoleSpy = vi
       .spyOn(console, "error")

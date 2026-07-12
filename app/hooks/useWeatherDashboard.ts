@@ -13,6 +13,7 @@ import {
   getGeolocationErrorMessage,
   requestCurrentPosition,
 } from "../lib/geolocation";
+import { isAbortError } from "../lib/async";
 import { readWithFallback, writeWithFallback } from "../lib/storage";
 import {
   fetchAirQuality,
@@ -29,6 +30,12 @@ import type { WeatherData } from "../types/weather";
 import { useWeatherSuggestions } from "./useWeatherSuggestions";
 
 const WEATHER_STORAGE_KEY = "weather-dashboard-state";
+const GENERIC_WEATHER_ERROR = "無法取得天氣資訊，請稍後再試。";
+
+const getRequestErrorMessage = (error: unknown): string =>
+  error instanceof Error && error.name === "WeatherApiError"
+    ? error.message
+    : GENERIC_WEATHER_ERROR;
 
 export function useWeatherDashboard(defaultQuery: string) {
   const [weatherQuery, setWeatherQuery] = useState(defaultQuery);
@@ -42,6 +49,7 @@ export function useWeatherDashboard(defaultQuery: string) {
   const [suggestionsEnabled, setSuggestionsEnabled] = useState(false);
 
   const requestControllerRef = useRef<AbortController | null>(null);
+  const operationIdRef = useRef(0);
   const storageRef = useRef<"local" | "session">("local");
   const {
     suggestions,
@@ -51,7 +59,7 @@ export function useWeatherDashboard(defaultQuery: string) {
   } = useWeatherSuggestions(weatherQuery, committedQuery, suggestionsEnabled);
 
   const persistWeather = useCallback(
-    (payload: { query: string; data: WeatherData }) => {
+    (payload: { query: string; data: WeatherData; forecastDays: 7 | 14 }) => {
       const succeededWith = writeWithFallback(
         WEATHER_STORAGE_KEY,
         JSON.stringify(payload),
@@ -62,6 +70,23 @@ export function useWeatherDashboard(defaultQuery: string) {
     [],
   );
 
+  const beginRequest = useCallback(() => {
+    operationIdRef.current += 1;
+    requestControllerRef.current?.abort();
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
+    return { controller, operationId: operationIdRef.current };
+  }, []);
+
+  const invalidateActiveOperation = useCallback(() => {
+    operationIdRef.current += 1;
+    requestControllerRef.current?.abort();
+    requestControllerRef.current = null;
+    setWeatherLoading(false);
+    setForecastLoading(false);
+    setGeolocating(false);
+  }, []);
+
   const fetchWeather = useCallback(
     async (query: string, days: 7 | 14, providedLocation?: GeoApiLocation) => {
       const trimmed = query.trim();
@@ -70,13 +95,15 @@ export function useWeatherDashboard(defaultQuery: string) {
         return;
       }
 
-      requestControllerRef.current?.abort();
-      const controller = new AbortController();
-      requestControllerRef.current = controller;
+      const { controller, operationId } = beginRequest();
       const { signal } = controller;
+      const isCurrent = () =>
+        operationIdRef.current === operationId && !signal.aborted;
+      let airQualityStarted = false;
 
       setWeatherLoading(true);
       setForecastLoading(false);
+      setGeolocating(false);
       setWeatherError(null);
       setSuggestionsEnabled(false);
       setSuggestionsOpen(false);
@@ -85,66 +112,94 @@ export function useWeatherDashboard(defaultQuery: string) {
         const location =
           providedLocation ?? (await searchLocation(trimmed, signal));
         const requestTimezone = location.timezone ?? "auto";
-        const [forecast, airQuality] = await Promise.all([
-          fetchForecast(
-            location.latitude,
-            location.longitude,
-            requestTimezone,
-            days,
-            signal,
-          ),
-          fetchAirQuality(location.latitude, location.longitude, signal),
-        ]);
+        const forecast = await fetchForecast(
+          location.latitude,
+          location.longitude,
+          requestTimezone,
+          days,
+          signal,
+        );
 
-        const nextData = buildWeatherData(location, forecast, airQuality);
+        if (!isCurrent()) return;
+
+        const nextData = buildWeatherData(location, forecast, null);
         setCommittedQuery(trimmed);
         setWeatherQuery(trimmed);
+        setForecastDaysState(days);
         setWeatherData(nextData);
-        persistWeather({ query: trimmed, data: nextData });
+        persistWeather({ query: trimmed, data: nextData, forecastDays: days });
+
+        airQualityStarted = true;
+        void fetchAirQuality(location.latitude, location.longitude, signal)
+          .then((airQuality) => {
+            if (!airQuality || !isCurrent()) return;
+            const enrichedData = buildWeatherData(
+              location,
+              forecast,
+              airQuality,
+            );
+            setWeatherData(enrichedData);
+            persistWeather({
+              query: trimmed,
+              data: enrichedData,
+              forecastDays: days,
+            });
+          })
+          .catch((error) => {
+            if (isCurrent() && !isAbortError(error)) {
+              console.error("fetchAirQuality", error);
+            }
+          })
+          .finally(() => {
+            if (requestControllerRef.current === controller) {
+              requestControllerRef.current = null;
+            }
+          });
       } catch (error) {
-        if (
-          signal.aborted ||
-          (error instanceof DOMException && error.name === "AbortError")
-        ) {
-          return;
-        }
+        if (!isCurrent() || isAbortError(error)) return;
         console.error("fetchWeather", error);
-        setWeatherError(
-          error instanceof Error
-            ? error.message
-            : "無法取得天氣資訊，請稍後再試。",
-        );
+        setWeatherError(getRequestErrorMessage(error));
       } finally {
-        if (requestControllerRef.current === controller) {
-          setWeatherLoading(false);
+        if (isCurrent()) setWeatherLoading(false);
+        if (!airQualityStarted && requestControllerRef.current === controller) {
+          requestControllerRef.current = null;
         }
       }
     },
-    [persistWeather, setSuggestionsOpen],
+    [beginRequest, persistWeather, setSuggestionsOpen],
   );
 
   useEffect(() => {
     const restored = readWithFallback(WEATHER_STORAGE_KEY, parseWeatherPayload);
     const initialQuery = restored?.data.query ?? defaultQuery;
+    const initialDays = restored?.data.forecastDays ?? 7;
     if (restored) {
       startTransition(() => {
         setWeatherQuery(restored.data.query);
         setWeatherData(restored.data.data);
+        setForecastDaysState(restored.data.forecastDays);
         setCommittedQuery(restored.data.query);
       });
       storageRef.current = restored.name;
     }
 
     const initialRequest = window.setTimeout(() => {
-      void fetchWeather(initialQuery, 7);
+      void fetchWeather(initialQuery, initialDays);
     }, 0);
 
     return () => window.clearTimeout(initialRequest);
   }, [defaultQuery, fetchWeather]);
 
-  useEffect(() => () => requestControllerRef.current?.abort(), []);
+  useEffect(
+    () => () => {
+      operationIdRef.current += 1;
+      requestControllerRef.current?.abort();
+    },
+    [],
+  );
 
   const handleWeatherQueryChange = (value: string) => {
+    invalidateActiveOperation();
     setWeatherQuery(value);
     setWeatherError(null);
     setSuggestionsEnabled(true);
@@ -167,13 +222,17 @@ export function useWeatherDashboard(defaultQuery: string) {
 
   const handleForecastDaysChange = async (days: 7 | 14) => {
     if (days === forecastDays) return;
-    setForecastDaysState(days);
+    if (!weatherData?.coordinates) {
+      setForecastDaysState(days);
+      return;
+    }
 
-    if (!weatherData?.coordinates) return;
-    requestControllerRef.current?.abort();
-    const controller = new AbortController();
-    requestControllerRef.current = controller;
+    const { controller, operationId } = beginRequest();
+    const isCurrent = () =>
+      operationIdRef.current === operationId && !controller.signal.aborted;
+    setWeatherLoading(false);
     setForecastLoading(true);
+    setGeolocating(false);
     setWeatherError(null);
 
     try {
@@ -184,19 +243,26 @@ export function useWeatherDashboard(defaultQuery: string) {
         days,
         controller.signal,
       );
+      if (!isCurrent()) return;
+
       const nextData = mergeWeatherForecast(weatherData, forecast);
       setWeatherData(nextData);
-      persistWeather({ query: committedQuery, data: nextData });
+      setForecastDaysState(days);
+      persistWeather({
+        query: committedQuery,
+        data: nextData,
+        forecastDays: days,
+      });
     } catch (error) {
-      if (
-        !controller.signal.aborted &&
-        !(error instanceof DOMException && error.name === "AbortError")
-      ) {
+      if (isCurrent() && !isAbortError(error)) {
         setWeatherError("無法更新預報天數，目前仍顯示先前資料。");
       }
     } finally {
-      if (requestControllerRef.current === controller) {
+      if (isCurrent()) {
         setForecastLoading(false);
+        if (requestControllerRef.current === controller) {
+          requestControllerRef.current = null;
+        }
       }
     }
   };
@@ -207,6 +273,9 @@ export function useWeatherDashboard(defaultQuery: string) {
       return;
     }
 
+    invalidateActiveOperation();
+    operationIdRef.current += 1;
+    const geolocationOperationId = operationIdRef.current;
     setGeolocating(true);
     setWeatherError(null);
     setSuggestionsEnabled(false);
@@ -214,18 +283,25 @@ export function useWeatherDashboard(defaultQuery: string) {
 
     try {
       const position = await requestCurrentPosition(navigator.geolocation);
+      if (operationIdRef.current !== geolocationOperationId) return;
+
       const { latitude, longitude } = position.coords;
       const location: GeoApiLocation = {
         name: "目前位置",
         latitude,
         longitude,
       };
-      setWeatherQuery(location.name);
-      await fetchWeather(location.name, forecastDays, location);
-    } catch (error) {
-      setWeatherError(getGeolocationErrorMessage(error));
-    } finally {
       setGeolocating(false);
+      setWeatherQuery(location.name);
+      void fetchWeather(location.name, forecastDays, location);
+    } catch (error) {
+      if (operationIdRef.current === geolocationOperationId) {
+        setWeatherError(getGeolocationErrorMessage(error));
+      }
+    } finally {
+      if (operationIdRef.current === geolocationOperationId) {
+        setGeolocating(false);
+      }
     }
   };
 
