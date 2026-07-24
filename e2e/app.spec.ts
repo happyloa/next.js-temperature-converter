@@ -29,9 +29,9 @@ test("temperature conversion remains exact and usable", async ({ page }) => {
   await expect(
     page.getByRole("listitem").filter({ hasText: "華氏" }),
   ).toContainText("212");
-  await page.getByRole("button", { name: "複製華氏結果" }).click();
+  await page.getByRole("button", { name: "複製華氏 (°F)結果" }).click();
   await expect(
-    page.getByRole("status").filter({ hasText: "已複製華氏結果。" }),
+    page.getByRole("status").filter({ hasText: "已複製華氏 (°F)結果。" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "加入紀錄" }).click();
   await expect(
@@ -78,7 +78,11 @@ test("weather search avoids duplicate full requests", async ({ page }) => {
       Math.abs(initialFormBox.height - loadingFormBox.height),
     ).toBeLessThan(1);
   }
-  await expect(page.getByRole("option", { name: /Tokyo/ })).toBeVisible();
+  const suggestionOptions = page
+    .locator("#weather-suggestions")
+    .getByRole("option");
+  await expect(suggestionOptions).toHaveCount(2);
+  await expect(suggestionOptions.first()).toBeVisible();
   expect(requests.suggestions).toBe(1);
   expect(requests.forecast).toBe(1);
 
