@@ -29,6 +29,9 @@ export function ConversionResults({
   const resultSummary = conversions.length
     ? `轉換完成，共 ${conversions.length} 種溫標結果。`
     : (validationError ?? "等待有效的溫度輸入。");
+  const copiedConversion = copiedScale
+    ? conversions.find((conversion) => conversion.code === copiedScale)
+    : null;
 
   return (
     <div className="mt-6 border-t border-edge-subtle pt-5">
@@ -41,6 +44,14 @@ export function ConversionResults({
       </div>
       <div className="sr-only" role="status" aria-live="polite">
         {resultSummary}
+      </div>
+      <div
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {copiedConversion ? `已複製${copiedConversion.label}結果。` : ""}
       </div>
       {conversions.length ? (
         <ul className="mt-4 grid list-none gap-2 sm:grid-cols-2">

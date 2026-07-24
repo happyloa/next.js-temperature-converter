@@ -74,9 +74,8 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
         ref={triggerRef}
         type="button"
         onClick={() => setIsOpen((open) => !open)}
-        aria-haspopup="menu"
         aria-expanded={isOpen}
-        aria-controls={menuId}
+        aria-controls={isOpen ? menuId : undefined}
         className={cn(ui.button, ui.secondaryButton)}
       >
         {status === "success" ? (
@@ -99,19 +98,23 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
         <>
           <button
             type="button"
+            tabIndex={-1}
             className="fixed inset-0 z-45 border-0 bg-transparent"
-            aria-label="關閉匯出選單"
-            onClick={() => closeMenu()}
+            aria-hidden="true"
+            onPointerDown={(event) => {
+              event.preventDefault();
+              closeMenu(true);
+            }}
           />
           <div
             id={menuId}
-            role="menu"
+            role="group"
+            aria-label="匯出選項"
             className="absolute top-[calc(100%+0.35rem)] left-0 z-50 min-w-40 overflow-hidden rounded-lg border border-edge-subtle bg-surface-strong p-1.5 shadow-[var(--shadow)]"
           >
             <button
               ref={firstItemRef}
               type="button"
-              role="menuitem"
               className="flex w-full items-center gap-2 rounded-md bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong"
               onClick={() =>
                 download(
@@ -126,7 +129,6 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
             </button>
             <button
               type="button"
-              role="menuitem"
               className="flex w-full items-center gap-2 rounded-md bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong"
               onClick={() =>
                 download(
@@ -141,7 +143,6 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
             </button>
             <button
               type="button"
-              role="menuitem"
               className="flex w-full items-center gap-2 rounded-md bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong"
               onClick={async () => {
                 try {

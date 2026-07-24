@@ -29,10 +29,19 @@ test("temperature conversion remains exact and usable", async ({ page }) => {
   await expect(
     page.getByRole("listitem").filter({ hasText: "華氏" }),
   ).toContainText("212");
+  await page.getByRole("button", { name: "複製華氏結果" }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "已複製華氏結果。" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "加入紀錄" }).click();
   await expect(
     page.getByRole("region", { name: "轉換紀錄" }).locator("details"),
   ).toHaveCount(1);
+  await page.getByRole("button", { name: "匯出" }).click();
+  await expect(page.getByRole("group", { name: "匯出選項" })).toBeVisible();
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "匯出" })).toBeFocused();
 
   const html = page.locator("html");
   const initialTheme = await html.getAttribute("data-theme");
@@ -73,7 +82,16 @@ test("weather search avoids duplicate full requests", async ({ page }) => {
   expect(requests.suggestions).toBe(1);
   expect(requests.forecast).toBe(1);
 
+  await search.press("ArrowUp");
+  await expect(search).toHaveAttribute(
+    "aria-activedescendant",
+    "weather-suggestion-1",
+  );
   await search.press("ArrowDown");
+  await expect(search).toHaveAttribute(
+    "aria-activedescendant",
+    "weather-suggestion-0",
+  );
   await search.press("Enter");
   await expect(
     page.getByRole("heading", { name: "Tokyo · Japan" }),
@@ -155,6 +173,15 @@ async function expectWeatherLayout(page: Page) {
     expect(titleBox.y + titleBox.height).toBeLessThanOrEqual(rangeBox.y);
   }
 
+  const chart = page.getByRole("img", {
+    name: /日最高溫與最低溫折線圖/,
+  });
+  if (viewportWidth < 768) {
+    await expect(chart).toHaveCount(0);
+  } else {
+    await expect(chart).toHaveCount(1);
+  }
+
   if (viewportWidth >= 900) {
     const metricBoxes = await page
       .locator('section[aria-labelledby="environment-title"] > div')
@@ -191,30 +218,45 @@ async function mockWeatherApis(page: Page) {
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
+    const primaryLocation = isTokyo
+      ? {
+          id: 2,
+          name: "Tokyo",
+          country: "Japan",
+          admin1: "Tokyo",
+          latitude: 35.68,
+          longitude: 139.76,
+          timezone: "Asia/Tokyo",
+        }
+      : {
+          id: 1,
+          name: "Taipei",
+          country: "Taiwan",
+          admin1: "Taipei City",
+          latitude: 25.04,
+          longitude: 121.52,
+          timezone: "Asia/Taipei",
+        };
+    const results =
+      isSuggestion && isTokyo
+        ? [
+            primaryLocation,
+            {
+              id: 3,
+              name: "Tokyo Bay",
+              country: "Japan",
+              admin1: "Tokyo",
+              latitude: 35.63,
+              longitude: 139.78,
+              timezone: "Asia/Tokyo",
+            },
+          ]
+        : [primaryLocation];
+
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
-        results: [
-          isTokyo
-            ? {
-                id: 2,
-                name: "Tokyo",
-                country: "Japan",
-                admin1: "Tokyo",
-                latitude: 35.68,
-                longitude: 139.76,
-                timezone: "Asia/Tokyo",
-              }
-            : {
-                id: 1,
-                name: "Taipei",
-                country: "Taiwan",
-                admin1: "Taipei City",
-                latitude: 25.04,
-                longitude: 121.52,
-                timezone: "Asia/Taipei",
-              },
-        ],
+        results,
       }),
     });
   });

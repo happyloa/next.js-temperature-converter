@@ -54,6 +54,9 @@ export function WeatherSearch({
       setSuggestionsOpen(true);
       setActiveSuggestion((current) => {
         const direction = event.key === "ArrowDown" ? 1 : -1;
+        if (current < 0) {
+          return event.key === "ArrowDown" ? 0 : suggestions.length - 1;
+        }
         return (current + direction + suggestions.length) % suggestions.length;
       });
       return;

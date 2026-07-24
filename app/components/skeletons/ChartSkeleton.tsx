@@ -7,7 +7,7 @@ export function ChartGraphicSkeleton({
 }) {
   return (
     <div
-      className={`mt-4 flex h-full min-h-64 flex-col justify-between gap-6 ${className}`}
+      className={`flex min-h-64 flex-col justify-between gap-6 ${className}`}
       aria-hidden="true"
     >
       <div className="grid flex-1 grid-cols-7 items-end gap-3 border-b border-l border-edge-subtle px-3 pb-3">

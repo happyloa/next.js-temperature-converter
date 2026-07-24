@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import { CalendarDays } from "lucide-react";
 
 import { ui } from "../../lib/uiStyles";
@@ -10,8 +11,28 @@ import { ChartGraphicSkeleton } from "../skeletons/ChartSkeleton";
 
 const WeatherChart = dynamic(
   () => import("../WeatherChart").then((module) => module.WeatherChart),
-  { loading: () => <ChartGraphicSkeleton />, ssr: false },
+  {
+    loading: () => <ChartGraphicSkeleton className="h-full min-h-0" />,
+    ssr: false,
+  },
 );
+
+const DESKTOP_CHART_QUERY = "(min-width: 768px)";
+
+function useDesktopChart() {
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(DESKTOP_CHART_QUERY);
+    const updateMatch = () => setIsDesktop(mediaQuery.matches);
+
+    updateMatch();
+    mediaQuery.addEventListener("change", updateMatch);
+    return () => mediaQuery.removeEventListener("change", updateMatch);
+  }, []);
+
+  return isDesktop;
+}
 
 export function WeatherForecast({
   data,
@@ -26,6 +47,8 @@ export function WeatherForecast({
   loading: boolean;
   onDaysChange: (days: 7 | 14) => void;
 }) {
+  const isDesktopChart = useDesktopChart();
+
   return (
     <section
       className={cn(ui.panel, "p-5 sm:p-6")}
@@ -92,8 +115,8 @@ export function WeatherForecast({
       </div>
 
       <div className="mt-4 hidden h-96 md:block">
-        {loading ? (
-          <ChartGraphicSkeleton />
+        {loading || !isDesktopChart ? (
+          <ChartGraphicSkeleton className="h-full min-h-0" />
         ) : (
           <WeatherChart data={data} unit={unit} />
         )}
