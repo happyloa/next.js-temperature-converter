@@ -43,7 +43,7 @@
 | Chart     | Recharts，僅在用戶端延遲載入                 |
 | Data      | Open-Meteo Geocoding、Forecast、Air Quality  |
 | Unit test | Vitest、Testing Library、jsdom、V8 coverage  |
-| E2E       | Playwright、axe，桌機 Chrome 與 Pixel 7      |
+| E2E       | Playwright、axe，桌機 Chromium 與 Pixel 7    |
 | Quality   | ESLint、Prettier、TypeScript、GitHub Actions |
 
 ## 依賴原則
@@ -54,14 +54,15 @@ ESLint 9 與 TypeScript 6 是目前 `eslint-config-next` 內部 parser 支援的
 
 ## 開始使用
 
-需求：Node.js 20.9 以上與 npm。
+支援範圍：Node.js `^20.19.0`、`^22.13.0` 或 `>=24.0.0`，以及 npm。CI 與建議的開發環境固定使用 [`.nvmrc`](.nvmrc) 中的 Node.js 24.12.0，以符合目前 Vitest 與 jsdom 的實際引擎需求。
 
 ```bash
-npm install
+nvm use
+npm ci
 npm run dev
 ```
 
-開發伺服器預設位於 <http://localhost:3000>。
+未使用 nvm 時，請安裝上述相容版本後執行 `npm ci`。開發伺服器預設位於 <http://localhost:3000>。
 
 ## 驗證指令
 
@@ -69,14 +70,16 @@ npm run dev
 npm run format:check   # 格式檢查
 npm run lint           # ESLint
 npm run typecheck      # TypeScript
-npm run test           # 85 項單元與 hook 測試
+npm run test           # 單元與 hook 測試
 npm run test:coverage  # 含全域 coverage 門檻
 npm run build          # Production build
-npm run test:e2e       # port 3100 桌機/手機流程、響應式與 axe 掃描
+npm run test:e2e       # 本機以 dev server 跑 port 3100 的桌機/手機流程、響應式與 axe 掃描
 npm run check          # 除 E2E 外的完整 CI 品質門檻
 ```
 
-Windows 本機若未安裝 Playwright Chromium，E2E 預設使用 Microsoft Edge；CI 會安裝並使用 Chromium。
+Windows 本機若未安裝 Playwright Chromium，E2E 預設使用 Microsoft Edge；CI 會安裝 Chromium、先建置 production bundle，再以 `next start` 執行 E2E。CI 同時會執行 high 以上漏洞的 npm audit。
+
+Dependabot 會每週檢查 npm 與 GitHub Actions 相依更新；CI 會在較新的同分支提交到達時取消舊的執行，以避免重複耗用資源。
 
 ## 專案結構
 
@@ -118,5 +121,7 @@ e2e/                             # Playwright 桌機/手機流程
 | `NEXT_PUBLIC_SITE_URL`            | canonical、Open Graph、sitemap 與 robots 使用的公開網址。 |
 | `NEXT_PUBLIC_GOOGLE_VERIFICATION` | Google Search Console 驗證碼，可選。                      |
 | `PLAYWRIGHT_CHANNEL`              | 覆寫本機 E2E 瀏覽器 channel，可選。                       |
+
+可將 [`.env.example`](.env.example) 複製為 `.env.local` 後填寫前兩個值；所有 `.env*` 檔都會被 Git 忽略，僅範本可提交。`NEXT_PUBLIC_*` 會公開給瀏覽器，不能放入密碼或其他機密。`PLAYWRIGHT_CHANNEL` 是命令列／CI 環境變數，請由 shell 或 CI 設定。
 
 天氣與空氣品質資料來源為 [Open-Meteo](https://open-meteo.com/)；空氣品質模型來自 CAMS ENSEMBLE。API 請求具備逾時、取消與回應資料驗證，空氣品質失敗時不會阻塞主要天氣內容。所有環境指標僅供資訊參考。
