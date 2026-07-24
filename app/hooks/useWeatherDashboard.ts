@@ -26,16 +26,45 @@ import {
   mergeWeatherForecast,
   parseWeatherPayload,
 } from "../lib/weatherPayload";
-import type { WeatherData } from "../types/weather";
+import type { WeatherData, WeatherLocationSource } from "../types/weather";
 import { useWeatherSuggestions } from "./useWeatherSuggestions";
 
 const WEATHER_STORAGE_KEY = "weather-dashboard-state";
 const GENERIC_WEATHER_ERROR = "無法取得天氣資訊，請稍後再試。";
+export const WEATHER_CACHE_TTL_MS = 10 * 60 * 1000;
 
 const getRequestErrorMessage = (error: unknown): string =>
   error instanceof Error && error.name === "WeatherApiError"
     ? error.message
     : GENERIC_WEATHER_ERROR;
+
+const getCacheRemainingMs = (fetchedAt: string): number => {
+  const fetchedAtMs = Date.parse(fetchedAt);
+  if (Number.isNaN(fetchedAtMs)) return 0;
+  return Math.max(0, WEATHER_CACHE_TTL_MS - (Date.now() - fetchedAtMs));
+};
+
+const getStoredLocation = (
+  query: string,
+  data: WeatherData,
+): GeoApiLocation | null => {
+  if (!data.coordinates) return null;
+  return {
+    name: query,
+    latitude: data.coordinates.latitude,
+    longitude: data.coordinates.longitude,
+    timezone: data.timezone,
+  };
+};
+
+const clearLocalWeatherCache = () => {
+  try {
+    window.localStorage.removeItem(WEATHER_STORAGE_KEY);
+  } catch {
+    // A strict privacy mode may disallow access. Never fall back to local
+    // storage for a current-location result.
+  }
+};
 
 export function useWeatherDashboard(defaultQuery: string) {
   const [weatherQuery, setWeatherQuery] = useState(defaultQuery);
@@ -47,10 +76,13 @@ export function useWeatherDashboard(defaultQuery: string) {
   const [geolocating, setGeolocating] = useState(false);
   const [committedQuery, setCommittedQuery] = useState(defaultQuery);
   const [suggestionsEnabled, setSuggestionsEnabled] = useState(false);
+  const [weatherStale, setWeatherStale] = useState(false);
 
   const requestControllerRef = useRef<AbortController | null>(null);
+  const cacheRefreshTimerRef = useRef<number | null>(null);
   const operationIdRef = useRef(0);
-  const storageRef = useRef<"local" | "session">("local");
+  const lastLocationRef = useRef<GeoApiLocation | null>(null);
+  const locationSourceRef = useRef<WeatherLocationSource>("search");
   const {
     suggestions,
     suggestionsLoading,
@@ -60,17 +92,27 @@ export function useWeatherDashboard(defaultQuery: string) {
 
   const persistWeather = useCallback(
     (payload: { query: string; data: WeatherData; forecastDays: 7 | 14 }) => {
+      const isCurrentLocation = payload.data.locationSource === "geolocation";
+      if (isCurrentLocation) clearLocalWeatherCache();
+
       const succeededWith = writeWithFallback(
         WEATHER_STORAGE_KEY,
         JSON.stringify(payload),
-        storageRef.current,
+        isCurrentLocation ? "session" : "local",
+        { allowFallback: !isCurrentLocation },
       );
-      if (succeededWith) storageRef.current = succeededWith;
+      if (!succeededWith && isCurrentLocation) {
+        console.warn("Current location is available only for this view.");
+      }
     },
     [],
   );
 
   const beginRequest = useCallback(() => {
+    if (cacheRefreshTimerRef.current !== null) {
+      window.clearTimeout(cacheRefreshTimerRef.current);
+      cacheRefreshTimerRef.current = null;
+    }
     operationIdRef.current += 1;
     requestControllerRef.current?.abort();
     const controller = new AbortController();
@@ -79,6 +121,10 @@ export function useWeatherDashboard(defaultQuery: string) {
   }, []);
 
   const invalidateActiveOperation = useCallback(() => {
+    if (cacheRefreshTimerRef.current !== null) {
+      window.clearTimeout(cacheRefreshTimerRef.current);
+      cacheRefreshTimerRef.current = null;
+    }
     operationIdRef.current += 1;
     requestControllerRef.current?.abort();
     requestControllerRef.current = null;
@@ -88,7 +134,12 @@ export function useWeatherDashboard(defaultQuery: string) {
   }, []);
 
   const fetchWeather = useCallback(
-    async (query: string, days: 7 | 14, providedLocation?: GeoApiLocation) => {
+    async (
+      query: string,
+      days: 7 | 14,
+      providedLocation?: GeoApiLocation,
+      locationSource: WeatherLocationSource = "search",
+    ) => {
       const trimmed = query.trim();
       if (!trimmed) {
         setWeatherError("請輸入地點名稱");
@@ -105,8 +156,11 @@ export function useWeatherDashboard(defaultQuery: string) {
       setForecastLoading(false);
       setGeolocating(false);
       setWeatherError(null);
+      setWeatherStale(true);
       setSuggestionsEnabled(false);
       setSuggestionsOpen(false);
+      locationSourceRef.current = locationSource;
+      lastLocationRef.current = providedLocation ?? null;
 
       try {
         const location =
@@ -122,11 +176,20 @@ export function useWeatherDashboard(defaultQuery: string) {
 
         if (!isCurrent()) return;
 
-        const nextData = buildWeatherData(location, forecast, null);
+        const fetchedAt = new Date().toISOString();
+        const weatherBuildOptions = { fetchedAt, locationSource };
+        const nextData = buildWeatherData(
+          location,
+          forecast,
+          null,
+          weatherBuildOptions,
+        );
+        lastLocationRef.current = location;
         setCommittedQuery(trimmed);
         setWeatherQuery(trimmed);
         setForecastDaysState(days);
         setWeatherData(nextData);
+        setWeatherStale(false);
         persistWeather({ query: trimmed, data: nextData, forecastDays: days });
 
         airQualityStarted = true;
@@ -137,6 +200,7 @@ export function useWeatherDashboard(defaultQuery: string) {
               location,
               forecast,
               airQuality,
+              weatherBuildOptions,
             );
             setWeatherData(enrichedData);
             persistWeather({
@@ -159,6 +223,7 @@ export function useWeatherDashboard(defaultQuery: string) {
         if (!isCurrent() || isAbortError(error)) return;
         console.error("fetchWeather", error);
         setWeatherError(getRequestErrorMessage(error));
+        setWeatherStale(true);
       } finally {
         if (isCurrent()) setWeatherLoading(false);
         if (!airQualityStarted && requestControllerRef.current === controller) {
@@ -170,25 +235,58 @@ export function useWeatherDashboard(defaultQuery: string) {
   );
 
   useEffect(() => {
-    const restored = readWithFallback(WEATHER_STORAGE_KEY, parseWeatherPayload);
+    const restored = readWithFallback(
+      WEATHER_STORAGE_KEY,
+      parseWeatherPayload,
+      "session",
+    );
     const initialQuery = restored?.data.query ?? defaultQuery;
     const initialDays = restored?.data.forecastDays ?? 7;
+    const initialSource = restored?.data.data.locationSource ?? "search";
+    const initialLocation = restored
+      ? getStoredLocation(initialQuery, restored.data.data)
+      : null;
+    const refreshDelay = restored
+      ? getCacheRemainingMs(restored.data.data.fetchedAt)
+      : 0;
     if (restored) {
       startTransition(() => {
         setWeatherQuery(restored.data.query);
         setWeatherData(restored.data.data);
         setForecastDaysState(restored.data.forecastDays);
         setCommittedQuery(restored.data.query);
+        setWeatherStale(refreshDelay === 0);
       });
-      storageRef.current = restored.name;
+      lastLocationRef.current = initialLocation;
+      locationSourceRef.current = initialSource;
+
+      // Migrate legacy current-location records out of localStorage. If
+      // sessionStorage is unavailable, discard the old persistent copy rather
+      // than retaining a precise location beyond the session.
+      if (initialSource === "geolocation" && restored.name === "local") {
+        persistWeather(restored.data);
+      }
     }
 
     const initialRequest = window.setTimeout(() => {
-      void fetchWeather(initialQuery, initialDays);
-    }, 0);
+      void fetchWeather(
+        initialQuery,
+        initialDays,
+        initialSource === "geolocation"
+          ? (initialLocation ?? undefined)
+          : undefined,
+        initialSource,
+      );
+    }, refreshDelay);
+    cacheRefreshTimerRef.current = initialRequest;
 
-    return () => window.clearTimeout(initialRequest);
-  }, [defaultQuery, fetchWeather]);
+    return () => {
+      window.clearTimeout(initialRequest);
+      if (cacheRefreshTimerRef.current === initialRequest) {
+        cacheRefreshTimerRef.current = null;
+      }
+    };
+  }, [defaultQuery, fetchWeather, persistWeather]);
 
   useEffect(
     () => () => {
@@ -200,6 +298,8 @@ export function useWeatherDashboard(defaultQuery: string) {
 
   const handleWeatherQueryChange = (value: string) => {
     invalidateActiveOperation();
+    locationSourceRef.current = "search";
+    lastLocationRef.current = null;
     setWeatherQuery(value);
     setWeatherError(null);
     setSuggestionsEnabled(true);
@@ -293,7 +393,7 @@ export function useWeatherDashboard(defaultQuery: string) {
       };
       setGeolocating(false);
       setWeatherQuery(location.name);
-      void fetchWeather(location.name, forecastDays, location);
+      void fetchWeather(location.name, forecastDays, location, "geolocation");
     } catch (error) {
       if (operationIdRef.current === geolocationOperationId) {
         setWeatherError(getGeolocationErrorMessage(error));
@@ -305,13 +405,30 @@ export function useWeatherDashboard(defaultQuery: string) {
     }
   };
 
+  const retryWeather = () => {
+    const locationSource = locationSourceRef.current;
+    const retryLocation =
+      locationSource === "geolocation"
+        ? (lastLocationRef.current ??
+          (weatherData ? getStoredLocation(weatherQuery, weatherData) : null))
+        : undefined;
+    void fetchWeather(
+      weatherQuery,
+      forecastDays,
+      retryLocation ?? undefined,
+      locationSource,
+    );
+  };
+
   return {
     weatherQuery,
     weatherData,
+    weatherStale,
     weatherLoading,
     weatherError,
     forecastLoading,
     fetchWeather,
+    retryWeather,
     handleWeatherQueryChange,
     handleWeatherSubmit,
     handleWeatherPreset,

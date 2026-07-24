@@ -1,4 +1,4 @@
-import type { WeatherData } from "../types/weather";
+import type { WeatherData, WeatherLocationSource } from "../types/weather";
 import type {
   AirQualityApiResponse,
   ForecastApiResponse,
@@ -12,6 +12,10 @@ export function buildWeatherData(
   location: GeoApiLocation,
   forecast: ForecastApiResponse,
   airQuality: AirQualityApiResponse | null,
+  options: {
+    fetchedAt?: string;
+    locationSource?: WeatherLocationSource;
+  } = {},
 ): WeatherData {
   const resolvedTimezone = location.timezone ?? forecast.timezone ?? "UTC";
 
@@ -23,6 +27,7 @@ export function buildWeatherData(
   const utcOffsetString = `${offsetSign}${String(offsetHours).padStart(2, "0")}:${String(offsetMinutes).padStart(2, "0")}`;
 
   const now = new Date();
+  const fetchedAt = options.fetchedAt ?? now.toISOString();
   const infoDate = new Date(
     now.toLocaleString("en-US", { timeZone: resolvedTimezone }),
   );
@@ -43,6 +48,8 @@ export function buildWeatherData(
     timezone: resolvedTimezone,
     timezoneAbbreviation: forecast.timezone_abbreviation ?? resolvedTimezone,
     observationTime: forecast.current.time,
+    fetchedAt,
+    locationSource: options.locationSource ?? "search",
     temperature: forecast.current.temperature_2m,
     temperatureUnit: forecast.current_units?.temperature_2m ?? "°C",
     apparentTemperature: forecast.current.apparent_temperature,
@@ -80,7 +87,9 @@ export function buildWeatherData(
           time: airQualityCurrent.time,
         }
       : null,
-    localTime: now.toISOString(),
+    // Retained for backward-compatible cached payloads. New UI uses fetchedAt
+    // so a restored cache is not presented as a live clock.
+    localTime: fetchedAt,
     utcOffset: utcOffsetString,
     dayOfWeek: dayOfWeekIndex,
     dailyForecast: forecast.daily.time.map((date, index) => ({
@@ -146,6 +155,8 @@ export function parseWeatherPayload(
   }
 
   const data = record.data as Partial<WeatherData>;
+  const isValidDate = (candidate: unknown): candidate is string =>
+    typeof candidate === "string" && !Number.isNaN(Date.parse(candidate));
   const optionalNumberFields: Array<keyof WeatherData> = [
     "pressure",
     "dailyHigh",
@@ -199,6 +210,12 @@ export function parseWeatherPayload(
       typeof data.airQuality.pm10Unit === "string" &&
       typeof data.airQuality.time === "string" &&
       !Number.isNaN(Date.parse(data.airQuality.time)));
+  const hasValidFetchedAt =
+    data.fetchedAt === undefined || isValidDate(data.fetchedAt);
+  const hasValidLocationSource =
+    data.locationSource === undefined ||
+    data.locationSource === "search" ||
+    data.locationSource === "geolocation";
 
   if (
     typeof data.location !== "string" ||
@@ -234,6 +251,8 @@ export function parseWeatherPayload(
     !hasValidDailyForecast ||
     !hasValidCoordinates ||
     !hasValidAirQuality ||
+    !hasValidFetchedAt ||
+    !hasValidLocationSource ||
     (data.localTime !== null &&
       data.localTime !== undefined &&
       (typeof data.localTime !== "string" ||
@@ -266,6 +285,17 @@ export function parseWeatherPayload(
         typeof data.dailyHigh === "number" ? data.dailyHigh : Number.NaN,
       dailyLow: typeof data.dailyLow === "number" ? data.dailyLow : Number.NaN,
       airQuality: data.airQuality ?? null,
+      // Older cache records predate fetchedAt. Their legacy localTime is the
+      // best available timestamp; without one, mark it as immediately stale.
+      fetchedAt: isValidDate(data.fetchedAt)
+        ? data.fetchedAt
+        : isValidDate(data.localTime)
+          ? data.localTime
+          : new Date(0).toISOString(),
+      locationSource:
+        data.locationSource === "geolocation" || data.location === "目前位置"
+          ? "geolocation"
+          : "search",
       localTime: data.localTime ?? null,
       utcOffset: data.utcOffset ?? null,
       dayOfWeek: data.dayOfWeek ?? null,

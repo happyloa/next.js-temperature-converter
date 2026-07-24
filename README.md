@@ -21,7 +21,8 @@
 - 支援瀏覽器座標定位，不依賴不穩定的反向地理端點。
 - 顯示即時溫度、體感、濕度、風速、氣壓、降雨、UV、European AQI、PM2.5 與 PM10。
 - 可切換 7 天或 14 天高低溫；切換時沿用現有座標，只更新預報。
-- 天氣請求失敗時保留最後一次成功資料，並提供可見的錯誤與重試操作。
+- 最近成功的天氣資料快取 10 分鐘；過期後在背景更新，並清楚標示資料是否可能過期。
+- 瀏覽器目前位置只保留於這個工作階段，不會寫入長期 localStorage；天氣請求失敗時保留最後一次成功資料，並提供可見的錯誤與重試操作。
 
 ### 介面與可用性
 
@@ -40,7 +41,7 @@
 | UI        | React 19、TypeScript                         |
 | Styling   | Tailwind CSS 4 與 CSS design tokens          |
 | Icons     | Lucide React                                 |
-| Chart     | Recharts，僅在用戶端延遲載入                 |
+| Chart     | Recharts，僅在桌機用戶端延遲載入             |
 | Data      | Open-Meteo Geocoding、Forecast、Air Quality  |
 | Unit test | Vitest、Testing Library、jsdom、V8 coverage  |
 | E2E       | Playwright、axe，桌機 Chromium 與 Pixel 7    |
@@ -124,4 +125,4 @@ e2e/                             # Playwright 桌機/手機流程
 
 可將 [`.env.example`](.env.example) 複製為 `.env.local` 後填寫前兩個值；所有 `.env*` 檔都會被 Git 忽略，僅範本可提交。`NEXT_PUBLIC_*` 會公開給瀏覽器，不能放入密碼或其他機密。`PLAYWRIGHT_CHANNEL` 是命令列／CI 環境變數，請由 shell 或 CI 設定。
 
-天氣與空氣品質資料來源為 [Open-Meteo](https://open-meteo.com/)；空氣品質模型來自 CAMS ENSEMBLE。API 請求具備逾時、取消與回應資料驗證，空氣品質失敗時不會阻塞主要天氣內容。所有環境指標僅供資訊參考。
+天氣與空氣品質資料來源為 [Open-Meteo](https://open-meteo.com/)；空氣品質模型來自 CAMS ENSEMBLE。API 請求具備逾時、取消、回應資料驗證與一次短暫的安全 GET 重試；服務限流不會自動重試。空氣品質失敗時不會阻塞主要天氣內容。所有環境指標僅供資訊參考。

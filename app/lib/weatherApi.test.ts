@@ -9,9 +9,10 @@ import {
 
 const mockFetch = vi.fn<typeof fetch>();
 
-const response = (data: unknown, ok = true) =>
+const response = (data: unknown, ok = true, status = ok ? 200 : 400) =>
   ({
     ok,
+    status,
     json: vi.fn().mockResolvedValue(data),
   }) as unknown as Response;
 
@@ -90,6 +91,35 @@ describe("weather API client", () => {
     await expect(fetchForecast(0, 0, "UTC", 7)).rejects.toThrow(
       "無法取得天氣資訊",
     );
+  });
+
+  it("reports rate limiting without retrying the provider request", async () => {
+    mockFetch.mockResolvedValueOnce(response({}, false, 429));
+
+    await expect(fetchForecast(0, 0, "UTC", 7)).rejects.toThrow(
+      "服務請求過於頻繁",
+    );
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries one transient server error for idempotent GET requests", async () => {
+    vi.useFakeTimers();
+    mockFetch
+      .mockResolvedValueOnce(response({}, false, 503))
+      .mockResolvedValueOnce(response(validForecast));
+
+    const request = fetchForecast(25.04, 121.52, "Asia/Taipei", 7);
+    await vi.advanceTimersByTimeAsync(300);
+
+    await expect(request).resolves.toEqual(validForecast);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects invalid coordinates before a network request", async () => {
+    await expect(fetchForecast(91, 121.52, "Asia/Taipei", 7)).rejects.toThrow(
+      "位置資訊無效",
+    );
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("rejects malformed successful responses", async () => {

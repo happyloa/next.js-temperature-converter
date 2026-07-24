@@ -15,10 +15,11 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
   const {
     weatherQuery,
     weatherData,
+    weatherStale,
     weatherLoading,
     weatherError,
     forecastLoading,
-    fetchWeather,
+    retryWeather,
     handleWeatherQueryChange,
     handleWeatherSubmit,
     handleWeatherPreset,
@@ -84,7 +85,7 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
             </div>
             <button
               type="button"
-              onClick={() => void fetchWeather(weatherQuery, forecastDays)}
+              onClick={retryWeather}
               className={cn(
                 ui.button,
                 ui.secondaryButton,
@@ -101,7 +102,7 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
           <WeatherSkeleton />
         ) : weatherData ? (
           <div className="flex min-w-0 flex-col gap-6">
-            <CurrentConditions data={weatherData} />
+            <CurrentConditions data={weatherData} stale={weatherStale} />
             <WeatherMetrics data={weatherData} />
             <WeatherForecast
               data={weatherData.dailyForecast}

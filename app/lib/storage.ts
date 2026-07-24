@@ -2,6 +2,15 @@ export type StorageName = "local" | "session";
 
 type NamedStorage = { name: StorageName; storage: Storage };
 
+type StorageWriteOptions = {
+  /**
+   * When false, never fall back to the other storage area. This is useful for
+   * short-lived or privacy-sensitive data such as the browser's current
+   * location.
+   */
+  allowFallback?: boolean;
+};
+
 const getStorage = (name: StorageName): NamedStorage | null => {
   try {
     return {
@@ -41,10 +50,12 @@ const isQuotaExceededError = (error: unknown): boolean => {
 export function readWithFallback<T>(
   key: string,
   parse: (raw: unknown) => T | null,
+  preferred?: StorageName,
 ): { name: StorageName; data: T } | null {
   if (typeof window === "undefined") return null;
 
-  for (const { name, storage } of getStorages()) {
+  const storages = preferred ? withPreferred(preferred) : getStorages();
+  for (const { name, storage } of storages) {
     try {
       const raw = storage.getItem(key);
       if (!raw) continue;
@@ -68,10 +79,14 @@ export function writeWithFallback(
   key: string,
   payload: string | null,
   preferred: StorageName,
+  options: StorageWriteOptions = {},
 ): StorageName | null {
   if (typeof window === "undefined") return null;
 
-  const storages = withPreferred(preferred);
+  const storages =
+    options.allowFallback === false
+      ? withPreferred(preferred).filter((item) => item.name === preferred)
+      : withPreferred(preferred);
 
   if (payload === null) {
     let succeededWith: StorageName | null = null;

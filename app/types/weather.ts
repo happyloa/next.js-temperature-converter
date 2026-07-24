@@ -11,6 +11,8 @@ export type WeatherAirQuality = {
   time: string;
 };
 
+export type WeatherLocationSource = "search" | "geolocation";
+
 /**
  * 單日預報資料。
  */
@@ -33,6 +35,10 @@ export type WeatherData = {
   timezone: string;
   timezoneAbbreviation: string;
   observationTime: string;
+  /** ISO timestamp for when this client successfully received the forecast. */
+  fetchedAt: string;
+  /** Controls storage scope for the last viewed location. */
+  locationSource: WeatherLocationSource;
   temperature: number;
   temperatureUnit: string;
   apparentTemperature: number;

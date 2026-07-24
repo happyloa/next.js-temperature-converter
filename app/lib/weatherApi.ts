@@ -70,13 +70,18 @@ export type AirQualityApiResponse = {
 };
 
 const API_TIMEOUT_MS = 10_000;
+const MAX_GET_ATTEMPTS = 2;
+const RETRY_DELAY_MS = 300;
 const GEOCODING_ENDPOINT = "https://geocoding-api.open-meteo.com/v1/search";
 const FORECAST_ENDPOINT = "https://api.open-meteo.com/v1/forecast";
 const AIR_QUALITY_ENDPOINT =
   "https://air-quality-api.open-meteo.com/v1/air-quality";
 
 class WeatherApiError extends Error {
-  constructor(message: string) {
+  constructor(
+    message: string,
+    readonly status?: number,
+  ) {
     super(message);
     this.name = "WeatherApiError";
   }
@@ -94,6 +99,27 @@ const isOptionalString = (value: unknown): value is string | undefined =>
 const isOptionalNumber = (value: unknown): value is number | undefined =>
   value === undefined || isFiniteNumber(value);
 
+const isLatitude = (value: unknown): value is number =>
+  isFiniteNumber(value) && value >= -90 && value <= 90;
+
+const isLongitude = (value: unknown): value is number =>
+  isFiniteNumber(value) && value >= -180 && value <= 180;
+
+const isTimezone = (value: unknown): value is string => {
+  if (typeof value !== "string" || !value || value.length > 64) return false;
+  if (value === "auto") return true;
+
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const isOptionalTimezone = (value: unknown): value is string | undefined =>
+  value === undefined || isTimezone(value);
+
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === "string");
 
@@ -108,10 +134,10 @@ const isGeoApiLocation = (value: unknown): value is GeoApiLocation => {
   if (!isRecord(value)) return false;
   return (
     typeof value.name === "string" &&
-    isFiniteNumber(value.latitude) &&
-    isFiniteNumber(value.longitude) &&
+    isLatitude(value.latitude) &&
+    isLongitude(value.longitude) &&
     isOptionalNumber(value.id) &&
-    isOptionalString(value.timezone) &&
+    isOptionalTimezone(value.timezone) &&
     isOptionalString(value.country) &&
     isOptionalString(value.admin1) &&
     isOptionalString(value.admin2) &&
@@ -165,7 +191,7 @@ const isForecastApiResponse = (
       "temperature_2m_max",
       "temperature_2m_min",
     ]) &&
-    isOptionalString(value.timezone) &&
+    isOptionalTimezone(value.timezone) &&
     isOptionalString(value.timezone_abbreviation) &&
     isOptionalNumber(value.utc_offset_seconds)
   );
@@ -188,6 +214,43 @@ const isAirQualityApiResponse = (
   );
 };
 
+const getResponseError = (
+  response: Response,
+  fallbackMessage: string,
+): WeatherApiError => {
+  if (response.status === 429) {
+    return new WeatherApiError("服務請求過於頻繁，請稍後再試。", 429);
+  }
+  if (response.status >= 500) {
+    return new WeatherApiError(
+      "天氣服務暫時異常，請稍後再試。",
+      response.status,
+    );
+  }
+  return new WeatherApiError(fallbackMessage, response.status);
+};
+
+const waitForRetry = (signal: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    if (signal.aborted) {
+      reject(signal.reason ?? new DOMException("Aborted", "AbortError"));
+      return;
+    }
+
+    const state: {
+      timeout?: ReturnType<typeof globalThis.setTimeout>;
+    } = {};
+    const onAbort = () => {
+      if (state.timeout !== undefined) globalThis.clearTimeout(state.timeout);
+      reject(signal.reason ?? new DOMException("Aborted", "AbortError"));
+    };
+    state.timeout = globalThis.setTimeout(() => {
+      signal.removeEventListener("abort", onAbort);
+      resolve();
+    }, RETRY_DELAY_MS);
+    signal.addEventListener("abort", onAbort, { once: true });
+  });
+
 async function requestJson(
   url: URL,
   fallbackMessage: string,
@@ -206,14 +269,51 @@ async function requestJson(
   }, API_TIMEOUT_MS);
 
   try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) throw new WeatherApiError(fallbackMessage);
+    for (let attempt = 1; attempt <= MAX_GET_ATTEMPTS; attempt += 1) {
+      try {
+        const response = await fetch(url, {
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) {
+          const error = getResponseError(response, fallbackMessage);
+          // GET requests are idempotent. Retry one transient server failure,
+          // but never retry a rate limit response because the provider decides
+          // when it is safe to send the next request.
+          if (
+            error.status !== undefined &&
+            error.status >= 500 &&
+            attempt < MAX_GET_ATTEMPTS
+          ) {
+            await waitForRetry(controller.signal);
+            continue;
+          }
+          throw error;
+        }
 
-    try {
-      return await response.json();
-    } catch {
-      throw new WeatherApiError(fallbackMessage);
+        try {
+          return await response.json();
+        } catch {
+          throw new WeatherApiError(fallbackMessage);
+        }
+      } catch (error) {
+        if (signal?.aborted) throw error;
+        if (timedOut) {
+          throw new WeatherApiError("服務回應逾時，請稍後再試。");
+        }
+        if (isAbortError(error)) throw error;
+        if (error instanceof WeatherApiError) throw error;
+        // A transport failure before receiving a response can also be
+        // transient. Limit this to a single retry within the same timeout.
+        if (attempt < MAX_GET_ATTEMPTS) {
+          await waitForRetry(controller.signal);
+          continue;
+        }
+        throw new WeatherApiError(fallbackMessage);
+      }
     }
+
+    throw new WeatherApiError(fallbackMessage);
   } catch (error) {
     if (signal?.aborted) throw error;
     if (timedOut) {
@@ -276,6 +376,17 @@ export async function fetchForecast(
   days: 7 | 14,
   signal?: AbortSignal,
 ): Promise<ForecastApiResponse> {
+  if (
+    !isLatitude(latitude) ||
+    !isLongitude(longitude) ||
+    !isTimezone(timezone)
+  ) {
+    throw new WeatherApiError("位置資訊無效，請重新選擇地點。");
+  }
+  if (days !== 7 && days !== 14) {
+    throw new WeatherApiError("預報天數無效，請重新選擇。");
+  }
+
   const url = new URL(FORECAST_ENDPOINT);
   url.search = new URLSearchParams({
     latitude: `${latitude}`,
@@ -300,6 +411,11 @@ export async function fetchAirQuality(
   longitude: number,
   signal?: AbortSignal,
 ): Promise<AirQualityApiResponse | null> {
+  if (!isLatitude(latitude) || !isLongitude(longitude)) {
+    console.error("fetchAirQuality", new WeatherApiError("位置資訊無效。"));
+    return null;
+  }
+
   const url = new URL(AIR_QUALITY_ENDPOINT);
   url.search = new URLSearchParams({
     latitude: `${latitude}`,

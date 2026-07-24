@@ -13,9 +13,15 @@ import { WeatherIcon } from "./WeatherIcon";
 
 const WEEKDAYS = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
 
-export function CurrentConditions({ data }: { data: WeatherData }) {
+export function CurrentConditions({
+  data,
+  stale = false,
+}: {
+  data: WeatherData;
+  stale?: boolean;
+}) {
   const coordinates = data.coordinates
-    ? `${Math.abs(data.coordinates.latitude).toFixed(4)}°${data.coordinates.latitude >= 0 ? "N" : "S"} · ${Math.abs(data.coordinates.longitude).toFixed(4)}°${data.coordinates.longitude >= 0 ? "E" : "W"}`
+    ? `${Math.abs(data.coordinates.latitude).toFixed(2)}°${data.coordinates.latitude >= 0 ? "N" : "S"} · ${Math.abs(data.coordinates.longitude).toFixed(2)}°${data.coordinates.longitude >= 0 ? "E" : "W"}`
     : null;
   const weekday =
     data.dayOfWeek === null ? null : (WEEKDAYS[data.dayOfWeek] ?? null);
@@ -84,10 +90,14 @@ export function CurrentConditions({ data }: { data: WeatherData }) {
         <Clock3 className="h-4 w-4" aria-hidden />
         <div className="flex min-w-0 flex-col">
           <strong className="text-sm text-ink-strong">
-            {formatLocalClock(data.localTime, data.timezone, {
+            {stale ? "資料可能已過期" : "資料已更新"}
+          </strong>
+          <span className="text-xs text-ink-subtle [overflow-wrap:anywhere]">
+            更新於{" "}
+            {formatLocalClock(data.fetchedAt, data.timezone, {
               withSeconds: false,
             })}
-          </strong>
+          </span>
           <span className="text-xs text-ink-subtle [overflow-wrap:anywhere]">
             {weekday ? `${weekday} · ` : ""}
             {formatUtcOffset(data.utcOffset)}

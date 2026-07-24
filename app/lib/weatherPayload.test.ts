@@ -158,4 +158,39 @@ describe("weather payload", () => {
       }),
     ).toBeNull();
   });
+
+  it("migrates legacy cache timestamps and identifies prior current-location data", () => {
+    const data = buildWeatherData(location, forecast, null, {
+      fetchedAt: "2026-07-10T12:05:00.000Z",
+    });
+    const legacyData = { ...data, location: "目前位置" } as Record<
+      string,
+      unknown
+    >;
+    delete legacyData.fetchedAt;
+    delete legacyData.locationSource;
+
+    const parsed = parseWeatherPayload({
+      query: "目前位置",
+      data: legacyData,
+      forecastDays: 7,
+    });
+
+    expect(parsed?.data.fetchedAt).toBe("2026-07-10T12:05:00.000Z");
+    expect(parsed?.data.locationSource).toBe("geolocation");
+  });
+
+  it("rejects a malformed fetchedAt in new cache payloads", () => {
+    const data = buildWeatherData(location, forecast, null, {
+      fetchedAt: "2026-07-10T12:05:00.000Z",
+    });
+
+    expect(
+      parseWeatherPayload({
+        query: "Taipei",
+        data: { ...data, fetchedAt: "not-a-date" },
+        forecastDays: 7,
+      }),
+    ).toBeNull();
+  });
 });
