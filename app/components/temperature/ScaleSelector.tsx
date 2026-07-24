@@ -30,9 +30,9 @@ export function ScaleSelector({
           tabIndex={activeScale === item.code ? 0 : -1}
           onClick={() => onScaleChange(item.code)}
           className={cn(
-            "flex min-h-13 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg border bg-surface-medium transition-colors hover:border-accent",
+            "flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border bg-surface-medium px-1 transition-colors hover:border-accent hover:bg-surface-soft",
             activeScale === item.code
-              ? "border-accent bg-surface-soft text-ink-strong"
+              ? "border-accent bg-surface-soft text-ink-strong shadow-[var(--shadow)]"
               : "border-edge-subtle text-ink-medium",
           )}
         >

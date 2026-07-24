@@ -56,7 +56,7 @@ export function WeatherMetrics({ data }: { data: WeatherData }) {
 
   return (
     <section
-      className={cn(ui.panel, "p-4 sm:p-5")}
+      className={cn(ui.panel, "p-5 sm:p-6")}
       aria-labelledby="environment-title"
     >
       <div className={ui.headingRow}>

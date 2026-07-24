@@ -13,7 +13,7 @@ export function SolarComparison({
   showProgress,
 }: SolarComparisonProps) {
   return (
-    <div className="mt-5 border-t border-edge-subtle pt-5">
+    <div className="mt-6 border-t border-edge-subtle pt-5">
       <div className={ui.headingRow}>
         <div>
           <h2 className={ui.sectionTitle}>絕對溫度比較</h2>
@@ -24,7 +24,7 @@ export function SolarComparison({
         </strong>
       </div>
       <div
-        className="mt-3 h-1.5 w-full overflow-hidden rounded bg-surface-muted"
+        className="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-muted"
         role="progressbar"
         aria-label="相對於太陽表面絕對溫度"
         aria-valuemin={0}

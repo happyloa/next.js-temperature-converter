@@ -5,9 +5,11 @@ import type { ThermalInsight } from "../types/insight";
 
 export function InsightsSection({ insights }: { insights: ThermalInsight[] }) {
   return (
-    <section className={cn(ui.panel, "p-4")} aria-labelledby="insights-title">
-      <header className="flex min-w-0 items-center justify-start gap-4">
-        <Lightbulb className="h-5 w-5 text-accent" aria-hidden />
+    <section className={cn(ui.panel, "p-5")} aria-labelledby="insights-title">
+      <header className="flex min-w-0 items-center justify-start gap-3">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface-soft text-accent">
+          <Lightbulb className="h-4 w-4" aria-hidden />
+        </span>
         <div>
           <p className={ui.kicker}>CONTEXT</p>
           <h2 id="insights-title" className={ui.sectionTitle}>
@@ -16,7 +18,7 @@ export function InsightsSection({ insights }: { insights: ThermalInsight[] }) {
         </div>
       </header>
       {insights.length ? (
-        <ul className="mt-3 list-none">
+        <ul className="mt-4 list-none">
           {insights.map((insight) => (
             <li
               key={insight.title}

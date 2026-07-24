@@ -55,10 +55,10 @@ export function TemperatureInputCard({
 
   return (
     <section
-      className={cn(ui.panel, "p-4 sm:p-6")}
+      className={cn(ui.panel, "p-5 sm:p-6")}
       aria-labelledby="converter-title"
     >
-      <header className="flex min-w-0 items-start justify-between gap-4 max-[760px]:flex-col max-[760px]:items-stretch">
+      <header className="flex min-w-0 items-start justify-between gap-4 border-b border-edge-subtle pb-5 max-[760px]:flex-col max-[760px]:items-stretch">
         <div>
           <p className={ui.kicker}>CONVERTER</p>
           <h2 id="converter-title" className={ui.sectionTitle}>
@@ -100,12 +100,12 @@ export function TemperatureInputCard({
 
       <ScaleSelector activeScale={scale} onScaleChange={handleScaleChange} />
 
-      <div className="mt-5 border-t border-edge-subtle pt-5">
+      <div className="mt-5">
         <label className="block min-w-0">
           <span className={ui.fieldLabel}>輸入數值</span>
           <span
             className={cn(
-              "mt-1.5 flex min-h-13 w-full min-w-0 items-center gap-2.5 rounded-lg border bg-surface-medium px-3 py-2.5 focus-within:border-accent",
+              "mt-2 flex min-h-14 w-full min-w-0 items-center gap-2.5 rounded-xl border bg-surface-medium px-3.5 py-3 focus-within:border-accent",
               validationError ? "border-error-border" : "border-edge-strong",
             )}
           >
@@ -134,8 +134,8 @@ export function TemperatureInputCard({
           {validationError ?? "可直接輸入小數；物理下限為絕對零度。"}
         </p>
 
-        <div className="mt-4 flex min-w-0 items-center justify-between gap-4 max-[760px]:flex-col max-[760px]:items-stretch">
-          <div>
+        <div className="mt-5 flex min-w-0 items-center justify-between gap-4 rounded-xl border border-edge-subtle bg-surface-medium p-3.5 max-[760px]:flex-col max-[760px]:items-stretch">
+          <div className="min-w-0">
             <span className={ui.fieldLabel}>滑桿範圍</span>
             <p className={ui.fieldHelp}>
               {formatTemperature(sliderRange.min)} 至{" "}
@@ -185,7 +185,7 @@ export function TemperatureInputCard({
           value={sliderValue}
           onChange={(event) => handleSliderChange(Number(event.target.value))}
           aria-label={`溫度滑桿，單位 ${activeSymbol ?? ""}`}
-          className="mt-2 h-5 w-full accent-accent"
+          className="mt-3 h-5 w-full accent-accent"
         />
         {sliderOutOfRange ? (
           <p className={ui.fieldHelp}>

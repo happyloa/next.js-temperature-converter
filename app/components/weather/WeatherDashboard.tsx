@@ -36,7 +36,7 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
   return (
     <main id="main-content" className={ui.pageShell}>
       <div className={ui.workspace}>
-        <header className="mb-5 grid gap-5 min-[900px]:grid-cols-[minmax(18rem,0.8fr)_minmax(28rem,1.2fr)] min-[900px]:items-start">
+        <header className="mb-6 grid gap-5 rounded-2xl border border-edge-subtle bg-surface-strong p-5 shadow-[var(--shadow)] min-[900px]:grid-cols-[minmax(18rem,0.8fr)_minmax(28rem,1.2fr)] min-[900px]:items-center sm:p-6">
           <div>
             <p className={ui.kicker}>GLOBAL WEATHER</p>
             <h1 className={ui.pageTitle}>城市天氣與環境</h1>
@@ -70,7 +70,7 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
 
         {weatherError ? (
           <div
-            className="mb-4 flex items-center gap-3 rounded-lg border border-error-border bg-error-bg p-3 text-error-ink max-[760px]:flex-col max-[760px]:items-stretch"
+            className="mb-4 flex items-center gap-3 rounded-xl border border-error-border bg-error-bg p-4 text-error-ink max-[760px]:flex-col max-[760px]:items-stretch"
             role="alert"
           >
             <AlertCircle className="h-5 w-5 shrink-0" aria-hidden />
@@ -100,7 +100,7 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
         {weatherLoading && !weatherData ? (
           <WeatherSkeleton />
         ) : weatherData ? (
-          <div className="flex min-w-0 flex-col gap-5">
+          <div className="flex min-w-0 flex-col gap-6">
             <CurrentConditions data={weatherData} />
             <WeatherMetrics data={weatherData} />
             <WeatherForecast
@@ -119,7 +119,7 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
           </div>
         )}
 
-        <footer className="mt-5 text-center text-[0.6875rem] text-ink-subtle">
+        <footer className="mt-6 text-center text-[0.6875rem] text-ink-subtle">
           <span>Weather data by </span>
           <a
             href="https://open-meteo.com/"

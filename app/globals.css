@@ -29,46 +29,46 @@
 @layer base {
   :root {
     color-scheme: dark;
-    --canvas: #111315;
-    --ink-strong: #f2f4f3;
-    --ink-medium: #c3c8c6;
-    --ink-subtle: #8f9894;
-    --surface-strong: #191c1b;
-    --surface-medium: #191c1b;
-    --surface-soft: #222625;
-    --surface-light: #222625;
-    --surface-muted: #2c3230;
-    --edge-subtle: #343b38;
-    --edge-strong: #5d6864;
-    --accent: #58b8ad;
-    --accent-hover: #71c8be;
-    --accent-ink: #0b1917;
-    --error-bg: #382326;
-    --error-border: #89515a;
-    --error-ink: #ffc1c8;
-    --shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    --canvas: #0c1210;
+    --ink-strong: #edf5f1;
+    --ink-medium: #c4d0cb;
+    --ink-subtle: #93a39c;
+    --surface-strong: #121b18;
+    --surface-medium: #17221e;
+    --surface-soft: #1d2a25;
+    --surface-light: #24342d;
+    --surface-muted: #30423a;
+    --edge-subtle: #2c3c35;
+    --edge-strong: #51645b;
+    --accent: #63d2c2;
+    --accent-hover: #8ae3d6;
+    --accent-ink: #062b25;
+    --error-bg: #37252a;
+    --error-border: #8c5963;
+    --error-ink: #ffc5cc;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
   }
 
   :root[data-theme="light"] {
     color-scheme: light;
-    --canvas: #f5f6f5;
-    --ink-strong: #1b211f;
-    --ink-medium: #4d5854;
-    --ink-subtle: #626d69;
+    --canvas: #f4f7f5;
+    --ink-strong: #16211d;
+    --ink-medium: #4b5b54;
+    --ink-subtle: #5f6e66;
     --surface-strong: #ffffff;
-    --surface-medium: #ffffff;
-    --surface-soft: #f0f2f1;
-    --surface-light: #f0f2f1;
-    --surface-muted: #e3e7e5;
-    --edge-subtle: #d5dcda;
-    --edge-strong: #a8b3af;
-    --accent: #167c74;
-    --accent-hover: #11675f;
+    --surface-medium: #fbfcfb;
+    --surface-soft: #edf3f0;
+    --surface-light: #e4ece7;
+    --surface-muted: #d8e3dd;
+    --edge-subtle: #d5dfda;
+    --edge-strong: #aab9b1;
+    --accent: #11766e;
+    --accent-hover: #0b625b;
     --accent-ink: #ffffff;
-    --error-bg: #f8e9eb;
-    --error-border: #c87a84;
-    --error-ink: #842c38;
-    --shadow: 0 8px 24px rgba(27, 33, 31, 0.08);
+    --error-bg: #f9eaed;
+    --error-border: #c97c86;
+    --error-ink: #842d3a;
+    --shadow: 0 1px 2px rgba(22, 33, 29, 0.08);
   }
 
   html {
@@ -91,7 +91,7 @@
     overflow-x: clip;
     background: var(--canvas);
     color: var(--ink-strong);
-    line-height: 1.55;
+    line-height: 1.6;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
   }
@@ -109,6 +109,11 @@
 
   button:disabled {
     cursor: not-allowed;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-ink);
   }
 
   button:focus-visible,

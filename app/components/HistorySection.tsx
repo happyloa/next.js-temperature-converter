@@ -24,10 +24,12 @@ export function HistorySection({
   const [confirmingClear, setConfirmingClear] = useState(false);
 
   return (
-    <section className={cn(ui.panel, "p-4")} aria-labelledby="history-title">
+    <section className={cn(ui.panel, "p-5")} aria-labelledby="history-title">
       <header className="flex min-w-0 items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <History className="h-5 w-5 text-accent" aria-hidden />
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface-soft text-accent">
+            <History className="h-4 w-4" aria-hidden />
+          </span>
           <div>
             <p className={ui.kicker}>HISTORY</p>
             <h2 id="history-title" className={ui.sectionTitle}>
@@ -103,7 +105,7 @@ export function HistorySection({
                 {entry.conversions.map((item) => (
                   <span
                     key={`${entry.id}-${item.code}`}
-                    className="min-w-0 rounded-md bg-surface-soft p-2 text-center"
+                    className="min-w-0 rounded-lg bg-surface-soft p-2 text-center"
                   >
                     <small className="block [overflow-wrap:anywhere] text-[0.6875rem]">
                       {item.symbol}

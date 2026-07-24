@@ -9,7 +9,7 @@ export function WeatherSkeleton() {
       <div
         className={cn(
           ui.panel,
-          "grid min-h-64 min-w-0 gap-5 border-l-4 border-l-accent p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-5",
+          "grid min-h-64 min-w-0 gap-5 border-l-4 border-l-accent p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-6",
         )}
       >
         <div className="space-y-3">
@@ -21,7 +21,7 @@ export function WeatherSkeleton() {
         <BaseSkeleton className="h-20 w-44" />
         <BaseSkeleton className="h-10 w-36" />
       </div>
-      <div className={cn(ui.panel, "p-4 sm:p-5")}>
+      <div className={cn(ui.panel, "p-5 sm:p-6")}>
         <BaseSkeleton className="h-6 w-32" />
         <div className="mt-3.5 grid min-w-0 grid-cols-1 gap-px overflow-hidden rounded-lg border border-edge-subtle bg-edge-subtle sm:grid-cols-2 min-[900px]:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((item) => (
@@ -36,7 +36,7 @@ export function WeatherSkeleton() {
           ))}
         </div>
       </div>
-      <div className={cn(ui.panel, "h-112 p-4 sm:p-5")}>
+      <div className={cn(ui.panel, "h-112 p-5 sm:p-6")}>
         <BaseSkeleton className="h-6 w-32" />
         <ChartGraphicSkeleton />
       </div>

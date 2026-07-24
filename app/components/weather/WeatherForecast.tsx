@@ -28,7 +28,7 @@ export function WeatherForecast({
 }) {
   return (
     <section
-      className={cn(ui.panel, "p-4 sm:p-5")}
+      className={cn(ui.panel, "p-5 sm:p-6")}
       aria-labelledby="forecast-title"
       aria-busy={loading}
     >

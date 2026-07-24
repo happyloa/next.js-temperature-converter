@@ -75,7 +75,7 @@ export function WeatherSearch({
     <div className="min-w-0">
       <form
         onSubmit={onSubmit}
-        className="relative grid min-w-0 grid-cols-[1.25rem_minmax(0,1fr)_auto_auto] items-center gap-1.5 rounded-lg border border-edge-strong bg-surface-strong p-1.5 focus-within:border-accent"
+        className="relative grid min-w-0 grid-cols-[1.25rem_minmax(0,1fr)_auto_auto] items-center gap-1.5 rounded-xl border border-edge-strong bg-surface-medium p-1.5 focus-within:border-accent"
         role="search"
       >
         <label htmlFor="weather-search" className="sr-only">
@@ -144,7 +144,7 @@ export function WeatherSearch({
           <ul
             id="weather-suggestions"
             role="listbox"
-            className="absolute top-[calc(100%+0.35rem)] right-0 left-0 z-50 overflow-hidden rounded-lg border border-edge-subtle bg-surface-strong p-1.5 shadow-[var(--shadow)]"
+            className="absolute top-[calc(100%+0.35rem)] right-0 left-0 z-50 overflow-hidden rounded-xl border border-edge-subtle bg-surface-strong p-1.5 shadow-[var(--shadow)]"
           >
             {suggestions.map((location, index) => (
               <li
@@ -182,7 +182,7 @@ export function WeatherSearch({
             type="button"
             onClick={() => onPreset(preset.query)}
             className={cn(
-              "inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border bg-surface-strong px-3 py-2 text-xs font-semibold transition-colors hover:border-accent hover:text-ink-strong",
+              "inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border bg-surface-medium px-3 py-2 text-xs font-semibold transition-colors hover:border-accent hover:bg-surface-soft hover:text-ink-strong",
               query === preset.query || query === preset.label
                 ? "border-accent text-ink-strong"
                 : "border-edge-subtle text-ink-medium",
@@ -198,7 +198,7 @@ export function WeatherSearch({
             onChange={(event) => {
               if (event.target.value) onPreset(event.target.value);
             }}
-            className="min-h-9 rounded-lg border border-edge-subtle bg-surface-strong py-1.5 pr-7 pl-2.5 text-xs font-semibold text-ink-medium"
+            className="min-h-9 rounded-full border border-edge-subtle bg-surface-medium py-1.5 pr-7 pl-2.5 text-xs font-semibold text-ink-medium"
           >
             <option value="">更多城市</option>
             {more.map((preset) => (

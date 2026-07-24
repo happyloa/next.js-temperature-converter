@@ -31,7 +31,7 @@ export function ConversionResults({
     : (validationError ?? "等待有效的溫度輸入。");
 
   return (
-    <div className="mt-5 border-t border-edge-subtle pt-5">
+    <div className="mt-6 border-t border-edge-subtle pt-5">
       <div className={ui.headingRow}>
         <div>
           <p className={ui.kicker}>RESULTS</p>
@@ -43,16 +43,16 @@ export function ConversionResults({
         {resultSummary}
       </div>
       {conversions.length ? (
-        <ul className="mt-3 list-none">
+        <ul className="mt-4 grid list-none gap-2 sm:grid-cols-2">
           {conversions.map((conversion) => (
             <li
               key={conversion.code}
               className={cn(
-                "grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(7rem,auto)_2.25rem] items-center gap-3 border-t border-edge-subtle py-3 first:border-t-0 max-[430px]:grid-cols-[minmax(0,1fr)_minmax(5.5rem,auto)_2.25rem] max-[430px]:gap-2",
-                conversion.code === scale && "bg-surface-soft",
+                "grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-xl border border-edge-subtle bg-surface-medium p-3",
+                conversion.code === scale && "border-accent bg-surface-soft",
               )}
             >
-              <div className="flex min-w-0 flex-col text-[0.8125rem] text-ink-medium">
+              <div className="col-start-1 flex min-w-0 flex-col text-[0.8125rem] text-ink-medium">
                 <span>{conversion.label}</span>
                 {conversion.code === "celsius" ? (
                   <small className="text-[0.6875rem] text-ink-subtle">
@@ -60,7 +60,7 @@ export function ConversionResults({
                   </small>
                 ) : null}
               </div>
-              <strong className="text-right text-lg text-ink-strong [font-variant-numeric:tabular-nums] [overflow-wrap:anywhere] max-[430px]:text-[0.9375rem]">
+              <strong className="col-start-1 text-left text-lg text-ink-strong [font-variant-numeric:tabular-nums] [overflow-wrap:anywhere] max-[430px]:text-[0.9375rem]">
                 {formatTemperature(conversion.result)}
                 <span className="ml-1 text-xs text-ink-subtle">
                   {conversion.symbol}
@@ -74,7 +74,10 @@ export function ConversionResults({
                     conversion.code,
                   )
                 }
-                className={ui.iconButton}
+                className={cn(
+                  ui.iconButton,
+                  "col-start-2 row-span-2 row-start-1",
+                )}
                 aria-label={`複製${conversion.label}結果`}
                 title={`複製${conversion.label}結果`}
               >

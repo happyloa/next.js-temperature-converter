@@ -24,7 +24,7 @@ export function CurrentConditions({ data }: { data: WeatherData }) {
     <section
       className={cn(
         ui.panel,
-        "grid min-w-0 gap-5 border-l-4 border-l-accent p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-5",
+        "grid min-w-0 gap-5 border-l-4 border-l-accent p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-6",
       )}
       aria-labelledby="current-location"
     >
