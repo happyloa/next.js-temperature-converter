@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { Check, Share2, X } from "lucide-react";
 
+import { useTransientState } from "../hooks/useTransientState";
+import { isAbortError } from "../lib/async";
 import { copyText } from "../lib/clipboard";
 import { ui } from "../lib/uiStyles";
 import { cn } from "../lib/utils";
@@ -18,32 +19,28 @@ export function ShareButton({
   url?: string;
   className?: string;
 }) {
-  const [status, setStatus] = useState<"idle" | "copied" | "error">("idle");
+  const [status, flash] = useTransientState<"idle" | "copied" | "error">(
+    "idle",
+  );
 
-  const flash = useCallback((next: "copied" | "error") => {
-    setStatus(next);
-    window.setTimeout(() => setStatus("idle"), 2000);
-  }, []);
-
-  const handleShare = useCallback(async () => {
+  const handleShare = async () => {
     const shareUrl = url ?? window.location.href;
-    try {
-      if (navigator.share) {
+    if (navigator.share) {
+      try {
         await navigator.share({ title, text, url: shareUrl });
         return;
-      }
-      await copyText(`${title}\n\n${text}\n\n${shareUrl}`);
-      flash("copied");
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") return;
-      try {
-        await copyText(`${title}\n\n${text}\n\n${shareUrl}`);
-        flash("copied");
-      } catch {
-        flash("error");
+      } catch (error) {
+        if (isAbortError(error)) return;
       }
     }
-  }, [flash, text, title, url]);
+
+    try {
+      await copyText(`${title}\n\n${text}\n\n${shareUrl}`);
+      flash("copied");
+    } catch {
+      flash("error");
+    }
+  };
 
   return (
     <button

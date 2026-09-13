@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, History, Trash2 } from "lucide-react";
 
+import { formatTemperature, timeFormatter } from "../lib/format";
 import { ui } from "../lib/uiStyles";
 import { cn } from "../lib/utils";
 import type { HistoryEntry } from "../types/history";
@@ -11,15 +12,11 @@ import { ExportButton } from "./ExportButton";
 type HistorySectionProps = {
   history: HistoryEntry[];
   onClearHistory: () => void;
-  formatTemperature: (value: number) => string;
-  formatTime: (value: Date) => string;
 };
 
 export function HistorySection({
   history,
   onClearHistory,
-  formatTemperature,
-  formatTime,
 }: HistorySectionProps) {
   const [confirmingClear, setConfirmingClear] = useState(false);
 
@@ -93,7 +90,7 @@ export function HistorySection({
                   </strong>
                   <small className="text-[0.6875rem] text-ink-subtle">
                     {new Date(entry.timestamp).toLocaleDateString("zh-TW")} ·{" "}
-                    {formatTime(new Date(entry.timestamp))}
+                    {timeFormatter.format(new Date(entry.timestamp))}
                   </small>
                 </span>
                 <ChevronDown

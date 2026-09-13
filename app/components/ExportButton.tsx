@@ -10,23 +10,24 @@ import {
   X,
 } from "lucide-react";
 
+import { useTransientState } from "../hooks/useTransientState";
 import { copyText } from "../lib/clipboard";
 import { historyToCsv } from "../lib/export";
 import { ui } from "../lib/uiStyles";
 import { cn } from "../lib/utils";
 import type { HistoryEntry } from "../types/history";
 
+const actionClassName =
+  "flex w-full items-center gap-2 rounded-md bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong";
+
 export function ExportButton({ history }: { history: HistoryEntry[] }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const [status, flashStatus] = useTransientState<"idle" | "success" | "error">(
+    "idle",
+  );
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const firstItemRef = useRef<HTMLButtonElement>(null);
-
-  const flashStatus = useCallback((next: "success" | "error") => {
-    setStatus(next);
-    window.setTimeout(() => setStatus("idle"), 2000);
-  }, []);
 
   const closeMenu = useCallback((returnFocus = false) => {
     setIsOpen(false);
@@ -34,11 +35,8 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
   }, []);
 
   useEffect(() => {
-    if (isOpen) firstItemRef.current?.focus();
-  }, [isOpen]);
-
-  useEffect(() => {
     if (!isOpen) return;
+    firstItemRef.current?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -49,22 +47,19 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [closeMenu, isOpen]);
 
-  const download = useCallback(
-    (content: string, type: string, extension: string) => {
-      const blob = new Blob([content], { type });
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.href = url;
-      link.download = `temperature-history-${new Date().toISOString().slice(0, 10)}.${extension}`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      closeMenu();
-      flashStatus("success");
-    },
-    [closeMenu, flashStatus],
-  );
+  const download = (content: string, type: string, extension: string) => {
+    const blob = new Blob([content], { type });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = `temperature-history-${new Date().toISOString().slice(0, 10)}.${extension}`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    closeMenu();
+    flashStatus("success");
+  };
 
   if (!history.length) return null;
 
@@ -115,7 +110,7 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
             <button
               ref={firstItemRef}
               type="button"
-              className="flex w-full items-center gap-2 rounded-md bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong"
+              className={actionClassName}
               onClick={() =>
                 download(
                   `\uFEFF${historyToCsv(history)}`,
@@ -129,7 +124,7 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
             </button>
             <button
               type="button"
-              className="flex w-full items-center gap-2 rounded-md bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong"
+              className={actionClassName}
               onClick={() =>
                 download(
                   JSON.stringify(history, null, 2),
@@ -143,7 +138,7 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
             </button>
             <button
               type="button"
-              className="flex w-full items-center gap-2 rounded-md bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong"
+              className={actionClassName}
               onClick={async () => {
                 try {
                   await copyText(historyToCsv(history));

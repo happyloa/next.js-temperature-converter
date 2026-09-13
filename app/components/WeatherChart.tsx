@@ -9,56 +9,27 @@ import {
   CartesianGrid,
 } from "recharts";
 import type { DailyForecast } from "../types/weather";
-import { useTheme } from "./ThemeProvider";
 
 interface WeatherChartProps {
   data: DailyForecast[];
   unit?: string;
 }
 
-type ChartColors = {
-  grid: string;
-  axisText: string;
-  axisLine: string;
-  tooltipBg: string;
-  tooltipBorder: string;
-  high: string;
-  low: string;
-};
-
-const FALLBACK_COLORS: ChartColors = {
-  grid: "#343b38",
-  axisText: "#8f9894",
-  axisLine: "#5d6864",
-  tooltipBg: "#191c1b",
-  tooltipBorder: "#343b38",
-  high: "#c3c8c6",
-  low: "#58b8ad",
-};
-
-const readChartColors = (): ChartColors => {
-  const styles = getComputedStyle(document.documentElement);
-  const read = (name: string, fallback: string) =>
-    styles.getPropertyValue(name).trim() || fallback;
-
-  return {
-    grid: read("--edge-subtle", FALLBACK_COLORS.grid),
-    axisText: read("--ink-subtle", FALLBACK_COLORS.axisText),
-    axisLine: read("--edge-strong", FALLBACK_COLORS.axisLine),
-    tooltipBg: read("--surface-strong", FALLBACK_COLORS.tooltipBg),
-    tooltipBorder: read("--edge-subtle", FALLBACK_COLORS.tooltipBorder),
-    high: read("--ink-medium", FALLBACK_COLORS.high),
-    low: read("--accent", FALLBACK_COLORS.low),
-  };
+// SVG and tooltip styles inherit theme changes directly from CSS.
+const colors = {
+  grid: "var(--edge-subtle)",
+  axisText: "var(--ink-subtle)",
+  axisLine: "var(--edge-strong)",
+  tooltipBg: "var(--surface-strong)",
+  tooltipBorder: "var(--edge-subtle)",
+  high: "var(--ink-medium)",
+  low: "var(--accent)",
 };
 
 /**
- * Weather trend chart showing 7-day temperature forecast.
+ * Weather trend chart showing the selected forecast range.
  */
 export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
-  const { theme } = useTheme();
-  const colors = readChartColors();
-
   if (data.length === 0) {
     return (
       <div className="flex h-full min-h-64 items-center justify-center rounded-lg border border-dashed border-edge-subtle bg-surface-light text-sm text-ink-subtle">
@@ -79,7 +50,6 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
       className="flex h-full min-h-0 flex-col gap-3"
       role="img"
       aria-label={`${data.length} 日最高溫與最低溫折線圖`}
-      data-chart-theme={theme}
     >
       <h4 className="shrink-0 text-sm font-medium text-ink-medium">
         {data.length} 日溫度趨勢

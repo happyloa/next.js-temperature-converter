@@ -109,6 +109,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
   if (originalGeolocation) {
     Object.defineProperty(navigator, "geolocation", originalGeolocation);
   } else {
@@ -158,12 +159,110 @@ describe("useWeatherDashboard", () => {
       await vi.advanceTimersByTimeAsync(WEATHER_CACHE_TTL_MS);
     });
 
-    expect(mockSearchLocation).toHaveBeenCalledOnce();
+    expect(mockSearchLocation).not.toHaveBeenCalled();
     expect(mockFetchForecast).toHaveBeenCalledOnce();
+    expect(mockFetchForecast).toHaveBeenCalledWith(
+      taipei.latitude,
+      taipei.longitude,
+      taipei.timezone,
+      7,
+      expect.any(AbortSignal),
+    );
     expect(result.current.weatherStale).toBe(true);
 
     await act(async () => resolveForecast?.(createForecast()));
     expect(result.current.weatherStale).toBe(false);
+    expect(result.current.weatherData?.location).toBe("Taipei · Taiwan");
+    expect(result.current.weatherData?.administrative).toEqual(["Taipei City"]);
+  });
+
+  it("retries a failed selected-city forecast at its original coordinates", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+    vi.clearAllMocks();
+    mockFetchForecast.mockRejectedValueOnce(new Error("offline"));
+
+    act(() => result.current.handleSuggestionSelect(tokyo));
+    await waitFor(() => expect(result.current.weatherError).not.toBeNull());
+    act(() => result.current.retryWeather());
+    await waitFor(() =>
+      expect(result.current.weatherData?.location).toBe("Tokyo · Japan"),
+    );
+
+    expect(mockSearchLocation).not.toHaveBeenCalled();
+    expect(mockFetchForecast).toHaveBeenLastCalledWith(
+      tokyo.latitude,
+      tokyo.longitude,
+      tokyo.timezone,
+      7,
+      expect.any(AbortSignal),
+    );
+  });
+
+  it("reuses a resolved city after a forecast failure but discards it when the query changes", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+    vi.clearAllMocks();
+    mockSearchLocation.mockResolvedValueOnce(tokyo);
+    mockFetchForecast.mockRejectedValueOnce(new Error("offline"));
+
+    act(() => result.current.handleWeatherPreset("Tokyo"));
+    await waitFor(() => expect(result.current.weatherError).not.toBeNull());
+    act(() => result.current.retryWeather());
+    await waitFor(() =>
+      expect(result.current.weatherData?.location).toBe("Tokyo · Japan"),
+    );
+    expect(mockSearchLocation).toHaveBeenCalledOnce();
+
+    act(() => result.current.handleWeatherQueryChange("Taipei"));
+    act(() =>
+      result.current.handleWeatherSubmit({ preventDefault: vi.fn() } as never),
+    );
+    await waitFor(() =>
+      expect(result.current.weatherData?.location).toBe("Taipei · Taiwan"),
+    );
+    expect(mockSearchLocation).toHaveBeenLastCalledWith(
+      "Taipei",
+      expect.any(AbortSignal),
+    );
+    expect(mockSearchLocation).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps the selected city when its unchanged query is submitted again", async () => {
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+    act(() => result.current.handleSuggestionSelect(tokyo));
+    await waitFor(() =>
+      expect(result.current.weatherData?.location).toBe("Tokyo · Japan"),
+    );
+    vi.clearAllMocks();
+
+    act(() =>
+      result.current.handleWeatherSubmit({ preventDefault: vi.fn() } as never),
+    );
+    await waitFor(() => expect(result.current.weatherLoading).toBe(false));
+
+    expect(mockSearchLocation).not.toHaveBeenCalled();
+    expect(result.current.weatherData?.location).toBe("Tokyo · Japan");
+  });
+
+  it("does not fetch an obsolete forecast after geocoding finishes late", async () => {
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherData).not.toBeNull());
+    vi.clearAllMocks();
+    let resolveLocation: (location: GeoApiLocation) => void = () => undefined;
+    mockSearchLocation.mockImplementationOnce(
+      () => new Promise((resolve) => (resolveLocation = resolve)),
+    );
+    act(() => result.current.handleWeatherPreset("Tokyo"));
+    act(() => result.current.handleWeatherQueryChange("Osaka"));
+
+    await act(async () => resolveLocation(tokyo));
+
+    expect(mockFetchForecast).not.toHaveBeenCalled();
+    expect(result.current.weatherQuery).toBe("Osaka");
   });
 
   it("only searches suggestions while the user is typing", async () => {

@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
-
 import { useHistoryStore } from "../hooks/useHistoryStore";
 import { useTemperatureConversion } from "../hooks/useTemperatureConversion";
+import { useTransientState } from "../hooks/useTransientState";
 import { copyText } from "../lib/clipboard";
-import { formatTemperature, timeFormatter } from "../lib/format";
 import { TEMPERATURE_PRESETS } from "../lib/temperature";
 import { ui } from "../lib/uiStyles";
 import type { TemperatureScaleCode } from "../types/temperature";
@@ -17,9 +15,8 @@ import { TemperatureInputCard } from "./TemperatureInputCard";
 export function TemperatureStudioClient() {
   const converter = useTemperatureConversion();
   const { history, addHistoryEntry, clearHistory } = useHistoryStore();
-  const [copiedScale, setCopiedScale] = useState<TemperatureScaleCode | null>(
-    null,
-  );
+  const [copiedScale, showCopiedScale] =
+    useTransientState<TemperatureScaleCode | null>(null, 1800);
 
   const handleAddHistory = () => {
     const now = new Date();
@@ -33,8 +30,7 @@ export function TemperatureStudioClient() {
   const handleCopy = async (text: string, code: TemperatureScaleCode) => {
     try {
       await copyText(text);
-      setCopiedScale(code);
-      window.setTimeout(() => setCopiedScale(null), 1800);
+      showCopiedScale(code);
     } catch (error) {
       console.error("Failed to copy", error);
     }
@@ -58,12 +54,7 @@ export function TemperatureStudioClient() {
 
           <aside className="flex min-w-0 flex-col gap-5 lg:sticky lg:top-20">
             <InsightsSection insights={converter.insights} />
-            <HistorySection
-              history={history}
-              onClearHistory={clearHistory}
-              formatTemperature={formatTemperature}
-              formatTime={(date) => timeFormatter.format(date)}
-            />
+            <HistorySection history={history} onClearHistory={clearHistory} />
           </aside>
         </div>
       </div>

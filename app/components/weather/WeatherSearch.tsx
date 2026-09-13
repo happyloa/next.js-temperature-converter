@@ -47,6 +47,7 @@ export function WeatherSearch({
   };
 
   const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
     if (!suggestions.length) return;
 
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -62,7 +63,11 @@ export function WeatherSearch({
       return;
     }
 
-    if (event.key === "Enter" && suggestionsOpen && activeSuggestion >= 0) {
+    if (
+      event.key === "Enter" &&
+      suggestionsOpen &&
+      suggestions[activeSuggestion]
+    ) {
       event.preventDefault();
       onSuggestionSelect(suggestions[activeSuggestion]);
       closeSuggestions();
@@ -103,10 +108,10 @@ export function WeatherSearch({
             aria-autocomplete="list"
             aria-haspopup="listbox"
             aria-expanded={suggestionsOpen}
-            aria-controls="weather-suggestions"
+            aria-controls={suggestionsOpen ? "weather-suggestions" : undefined}
             aria-busy={suggestionsLoading}
             aria-activedescendant={
-              suggestionsOpen && activeSuggestion >= 0
+              suggestionsOpen && suggestions[activeSuggestion]
                 ? `weather-suggestion-${activeSuggestion}`
                 : undefined
             }

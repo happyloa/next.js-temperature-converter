@@ -27,6 +27,40 @@ afterEach(() => {
 });
 
 describe("useWeatherSuggestions", () => {
+  it.each(["resolve", "reject"] as const)(
+    "ignores an obsolete request that settles late with %s",
+    async (outcome) => {
+      let resolveOld: (locations: GeoApiLocation[]) => void = () => undefined;
+      let rejectOld: (error: Error) => void = () => undefined;
+      mockSearchLocations.mockImplementationOnce(
+        () =>
+          new Promise((resolve, reject) => {
+            resolveOld = resolve;
+            rejectOld = reject;
+          }),
+      );
+      const osaka = { ...tokyo, name: "Osaka", latitude: 34.69 };
+      mockSearchLocations.mockResolvedValueOnce([osaka]);
+      const { result, rerender } = renderHook(
+        ({ query }) => useWeatherSuggestions(query, "Taipei", true),
+        { initialProps: { query: "Tokyo" } },
+      );
+      await act(() => vi.advanceTimersByTimeAsync(350));
+      rerender({ query: "Osaka" });
+      await act(() => vi.advanceTimersByTimeAsync(350));
+      expect(result.current.suggestions).toEqual([osaka]);
+
+      await act(async () => {
+        if (outcome === "resolve") resolveOld([tokyo]);
+        else rejectOld(new Error("late network failure"));
+      });
+
+      expect(result.current.suggestions).toEqual([osaka]);
+      expect(result.current.suggestionsOpen).toBe(true);
+      expect(result.current.suggestionsLoading).toBe(false);
+    },
+  );
+
   it("ignores short and already committed queries", async () => {
     const { result, rerender } = renderHook(
       ({ query, committed }) => useWeatherSuggestions(query, committed, true),

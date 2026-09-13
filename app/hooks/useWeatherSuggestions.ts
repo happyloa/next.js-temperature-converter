@@ -25,7 +25,6 @@ export function useWeatherSuggestions(
     loading: false,
   });
   const [openRequested, setOpenRequested] = useState(false);
-  const controllerRef = useRef<AbortController | null>(null);
   const shouldOpenRef = useRef(false);
   const trimmed = query.trim();
   const canSearch =
@@ -41,25 +40,23 @@ export function useWeatherSuggestions(
   }, []);
 
   useEffect(() => {
-    controllerRef.current?.abort();
-
     if (!canSearch) {
       shouldOpenRef.current = false;
       return;
     }
 
+    const controller = new AbortController();
     shouldOpenRef.current = true;
     const timer = window.setTimeout(async () => {
-      const controller = new AbortController();
-      controllerRef.current = controller;
       setState({ query: trimmed, items: [], loading: true });
 
       try {
         const result = await searchLocations(trimmed, 5, controller.signal);
+        if (controller.signal.aborted) return;
         setState({ query: trimmed, items: result, loading: false });
         setOpenRequested(shouldOpenRef.current && result.length > 0);
       } catch (error) {
-        if (!isAbortError(error)) {
+        if (!controller.signal.aborted && !isAbortError(error)) {
           console.error("searchLocations", error);
           setState({ query: trimmed, items: [], loading: false });
           setOpenRequested(false);
@@ -67,16 +64,12 @@ export function useWeatherSuggestions(
       }
     }, SUGGESTION_DELAY_MS);
 
-    return () => window.clearTimeout(timer);
-  }, [canSearch, trimmed]);
-
-  useEffect(
-    () => () => {
+    return () => {
+      window.clearTimeout(timer);
       shouldOpenRef.current = false;
-      controllerRef.current?.abort();
-    },
-    [],
-  );
+      controller.abort();
+    };
+  }, [canSearch, trimmed]);
 
   return {
     suggestions,

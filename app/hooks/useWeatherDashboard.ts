@@ -44,16 +44,17 @@ const getCacheRemainingMs = (fetchedAt: string): number => {
   return Math.max(0, WEATHER_CACHE_TTL_MS - (Date.now() - fetchedAtMs));
 };
 
-const getStoredLocation = (
-  query: string,
-  data: WeatherData,
-): GeoApiLocation | null => {
+const getStoredLocation = (data: WeatherData): GeoApiLocation | null => {
   if (!data.coordinates) return null;
   return {
-    name: query,
+    // The cached display name already includes the country, when available.
+    name: data.location,
     latitude: data.coordinates.latitude,
     longitude: data.coordinates.longitude,
     timezone: data.timezone,
+    admin1: data.administrative[0],
+    admin2: data.administrative[1],
+    admin3: data.administrative[2],
   };
 };
 
@@ -165,6 +166,9 @@ export function useWeatherDashboard(defaultQuery: string) {
       try {
         const location =
           providedLocation ?? (await searchLocation(trimmed, signal));
+        if (!isCurrent()) return;
+        // Preserve the resolved city even if its forecast request fails.
+        lastLocationRef.current = location;
         const requestTimezone = location.timezone ?? "auto";
         const forecast = await fetchForecast(
           location.latitude,
@@ -184,7 +188,6 @@ export function useWeatherDashboard(defaultQuery: string) {
           null,
           weatherBuildOptions,
         );
-        lastLocationRef.current = location;
         setCommittedQuery(trimmed);
         setWeatherQuery(trimmed);
         setForecastDaysState(days);
@@ -244,7 +247,7 @@ export function useWeatherDashboard(defaultQuery: string) {
     const initialDays = restored?.data.forecastDays ?? 7;
     const initialSource = restored?.data.data.locationSource ?? "search";
     const initialLocation = restored
-      ? getStoredLocation(initialQuery, restored.data.data)
+      ? getStoredLocation(restored.data.data)
       : null;
     const refreshDelay = restored
       ? getCacheRemainingMs(restored.data.data.fetchedAt)
@@ -272,9 +275,7 @@ export function useWeatherDashboard(defaultQuery: string) {
       void fetchWeather(
         initialQuery,
         initialDays,
-        initialSource === "geolocation"
-          ? (initialLocation ?? undefined)
-          : undefined,
+        initialLocation ?? undefined,
         initialSource,
       );
     }, refreshDelay);
@@ -305,9 +306,18 @@ export function useWeatherDashboard(defaultQuery: string) {
     setSuggestionsEnabled(true);
   };
 
+  const retryWeather = () => {
+    void fetchWeather(
+      weatherQuery,
+      forecastDays,
+      lastLocationRef.current ?? undefined,
+      locationSourceRef.current,
+    );
+  };
+
   const handleWeatherSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    void fetchWeather(weatherQuery, forecastDays);
+    retryWeather();
   };
 
   const handleWeatherPreset = (preset: string) => {
@@ -405,21 +415,6 @@ export function useWeatherDashboard(defaultQuery: string) {
     }
   };
 
-  const retryWeather = () => {
-    const locationSource = locationSourceRef.current;
-    const retryLocation =
-      locationSource === "geolocation"
-        ? (lastLocationRef.current ??
-          (weatherData ? getStoredLocation(weatherQuery, weatherData) : null))
-        : undefined;
-    void fetchWeather(
-      weatherQuery,
-      forecastDays,
-      retryLocation ?? undefined,
-      locationSource,
-    );
-  };
-
   return {
     weatherQuery,
     weatherData,
@@ -427,7 +422,6 @@ export function useWeatherDashboard(defaultQuery: string) {
     weatherLoading,
     weatherError,
     forecastLoading,
-    fetchWeather,
     retryWeather,
     handleWeatherQueryChange,
     handleWeatherSubmit,

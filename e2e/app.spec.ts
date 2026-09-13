@@ -143,6 +143,38 @@ test("city presets do not open location suggestions", async ({ page }) => {
   }
 });
 
+test("weather chart follows theme colors without reloading weather", async ({
+  page,
+}) => {
+  test.skip((page.viewportSize()?.width ?? 0) < 768, "Chart is desktop-only");
+  const requests = await mockWeatherApis(page);
+  await page.goto("/weather");
+  const chart = page.getByRole("img", { name: "7 日最高溫與最低溫折線圖" });
+  const line = chart.locator(".recharts-line-curve").first();
+  await expect(line).toBeVisible();
+  const originalStroke = await line.evaluate(
+    (element) => getComputedStyle(element).stroke,
+  );
+
+  await page.getByRole("button", { name: /切換為.+主題/ }).click();
+  await expect
+    .poll(() => line.evaluate((element) => getComputedStyle(element).stroke))
+    .not.toBe(originalStroke);
+  await expect(line).toHaveCSS(
+    "stroke",
+    await page.evaluate(() => {
+      const sample = document.createElement("span");
+      sample.style.color = "var(--ink-medium)";
+      document.body.appendChild(sample);
+      const color = getComputedStyle(sample).color;
+      sample.remove();
+      return color;
+    }),
+  );
+  expect(requests.forecast).toBe(1);
+  expect(requests.airQuality).toBe(1);
+});
+
 async function expectPageNotToOverflow(page: Page) {
   const dimensions = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
@@ -165,7 +197,7 @@ async function expectNoSeriousAccessibilityViolations(page: Page) {
 async function expectWeatherLayout(page: Page) {
   const viewportWidth = page.viewportSize()?.width ?? 0;
   const titleBox = await page
-    .getByRole("heading", { name: "溫度趨勢" })
+    .getByRole("heading", { name: "溫度趨勢", level: 2, exact: true })
     .boundingBox();
   const rangeBox = await page
     .getByRole("radiogroup", { name: "預報天數" })

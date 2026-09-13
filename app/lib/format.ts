@@ -84,10 +84,5 @@ export const formatLocalClock = (
 };
 
 export const formatUtcOffset = (value: string | null): string => {
-  if (!value) return "UTC±00:00";
-  const normalized = `${value}`.trim();
-  if (/^[+-]\d{2}:\d{2}$/.test(normalized)) {
-    return `UTC${normalized}`;
-  }
-  return `UTC${normalized}`;
+  return value ? `UTC${value.trim()}` : "UTC±00:00";
 };

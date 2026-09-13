@@ -44,6 +44,7 @@ export function useTemperatureConversion(
     validationError = "數值過大，無法完成所有溫標換算。";
     conversions = [];
   }
+  const canAddHistory = conversions.length > 0;
   const resultFor = (code: TemperatureScaleCode) =>
     conversions.find((item) => item.code === code)?.result ?? Number.NaN;
   const celsiusValue = resultFor("celsius");
@@ -90,13 +91,7 @@ export function useTemperatureConversion(
     id,
     timestamp,
   }: Pick<HistoryEntry, "id" | "timestamp">): HistoryEntry | null => {
-    if (
-      !conversions.length ||
-      !Number.isFinite(value) ||
-      conversions.some((item) => !Number.isFinite(item.result))
-    ) {
-      return null;
-    }
+    if (!canAddHistory) return null;
 
     return {
       id,
@@ -129,11 +124,6 @@ export function useTemperatureConversion(
   const relativeSolarProgress = clamp(solarTemperatureRatio, 0, 100);
 
   const showSolarProgress = Number.isFinite(kelvinValue);
-
-  const canAddHistory =
-    conversions.length > 0 &&
-    Number.isFinite(value) &&
-    conversions.every((item) => Number.isFinite(item.result));
 
   return {
     scale,

@@ -18,6 +18,11 @@ const WeatherChart = dynamic(
 );
 
 const DESKTOP_CHART_QUERY = "(min-width: 768px)";
+const forecastDateFormatter = new Intl.DateTimeFormat("zh-TW", {
+  month: "numeric",
+  day: "numeric",
+  weekday: "short",
+});
 
 function useDesktopChart() {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -151,9 +156,5 @@ export function WeatherForecast({
 
 function formatForecastDate(value: string): string {
   const [year, month, day] = value.split("-").map(Number);
-  return new Intl.DateTimeFormat("zh-TW", {
-    month: "numeric",
-    day: "numeric",
-    weekday: "short",
-  }).format(new Date(year, month - 1, day));
+  return forecastDateFormatter.format(new Date(year, month - 1, day));
 }

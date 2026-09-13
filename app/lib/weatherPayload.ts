@@ -19,13 +19,6 @@ export function buildWeatherData(
 ): WeatherData {
   const resolvedTimezone = location.timezone ?? forecast.timezone ?? "UTC";
 
-  const offsetSeconds = forecast.utc_offset_seconds ?? 0;
-  const offsetSign = offsetSeconds >= 0 ? "+" : "-";
-  const offsetAbs = Math.abs(offsetSeconds);
-  const offsetHours = Math.floor(offsetAbs / 3600);
-  const offsetMinutes = Math.floor((offsetAbs % 3600) / 60);
-  const utcOffsetString = `${offsetSign}${String(offsetHours).padStart(2, "0")}:${String(offsetMinutes).padStart(2, "0")}`;
-
   const now = new Date();
   const fetchedAt = options.fetchedAt ?? now.toISOString();
   const infoDate = new Date(
@@ -90,7 +83,7 @@ export function buildWeatherData(
     // Retained for backward-compatible cached payloads. New UI uses fetchedAt
     // so a restored cache is not presented as a live clock.
     localTime: fetchedAt,
-    utcOffset: utcOffsetString,
+    utcOffset: formatOffset(forecast.utc_offset_seconds ?? 0),
     dayOfWeek: dayOfWeekIndex,
     dailyForecast: forecast.daily.time.map((date, index) => ({
       date,
