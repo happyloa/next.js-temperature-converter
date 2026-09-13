@@ -55,7 +55,7 @@ ESLint 9 與 TypeScript 6 是目前 `eslint-config-next` 內部 parser 支援的
 
 ## 開始使用
 
-支援範圍：Node.js `^20.19.0`、`^22.13.0` 或 `>=24.0.0`，以及 npm。CI 與建議的開發環境固定使用 [`.nvmrc`](.nvmrc) 中的 Node.js 24.12.0，以符合目前 Vitest 與 jsdom 的實際引擎需求。
+支援範圍：Node.js `^22.22.2`、`^24.15.0` 或 `>=26.0.0`，以及 npm。CI 與建議的開發環境固定使用 [`.nvmrc`](.nvmrc) 中的 Node.js 24.16.0，以符合目前 Vitest 與 jsdom 的實際引擎需求。
 
 ```bash
 nvm use
