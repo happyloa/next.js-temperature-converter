@@ -36,8 +36,15 @@ export function WeatherSkeleton() {
           ))}
         </div>
       </div>
-      <div className={cn(ui.panel, "flex h-112 flex-col p-5 sm:p-6")}>
-        <BaseSkeleton className="h-6 w-32 shrink-0" />
+      <div className={cn(ui.panel, "flex h-126 flex-col p-5 sm:p-6")}>
+        <div className="flex items-start justify-between gap-4 max-[760px]:flex-col">
+          <div className="space-y-2">
+            <BaseSkeleton className="h-3 w-20" />
+            <BaseSkeleton className="h-5 w-28" />
+            <BaseSkeleton className="h-3 w-36" />
+          </div>
+          <BaseSkeleton className="h-10 w-24 max-[760px]:w-full" />
+        </div>
         <ChartGraphicSkeleton className="mt-4 min-h-0 flex-1" />
       </div>
     </div>
