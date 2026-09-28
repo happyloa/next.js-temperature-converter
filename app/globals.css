@@ -29,24 +29,24 @@
 @layer base {
   :root {
     color-scheme: dark;
-    --canvas: #0c1210;
-    --ink-strong: #edf5f1;
-    --ink-medium: #c4d0cb;
-    --ink-subtle: #93a39c;
-    --surface-strong: #121b18;
-    --surface-medium: #17221e;
-    --surface-soft: #1d2a25;
-    --surface-light: #24342d;
-    --surface-muted: #30423a;
-    --edge-subtle: #2c3c35;
-    --edge-strong: #51645b;
-    --accent: #63d2c2;
-    --accent-hover: #8ae3d6;
-    --accent-ink: #062b25;
-    --error-bg: #37252a;
-    --error-border: #8c5963;
-    --error-ink: #ffc5cc;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
+    --canvas: #0b121a;
+    --ink-strong: #f2f7f8;
+    --ink-medium: #c7d6db;
+    --ink-subtle: #a4b9c2;
+    --surface-strong: #17232e;
+    --surface-medium: #1d2d39;
+    --surface-soft: #263947;
+    --surface-light: #304756;
+    --surface-muted: #405a66;
+    --edge-subtle: #38505c;
+    --edge-strong: #68818b;
+    --accent: #7ce0d0;
+    --accent-hover: #a1ecdf;
+    --accent-ink: #082c2a;
+    --error-bg: #3b2831;
+    --error-border: #b76d7c;
+    --error-ink: #ffd0d8;
+    --shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
   }
 
   :root[data-theme="light"] {
