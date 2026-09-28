@@ -35,27 +35,27 @@
 
 ## 技術組成
 
-| 類別      | 使用技術                                     |
-| --------- | -------------------------------------------- |
-| Framework | Next.js 16 App Router                        |
-| UI        | React 19、TypeScript                         |
-| Styling   | Tailwind CSS 4 與 CSS design tokens          |
-| Icons     | Lucide React                                 |
-| Chart     | Recharts，僅在桌機用戶端延遲載入             |
-| Data      | Open-Meteo Geocoding、Forecast、Air Quality  |
-| Unit test | Vitest、Testing Library、jsdom、V8 coverage  |
-| E2E       | Playwright、axe，桌機 Chromium 與 Pixel 7    |
-| Quality   | ESLint、Prettier、TypeScript、GitHub Actions |
+| 類別      | 使用技術                                    |
+| --------- | ------------------------------------------- |
+| Framework | Next.js 16 App Router                       |
+| UI        | React 19、TypeScript                        |
+| Styling   | Tailwind CSS 4 與 CSS design tokens         |
+| Icons     | Lucide React                                |
+| Chart     | Recharts，僅在桌機用戶端延遲載入            |
+| Data      | Open-Meteo Geocoding、Forecast、Air Quality |
+| Unit test | Vitest、Testing Library、jsdom、V8 coverage |
+| E2E       | Playwright、axe，桌機 Chromium 與 Pixel 7   |
+| Quality   | Biome、Prettier、TypeScript、GitHub Actions |
 
 ## 依賴原則
 
 正式環境只保留 Next.js、React／React DOM、Lucide 與 Recharts；條件 class 由專案內的小型 helper 處理，不再為此載入額外套件。其餘依賴皆用於編譯、型別、格式或自動化測試，axe 只在 Playwright E2E 中執行，不會進入瀏覽器 runtime bundle。
 
-ESLint 9 與 TypeScript 6 是目前 `eslint-config-next` 內部 parser 支援的最新主版本。ESLint 10 與 TypeScript 7 會產生 peer warning，且 TypeScript 7 會讓 lint parser 啟動失敗，因此暫不升級這兩個不相容的大版本。
+Biome 負責程式碼檢查，Prettier 負責格式檢查；這套組合可使用 TypeScript 7，並避免已棄用的 ESLint 9 安裝警告。
 
 ## 開始使用
 
-支援範圍：Node.js `^22.22.2`、`^24.15.0` 或 `>=26.0.0`，以及 npm。CI 與建議的開發環境固定使用 [`.nvmrc`](.nvmrc) 中的 Node.js 24.16.0，以符合目前 Vitest 與 jsdom 的實際引擎需求。
+支援範圍：Node.js `^22.22.2`、`^24.15.0` 或 `>=26.0.0`，以及 npm。CI 與建議的開發環境固定使用 [`.nvmrc`](.nvmrc) 中的 Node.js 24.20.0，以符合目前 Vitest 與 jsdom 的實際引擎需求。
 
 ```bash
 nvm use
@@ -69,7 +69,7 @@ npm run dev
 
 ```bash
 npm run format:check   # 格式檢查
-npm run lint           # ESLint
+npm run lint           # Biome
 npm run typecheck      # TypeScript
 npm run test           # 單元與 hook 測試
 npm run test:coverage  # 含全域 coverage 門檻

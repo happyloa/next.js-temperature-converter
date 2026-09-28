@@ -11,9 +11,9 @@ export function ChartGraphicSkeleton({
       aria-hidden="true"
     >
       <div className="grid flex-1 grid-cols-7 items-end gap-3 border-b border-l border-edge-subtle px-3 pb-3">
-        {[45, 68, 52, 76, 62, 82, 58].map((height, index) => (
+        {[45, 68, 52, 76, 62, 82, 58].map((height) => (
           <BaseSkeleton
-            key={`${height}-${index}`}
+            key={height}
             className="w-full"
             style={{ height: `${height}%` }}
           />

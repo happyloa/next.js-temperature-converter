@@ -149,16 +149,17 @@ export function WeatherSearch({
         </button>
 
         {suggestionsOpen && suggestions.length ? (
-          <ul
+          <div
             id="weather-suggestions"
             role="listbox"
             className="absolute top-[calc(100%+0.35rem)] right-0 left-0 z-50 overflow-hidden rounded-xl border border-edge-subtle bg-surface-strong p-1.5 shadow-[var(--shadow)]"
           >
             {suggestions.map((location, index) => (
-              <li
+              <div
                 id={`weather-suggestion-${index}`}
                 key={location.id ?? `${location.name}-${location.latitude}`}
                 role="option"
+                tabIndex={-1}
                 aria-selected={activeSuggestion === index}
                 className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2.5 py-2 text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong aria-selected:bg-surface-soft aria-selected:text-ink-strong"
                 onMouseEnter={() => setActiveSuggestion(index)}
@@ -174,14 +175,15 @@ export function WeatherSearch({
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         ) : null}
       </form>
 
       <div
         className="mt-2.5 flex min-w-0 gap-2 overflow-x-auto px-0.5 pt-0.5 pb-1 [scrollbar-width:thin]"
+        role="group"
         aria-label="常用城市"
       >
         {featured.map((preset) => (

@@ -128,8 +128,11 @@ export const decimalPattern = /^-?\d*(\.\d*)?$/;
 /**
  * 取得指定代碼的溫標設定。
  */
-export const getScale = (code: TemperatureScaleCode): TemperatureScale =>
-  TEMPERATURE_SCALES.find((item) => item.code === code)!;
+export const getScale = (code: TemperatureScaleCode): TemperatureScale => {
+  const scale = TEMPERATURE_SCALES.find((item) => item.code === code);
+  if (!scale) throw new Error(`Unknown temperature scale: ${code}`);
+  return scale;
+};
 
 export const getTemperatureRange = (
   scale: TemperatureScale,
