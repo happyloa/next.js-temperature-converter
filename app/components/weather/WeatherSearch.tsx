@@ -161,7 +161,7 @@ export function WeatherSearch({
                 role="option"
                 tabIndex={-1}
                 aria-selected={activeSuggestion === index}
-                className="flex w-full cursor-pointer items-center justify-between gap-2 px-2.5 py-2 text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong aria-selected:bg-surface-soft aria-selected:text-ink-strong"
+                className="flex w-full cursor-pointer items-center justify-between gap-2 px-2.5 py-2 text-detail text-ink-medium hover:bg-surface-soft hover:text-ink-strong aria-selected:bg-surface-soft aria-selected:text-ink-strong"
                 onMouseEnter={() => setActiveSuggestion(index)}
                 onMouseDown={(event) => {
                   event.preventDefault();

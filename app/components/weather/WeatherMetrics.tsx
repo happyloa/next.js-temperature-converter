@@ -77,7 +77,7 @@ export function WeatherMetrics({ data }: { data: WeatherData }) {
               <strong className="text-right text-lg text-ink-strong [font-variant-numeric:tabular-nums] [overflow-wrap:anywhere]">
                 {metric.value}
               </strong>
-              <small className="col-start-2 col-end-[-1] text-[0.6875rem] text-ink-subtle">
+              <small className="col-start-2 col-end-[-1] text-caption text-ink-subtle">
                 {metric.note}
               </small>
             </div>
@@ -92,13 +92,13 @@ export function WeatherMetrics({ data }: { data: WeatherData }) {
           </strong>
           <span
             className={cn(
-              "col-start-3 row-start-2 justify-self-end border px-2 py-0.5 text-[0.6875rem] font-[750]",
+              "col-start-3 row-start-2 justify-self-end border px-2 py-0.5 text-caption font-[750]",
               statusToneClass[uv.tone],
             )}
           >
             {uv.label}
           </span>
-          <small className="col-start-2 col-end-3 row-start-2 text-[0.6875rem] text-ink-subtle">
+          <small className="col-start-2 col-end-3 row-start-2 text-caption text-ink-subtle">
             {uv.guidance}
           </small>
         </div>
@@ -116,7 +116,7 @@ function AirQualityMetric({ data }: { data: WeatherData }) {
         <Waves className="h-5 w-5 text-accent-label" aria-hidden />
         <span className="text-xs text-ink-medium">European AQI</span>
         <strong className="text-right text-lg text-ink-strong">--</strong>
-        <small className="col-start-2 col-end-[-1] text-[0.6875rem] text-ink-subtle">
+        <small className="col-start-2 col-end-[-1] text-caption text-ink-subtle">
           目前沒有空氣品質資料
         </small>
       </div>
@@ -133,13 +133,13 @@ function AirQualityMetric({ data }: { data: WeatherData }) {
       </strong>
       <span
         className={cn(
-          "col-start-3 row-start-2 justify-self-end border px-2 py-0.5 text-[0.6875rem] font-[750]",
+          "col-start-3 row-start-2 justify-self-end border px-2 py-0.5 text-caption font-[750]",
           statusToneClass[level.tone],
         )}
       >
         {level.label}
       </span>
-      <div className="col-start-2 col-end-3 row-start-2 flex flex-wrap gap-x-4 gap-y-2 text-[0.6875rem] text-ink-subtle [&_b]:text-ink-strong">
+      <div className="col-start-2 col-end-3 row-start-2 flex flex-wrap gap-x-4 gap-y-2 text-caption text-ink-subtle [&_b]:text-ink-strong">
         <span>
           PM2.5{" "}
           <b>
@@ -159,7 +159,7 @@ function AirQualityMetric({ data }: { data: WeatherData }) {
           </b>
         </span>
       </div>
-      <small className="col-start-2 col-end-[-1] row-start-3 text-[0.6875rem] text-ink-subtle">
+      <small className="col-start-2 col-end-[-1] row-start-3 text-caption text-ink-subtle">
         {level.guidance}
       </small>
     </div>

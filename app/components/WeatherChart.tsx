@@ -69,12 +69,12 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
           <XAxis
             dataKey="date"
             tickFormatter={formatDate}
-            tick={{ fill: colors.axisText, fontSize: 11 }}
+            tick={{ fill: colors.axisText, fontSize: 13 }}
             axisLine={{ stroke: colors.axisLine }}
             tickLine={{ stroke: colors.axisLine }}
           />
           <YAxis
-            tick={{ fill: colors.axisText, fontSize: 11 }}
+            tick={{ fill: colors.axisText, fontSize: 13 }}
             axisLine={{ stroke: colors.axisLine }}
             tickLine={{ stroke: colors.axisLine }}
             tickFormatter={(value) => `${value}${unit}`}
@@ -84,7 +84,7 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
               backgroundColor: colors.tooltipBg,
               border: `1px solid ${colors.tooltipBorder}`,
               borderRadius: "0",
-              fontSize: "12px",
+              fontSize: "14px",
             }}
             labelFormatter={(label) => {
               const [year, month, day] = `${label}`.split("-").map(Number);

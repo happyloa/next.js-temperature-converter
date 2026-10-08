@@ -36,10 +36,10 @@ export function ScaleSelector({
               : "border-transparent bg-surface-strong text-ink-medium",
           )}
         >
-          <span className="text-[0.9375rem] font-[750] text-ink-strong">
+          <span className="text-scale font-[750] text-ink-strong">
             {item.symbol}
           </span>
-          <small className="max-w-full overflow-hidden text-[0.6875rem] text-ellipsis whitespace-nowrap">
+          <small className="max-w-full overflow-hidden text-caption text-ellipsis whitespace-nowrap">
             {item.label.split(" (")[0]}
           </small>
         </button>

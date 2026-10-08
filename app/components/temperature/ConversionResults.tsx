@@ -64,15 +64,15 @@ export function ConversionResults({
                   : "border-transparent bg-surface-strong",
               )}
             >
-              <div className="col-start-1 flex min-w-0 flex-col text-[0.8125rem] text-ink-medium">
+              <div className="col-start-1 flex min-w-0 flex-col text-detail text-ink-medium">
                 <span>{conversion.label}</span>
                 {conversion.code === "celsius" ? (
-                  <small className="text-[0.6875rem] text-ink-subtle">
+                  <small className="text-caption text-ink-subtle">
                     {mood.title}
                   </small>
                 ) : null}
               </div>
-              <strong className="col-start-1 text-left text-[1.75rem] font-normal leading-tight tracking-tight text-ink-strong [overflow-wrap:anywhere]">
+              <strong className="col-start-1 text-left text-[2rem] font-normal leading-tight tracking-tight text-ink-strong [overflow-wrap:anywhere]">
                 {formatTemperature(conversion.result)}
                 <span className="ml-1 text-xs text-ink-subtle">
                   {conversion.symbol}

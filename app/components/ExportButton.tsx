@@ -18,7 +18,7 @@ import { cn } from "../lib/utils";
 import type { HistoryEntry } from "../types/history";
 
 const actionClassName =
-  "flex w-full items-center gap-2 bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong";
+  "flex w-full items-center gap-2 bg-transparent px-2.5 py-2 text-left text-detail text-ink-medium hover:bg-surface-soft hover:text-ink-strong";
 
 export function ExportButton({ history }: { history: HistoryEntry[] }) {
   const [isOpen, setIsOpen] = useState(false);

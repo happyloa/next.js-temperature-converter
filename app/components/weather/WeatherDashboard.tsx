@@ -74,7 +74,7 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
             role="alert"
           >
             <AlertCircle className="h-5 w-5 shrink-0" aria-hidden />
-            <div className="min-w-0 flex-1 text-[0.8125rem]">
+            <div className="min-w-0 flex-1 text-detail">
               <strong>{weatherError}</strong>
               {weatherData ? (
                 <p className="text-xs opacity-80">
@@ -119,7 +119,7 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
           </div>
         )}
 
-        <footer className="mt-6 text-left text-[0.6875rem] text-ink-subtle">
+        <footer className="mt-6 text-left text-caption text-ink-subtle">
           <span>Weather data by </span>
           <a
             href="https://open-meteo.com/"

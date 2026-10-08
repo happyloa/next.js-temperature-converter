@@ -47,7 +47,7 @@ export function CurrentConditions({
             {data.administrative.join(" · ") || "座標定位"}
           </span>
           {coordinates ? (
-            <code className="max-w-full bg-surface-soft px-1.5 py-1 text-[0.6875rem] [overflow-wrap:anywhere]">
+            <code className="max-w-full bg-surface-soft px-1.5 py-1 text-caption [overflow-wrap:anywhere]">
               {coordinates}
             </code>
           ) : null}

@@ -28,7 +28,7 @@ export function InsightsSection({ insights }: { insights: ThermalInsight[] }) {
             >
               <span className="mt-1 h-3 w-px bg-accent" aria-hidden />
               <div>
-                <strong className="text-[0.8125rem] text-ink-strong">
+                <strong className="text-detail text-ink-strong">
                   {insight.title}
                 </strong>
                 <p className="mt-1 text-xs text-ink-medium">

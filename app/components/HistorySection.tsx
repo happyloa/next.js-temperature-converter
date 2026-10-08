@@ -87,10 +87,10 @@ export function HistorySection({
             >
               <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 py-2.5 text-ink-medium [&::-webkit-details-marker]:hidden">
                 <span className="flex min-w-0 flex-col">
-                  <strong className="text-[0.8125rem] text-ink-strong">
+                  <strong className="text-detail text-ink-strong">
                     {formatTemperature(entry.value)} {entry.scaleSymbol}
                   </strong>
-                  <small className="text-[0.6875rem] text-ink-subtle">
+                  <small className="text-caption text-ink-subtle">
                     {new Date(entry.timestamp).toLocaleDateString("zh-TW")} ·{" "}
                     {timeFormatter.format(new Date(entry.timestamp))}
                   </small>
@@ -106,10 +106,10 @@ export function HistorySection({
                     key={`${entry.id}-${item.code}`}
                     className="min-w-0 bg-surface-soft p-2 text-center"
                   >
-                    <small className="block [overflow-wrap:anywhere] text-[0.6875rem]">
+                    <small className="block [overflow-wrap:anywhere] text-caption">
                       {item.symbol}
                     </small>
-                    <b className="block [overflow-wrap:anywhere] text-[0.6875rem]">
+                    <b className="block [overflow-wrap:anywhere] text-caption">
                       {formatTemperature(item.result)}
                     </b>
                   </span>
