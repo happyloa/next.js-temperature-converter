@@ -18,7 +18,7 @@ export function ScaleSelector({
       onKeyDown={(event) =>
         handleRadioGroupKeyDown(event, codes, activeScale, onScaleChange)
       }
-      className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-6"
+      className="mt-5 grid grid-cols-3 gap-px border border-edge-subtle bg-edge-subtle sm:grid-cols-6"
     >
       {TEMPERATURE_SCALES.map((item) => (
         <button
@@ -30,10 +30,10 @@ export function ScaleSelector({
           tabIndex={activeScale === item.code ? 0 : -1}
           onClick={() => onScaleChange(item.code)}
           className={cn(
-            "flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border bg-surface-medium px-1 transition-colors hover:border-accent hover:bg-surface-soft",
+            "flex min-h-17 min-w-0 flex-col items-start justify-center gap-1 border-b-2 px-3 transition-[border-color] hover:bg-surface-soft",
             activeScale === item.code
-              ? "border-accent bg-surface-soft text-ink-strong shadow-[var(--shadow)]"
-              : "border-edge-subtle text-ink-medium",
+              ? "border-accent-label bg-surface-medium text-ink-strong"
+              : "border-transparent bg-surface-strong text-ink-medium",
           )}
         >
           <span className="text-[0.9375rem] font-[750] text-ink-strong">

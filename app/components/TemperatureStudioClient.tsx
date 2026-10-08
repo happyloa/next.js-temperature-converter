@@ -44,7 +44,7 @@ export function TemperatureStudioClient() {
           onPresetSelect={converter.handlePresetSelect}
         />
 
-        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(19rem,0.8fr)] lg:items-start">
+        <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
           <TemperatureInputCard
             converter={converter}
             onAddHistory={handleAddHistory}
@@ -52,7 +52,7 @@ export function TemperatureStudioClient() {
             onCopy={handleCopy}
           />
 
-          <aside className="flex min-w-0 flex-col gap-5 lg:sticky lg:top-20">
+          <aside className="flex min-w-0 flex-col gap-6 lg:sticky lg:top-28">
             <InsightsSection insights={converter.insights} />
             <HistorySection history={history} onClearHistory={clearHistory} />
           </aside>

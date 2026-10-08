@@ -18,7 +18,7 @@ import { cn } from "../lib/utils";
 import type { HistoryEntry } from "../types/history";
 
 const actionClassName =
-  "flex w-full items-center gap-2 rounded-md bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong";
+  "flex w-full items-center gap-2 bg-transparent px-2.5 py-2 text-left text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong";
 
 export function ExportButton({ history }: { history: HistoryEntry[] }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -105,7 +105,7 @@ export function ExportButton({ history }: { history: HistoryEntry[] }) {
             id={menuId}
             role="group"
             aria-label="匯出選項"
-            className="absolute top-[calc(100%+0.35rem)] left-0 z-50 min-w-40 overflow-hidden rounded-lg border border-edge-subtle bg-surface-strong p-1.5 shadow-[var(--shadow)]"
+            className="absolute top-[calc(100%+0.35rem)] left-0 z-50 min-w-40 overflow-hidden border border-edge-subtle bg-surface-strong p-1.5"
           >
             <button
               ref={firstItemRef}

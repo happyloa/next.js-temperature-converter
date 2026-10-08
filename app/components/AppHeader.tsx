@@ -11,50 +11,48 @@ const NAV_LINKS = [
   { href: "/weather", label: "天氣" },
 ];
 
-/**
- * 全站共用導覽列，讓轉換器與天氣頁之間有對稱、隨處可見的導覽入口。
- */
 export function AppHeader() {
   const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-edge-subtle bg-canvas">
-      <div className="mx-auto flex min-h-16 max-w-[1180px] items-center justify-between gap-3 px-4 py-2 md:px-6 max-[430px]:px-3">
+      <div className="mx-auto flex min-h-20 max-w-[1304px] items-center justify-between gap-3 px-4 md:px-8">
         <Link
           href="/"
-          className="flex min-w-0 items-center gap-2.5 rounded-xl text-sm font-bold text-ink-strong"
+          className="flex min-w-0 items-center gap-3 text-ink-strong"
         >
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-edge-subtle bg-surface-strong text-accent">
-            <Thermometer className="h-[1.125rem] w-[1.125rem]" aria-hidden />
+          <span className="grid size-10 shrink-0 place-items-center bg-accent text-accent-ink">
+            <Thermometer className="size-6" strokeWidth={1.5} aria-hidden />
           </span>
-          <span className="truncate max-[430px]:max-w-[5.5rem]">
-            溫度工作室
+          <span className="min-w-0">
+            <span className="block text-sm font-bold tracking-tight sm:text-base">
+              溫度工作室
+            </span>
+            <span className="hidden text-[0.6875rem] text-ink-subtle sm:block">
+              Temperature Studio
+            </span>
           </span>
         </Link>
-
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 sm:gap-6">
           <nav
             aria-label="主要導覽"
-            className="flex items-center gap-1 rounded-xl border border-edge-subtle bg-surface-soft p-1"
+            className="flex self-stretch gap-1 sm:gap-4"
           >
-            {NAV_LINKS.map((link) => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-current={isActive ? "page" : undefined}
-                  className={cn(
-                    "min-w-[3.9rem] rounded-lg px-2.5 py-2 text-center text-[0.8125rem] font-bold transition-colors max-[430px]:min-w-[3.25rem] max-[430px]:px-2",
-                    isActive
-                      ? "bg-surface-strong text-ink-strong shadow-[var(--shadow)]"
-                      : "text-ink-medium hover:text-ink-strong",
-                  )}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={pathname === link.href ? "page" : undefined}
+                className={cn(
+                  "inline-flex min-h-11 items-center border-b-2 px-2 text-xs font-bold transition-[border-color] sm:px-3 sm:text-sm",
+                  pathname === link.href
+                    ? "border-accent-label text-ink-strong"
+                    : "border-transparent text-ink-subtle hover:border-edge-strong hover:text-ink-strong",
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
           <ThemeToggleButton />
         </div>

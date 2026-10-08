@@ -1,24 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="tempGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" style="stop-color:#3b82f6"/>
-      <stop offset="50%" style="stop-color:#f59e0b"/>
-      <stop offset="100%" style="stop-color:#ef4444"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" fill="#0f172a"/>
-  <g transform="translate(256, 256)">
-    <!-- Thermometer body -->
-    <rect x="-30" y="-150" width="60" height="220" rx="30" fill="#1e293b" stroke="#334155" stroke-width="3"/>
-    <!-- Temperature fill -->
-    <rect x="-20" y="-100" width="40" height="170" rx="20" fill="url(#tempGradient)"/>
-    <!-- Thermometer bulb -->
-    <circle cx="0" cy="100" r="60" fill="#1e293b" stroke="#334155" stroke-width="3"/>
-    <circle cx="0" cy="100" r="45" fill="url(#tempGradient)"/>
-    <!-- Temperature marks -->
-    <rect x="35" y="-120" width="25" height="4" rx="2" fill="#64748b"/>
-    <rect x="35" y="-80" width="25" height="4" rx="2" fill="#64748b"/>
-    <rect x="35" y="-40" width="25" height="4" rx="2" fill="#64748b"/>
-    <rect x="35" y="0" width="25" height="4" rx="2" fill="#64748b"/>
-  </g>
+  <rect width="512" height="512" fill="#002fa7"/>
+  <path d="M220 298V130a36 36 0 0 1 72 0v168a76 76 0 1 1-72 0Z" fill="none" stroke="#fff" stroke-width="20"/>
+  <path d="M256 176v162" stroke="#fff" stroke-width="18"/>
+  <circle cx="256" cy="364" r="30" fill="#fff"/>
+  <path d="M324 154h30m-30 54h30m-30 54h30" stroke="#fff" stroke-width="12"/>
 </svg>

@@ -13,8 +13,8 @@ export default function OpengraphImage() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        backgroundColor: "#0b121a",
-        color: "#f2f7f8",
+        backgroundColor: "#ffffff",
+        color: "#161616",
         padding: "72px 84px",
         fontFamily: "Arial, sans-serif",
       }}
@@ -25,18 +25,27 @@ export default function OpengraphImage() {
           alignItems: "center",
           justifyContent: "space-between",
           fontSize: 28,
-          color: "#a4b9c2",
+          color: "#505050",
+          borderBottom: "1px solid #d6d6d8",
+          paddingBottom: 24,
         }}
       >
         <span>Temperature Studio</span>
-        <span>CONVERT / WEATHER / INSIGHT</span>
+        <span style={{ color: "#002fa7" }}>°C / °F / K</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        <div style={{ display: "flex", fontSize: 86, fontWeight: 700 }}>
-          Temperature, made clear.
+        <div
+          style={{
+            display: "flex",
+            fontSize: 100,
+            fontWeight: 700,
+            letterSpacing: "-5px",
+          }}
+        >
+          Temperature Studio
         </div>
-        <div style={{ display: "flex", fontSize: 34, color: "#c7d6db" }}>
-          Six scales, global weather and practical context in one workspace.
+        <div style={{ display: "flex", fontSize: 32, color: "#505050" }}>
+          Six temperature scales. Weather around the world.
         </div>
       </div>
       <div style={{ display: "flex", gap: 18 }}>
@@ -45,11 +54,10 @@ export default function OpengraphImage() {
             key={label}
             style={{
               display: "flex",
-              border: "1px solid #38505c",
-              borderRadius: 8,
+              borderTop: "2px solid #002fa7",
               padding: "12px 18px",
               fontSize: 20,
-              color: "#f2f7f8",
+              color: "#161616",
             }}
           >
             {label}

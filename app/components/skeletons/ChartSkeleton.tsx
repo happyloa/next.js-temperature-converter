@@ -58,7 +58,7 @@ export function ChartGraphicSkeleton({
               />
               <path
                 d="M0 132 C55 134 80 138 117 138 S195 135 233 136 S310 127 350 126 S427 130 467 132 S545 140 583 142 S660 139 700 140"
-                stroke="var(--accent)"
+                stroke="var(--accent-label)"
                 strokeWidth="2"
                 strokeLinecap="round"
                 vectorEffect="non-scaling-stroke"

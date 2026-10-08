@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import { ui } from "./lib/uiStyles";
 import { cn } from "./lib/utils";
 
@@ -11,40 +12,42 @@ import { cn } from "./lib/utils";
  */
 export default function RouteError({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   useEffect(() => {
     console.error("Unhandled route error", error);
   }, [error]);
 
   return (
-    <main
-      id="main-content"
-      className="flex w-full flex-col items-center justify-center gap-6 px-4 py-32 text-center"
-    >
-      <span className="text-5xl" aria-hidden="true">
-        ⚠️
-      </span>
-      <div className="space-y-2">
-        <h1 className="text-xl font-bold text-ink-strong">發生了一些問題</h1>
-        <p className="text-ink-medium max-w-md text-sm leading-relaxed">
-          頁面暫時無法正常運作，請稍後再試，或返回首頁重新開始。
-        </p>
-      </div>
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <button
-          type="button"
-          onClick={() => reset()}
-          className={cn(ui.button, ui.primaryButton)}
-        >
-          重試
-        </button>
-        <Link href="/" className={cn(ui.button, ui.secondaryButton)}>
-          返回首頁
-        </Link>
+    <main id="main-content" className={ui.pageShell}>
+      <div
+        className={cn(
+          ui.workspace,
+          "min-h-[55vh] border-l-4 border-accent-label pl-6 py-12 sm:pl-10",
+        )}
+      >
+        <AlertTriangle
+          className="mb-6 size-12 text-accent-label"
+          strokeWidth={1.5}
+          aria-hidden
+        />
+        <h1 className={ui.pageTitle}>頁面暫時無法載入</h1>
+        <p className={ui.description}>請重新載入，或返回首頁再試一次。</p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={retry}
+            className={cn(ui.button, ui.primaryButton)}
+          >
+            重試
+          </button>
+          <Link href="/" className={cn(ui.button, ui.secondaryButton)}>
+            返回首頁
+          </Link>
+        </div>
       </div>
     </main>
   );

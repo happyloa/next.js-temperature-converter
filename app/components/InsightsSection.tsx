@@ -5,13 +5,15 @@ import type { ThermalInsight } from "../types/insight";
 
 export function InsightsSection({ insights }: { insights: ThermalInsight[] }) {
   return (
-    <section className={cn(ui.panel, "p-5")} aria-labelledby="insights-title">
+    <section
+      className={cn(ui.panel, "border-t-2 border-t-ink-strong p-5")}
+      aria-labelledby="insights-title"
+    >
       <header className="flex min-w-0 items-center justify-start gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface-soft text-accent">
+        <span className="grid size-9 shrink-0 place-items-center text-accent-label">
           <Lightbulb className="h-4 w-4" aria-hidden />
         </span>
         <div>
-          <p className={ui.kicker}>CONTEXT</p>
           <h2 id="insights-title" className={ui.sectionTitle}>
             溫度洞察
           </h2>
@@ -22,9 +24,9 @@ export function InsightsSection({ insights }: { insights: ThermalInsight[] }) {
           {insights.map((insight) => (
             <li
               key={insight.title}
-              className="grid grid-cols-[1.75rem_minmax(0,1fr)] gap-2.5 border-t border-edge-subtle py-3 first:border-t-0"
+              className="grid grid-cols-[0.5rem_minmax(0,1fr)] gap-2.5 border-t border-edge-subtle py-4 first:border-t-0"
             >
-              <span aria-hidden>{insight.icon}</span>
+              <span className="mt-1 h-3 w-px bg-accent" aria-hidden />
               <div>
                 <strong className="text-[0.8125rem] text-ink-strong">
                   {insight.title}

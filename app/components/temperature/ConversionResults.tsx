@@ -37,7 +37,6 @@ export function ConversionResults({
     <div className="mt-6 border-t border-edge-subtle pt-5">
       <div className={ui.headingRow}>
         <div>
-          <p className={ui.kicker}>RESULTS</p>
           <h2 className={ui.sectionTitle}>即時轉換結果</h2>
         </div>
         <span className={ui.count}>{conversions.length} / 6</span>
@@ -54,13 +53,15 @@ export function ConversionResults({
         {copiedConversion ? `已複製${copiedConversion.label}結果。` : ""}
       </div>
       {conversions.length ? (
-        <ul className="mt-4 grid list-none gap-2 sm:grid-cols-2">
+        <ul className="mt-5 grid list-none grid-cols-1 gap-px border border-edge-subtle bg-edge-subtle sm:grid-cols-2 xl:grid-cols-3">
           {conversions.map((conversion) => (
             <li
               key={conversion.code}
               className={cn(
-                "grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-xl border border-edge-subtle bg-surface-medium p-3",
-                conversion.code === scale && "border-accent bg-surface-soft",
+                "grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-3 border-t-2 p-4",
+                conversion.code === scale
+                  ? "border-accent-label bg-surface-medium"
+                  : "border-transparent bg-surface-strong",
               )}
             >
               <div className="col-start-1 flex min-w-0 flex-col text-[0.8125rem] text-ink-medium">
@@ -71,7 +72,7 @@ export function ConversionResults({
                   </small>
                 ) : null}
               </div>
-              <strong className="col-start-1 text-left text-lg text-ink-strong [font-variant-numeric:tabular-nums] [overflow-wrap:anywhere] max-[430px]:text-[0.9375rem]">
+              <strong className="col-start-1 text-left text-[1.75rem] font-normal leading-tight tracking-tight text-ink-strong [overflow-wrap:anywhere]">
                 {formatTemperature(conversion.result)}
                 <span className="ml-1 text-xs text-ink-subtle">
                   {conversion.symbol}
@@ -93,7 +94,7 @@ export function ConversionResults({
                 title={`複製${conversion.label}結果`}
               >
                 {copiedScale === conversion.code ? (
-                  <Check className="h-4 w-4 text-accent" aria-hidden />
+                  <Check className="h-4 w-4 text-accent-label" aria-hidden />
                 ) : (
                   <Copy className="h-4 w-4" aria-hidden />
                 )}

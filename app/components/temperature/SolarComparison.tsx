@@ -19,12 +19,12 @@ export function SolarComparison({
           <h2 className={ui.sectionTitle}>絕對溫度比較</h2>
           <p className={ui.fieldHelp}>以 Kelvin 比較太陽光球層約 5,778 K</p>
         </div>
-        <strong className="text-accent [font-variant-numeric:tabular-nums]">
+        <strong className="text-accent-label [font-variant-numeric:tabular-nums]">
           {showProgress ? `${formatTemperature(ratio)}%` : "--"}
         </strong>
       </div>
       <div
-        className="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-muted"
+        className="mt-3 h-2 w-full overflow-hidden bg-surface-muted"
         role="progressbar"
         aria-label="相對於太陽表面絕對溫度"
         aria-valuemin={0}
@@ -32,7 +32,7 @@ export function SolarComparison({
         aria-valuenow={Math.round(progress)}
       >
         <span
-          className="block h-full bg-accent"
+          className="block h-full bg-accent-label"
           style={{ width: `${progress}%` }}
         />
       </div>

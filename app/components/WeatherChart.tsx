@@ -23,7 +23,7 @@ const colors = {
   tooltipBg: "var(--surface-strong)",
   tooltipBorder: "var(--edge-subtle)",
   high: "var(--ink-medium)",
-  low: "var(--accent)",
+  low: "var(--accent-label)",
 };
 
 /**
@@ -32,7 +32,7 @@ const colors = {
 export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
   if (data.length === 0) {
     return (
-      <div className="flex h-full min-h-64 items-center justify-center rounded-lg border border-dashed border-edge-subtle bg-surface-light text-sm text-ink-subtle">
+      <div className="flex h-full min-h-64 items-center justify-center border border-dashed border-edge-subtle bg-surface-light text-sm text-ink-subtle">
         暫無預報資料
       </div>
     );
@@ -83,7 +83,7 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
             contentStyle={{
               backgroundColor: colors.tooltipBg,
               border: `1px solid ${colors.tooltipBorder}`,
-              borderRadius: "8px",
+              borderRadius: "0",
               fontSize: "12px",
             }}
             labelFormatter={(label) => {
@@ -133,17 +133,17 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
           />
         </LineChart>
       </div>
-      <div className="flex items-center justify-center gap-6 text-xs text-ink-subtle">
+      <div className="flex items-center justify-start gap-6 text-xs text-ink-subtle">
         <span className="flex items-center gap-1">
           <span
-            className="inline-block h-2 w-2 rounded-full"
+            className="inline-block h-2 w-2"
             style={{ backgroundColor: colors.high }}
           />
           最高溫
         </span>
         <span className="flex items-center gap-1">
           <span
-            className="inline-block h-2 w-2 rounded-full"
+            className="inline-block h-2 w-2"
             style={{ backgroundColor: colors.low }}
           />
           最低溫

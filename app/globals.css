@@ -2,9 +2,9 @@
 
 @theme {
   --font-sans:
-    "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui,
-    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    "Helvetica Neue", Helvetica, Arial, "PingFang TC", "Microsoft JhengHei",
+    sans-serif;
+  --font-mono: var(--font-sans);
   --color-canvas: var(--canvas);
   --color-ink-strong: var(--ink-strong);
   --color-ink-medium: var(--ink-medium);
@@ -17,6 +17,7 @@
   --color-edge-subtle: var(--edge-subtle);
   --color-edge-strong: var(--edge-strong);
   --color-accent: var(--accent);
+  --color-accent-label: var(--accent-label);
   --color-accent-hover: var(--accent-hover);
   --color-accent-ink: var(--accent-ink);
   --color-error-bg: var(--error-bg);
@@ -28,47 +29,44 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
-    --canvas: #0b121a;
-    --ink-strong: #f2f7f8;
-    --ink-medium: #c7d6db;
-    --ink-subtle: #a4b9c2;
-    --surface-strong: #17232e;
-    --surface-medium: #1d2d39;
-    --surface-soft: #263947;
-    --surface-light: #304756;
-    --surface-muted: #405a66;
-    --edge-subtle: #38505c;
-    --edge-strong: #68818b;
-    --accent: #7ce0d0;
-    --accent-hover: #a1ecdf;
-    --accent-ink: #082c2a;
-    --error-bg: #3b2831;
-    --error-border: #b76d7c;
-    --error-ink: #ffd0d8;
-    --shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+    color-scheme: light;
+    --canvas: #ffffff;
+    --ink-strong: #161616;
+    --ink-medium: #505050;
+    --ink-subtle: #656565;
+    --surface-strong: #ffffff;
+    --surface-medium: #f7f7f8;
+    --surface-soft: #eeeeef;
+    --surface-light: #e7e7e8;
+    --surface-muted: #d9d9db;
+    --edge-subtle: #d6d6d8;
+    --edge-strong: #99999d;
+    --accent: #002fa7;
+    --accent-label: #002fa7;
+    --accent-hover: #00267f;
+    --accent-ink: #ffffff;
+    --error-bg: #f7f7f8;
+    --error-border: #505050;
+    --error-ink: #161616;
   }
 
-  :root[data-theme="light"] {
-    color-scheme: light;
-    --canvas: #f4f7f5;
-    --ink-strong: #16211d;
-    --ink-medium: #4b5b54;
-    --ink-subtle: #5f6e66;
-    --surface-strong: #ffffff;
-    --surface-medium: #fbfcfb;
-    --surface-soft: #edf3f0;
-    --surface-light: #e4ece7;
-    --surface-muted: #d8e3dd;
-    --edge-subtle: #d5dfda;
-    --edge-strong: #aab9b1;
-    --accent: #11766e;
-    --accent-hover: #0b625b;
-    --accent-ink: #ffffff;
-    --error-bg: #f9eaed;
-    --error-border: #c97c86;
-    --error-ink: #842d3a;
-    --shadow: 0 1px 2px rgba(22, 33, 29, 0.08);
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --canvas: #111111;
+    --ink-strong: #f7f7f8;
+    --ink-medium: #c5c5c8;
+    --ink-subtle: #aaaab0;
+    --surface-strong: #111111;
+    --surface-medium: #191919;
+    --surface-soft: #242424;
+    --surface-light: #303030;
+    --surface-muted: #3b3b3d;
+    --edge-subtle: #3b3b3d;
+    --edge-strong: #76767c;
+    --accent-label: #a3baff;
+    --error-bg: #242424;
+    --error-border: #aaaab0;
+    --error-ink: #f7f7f8;
   }
 
   html {
@@ -94,6 +92,7 @@
     line-height: 1.6;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
   }
 
   button,
@@ -121,7 +120,7 @@
   input:focus-visible,
   select:focus-visible,
   summary:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-label);
     outline-offset: 2px;
   }
 }

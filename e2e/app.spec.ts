@@ -45,11 +45,66 @@ test("temperature conversion remains exact and usable", async ({ page }) => {
 
   const html = page.locator("html");
   const initialTheme = await html.getAttribute("data-theme");
+  await expectNoSeriousAccessibilityViolations(page);
   await page.getByRole("button", { name: /切換為.+主題/ }).click();
   await expect(html).not.toHaveAttribute("data-theme", initialTheme ?? "");
 
   await expectPageNotToOverflow(page);
   await expectNoSeriousAccessibilityViolations(page);
+});
+
+test("navigation preserves saved history and the selected theme", async ({
+  page,
+}) => {
+  await mockWeatherApis(page);
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await page.getByPlaceholder("例如 25").fill("100");
+  await page.getByRole("button", { name: "加入紀錄" }).click();
+  await page.getByRole("button", { name: "切換為深色主題" }).click();
+
+  const navigation = page.getByRole("navigation", { name: "主要導覽" });
+  await navigation.getByRole("link", { name: "天氣", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Taipei · Taiwan" }),
+  ).toBeVisible();
+  await expect(
+    navigation.getByRole("link", { name: "天氣", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expectPageNotToOverflow(page);
+  await expectNoSeriousAccessibilityViolations(page);
+
+  await page.getByRole("button", { name: "切換為淺色主題" }).click();
+  await expectNoSeriousAccessibilityViolations(page);
+  await navigation.getByRole("link", { name: "轉換器", exact: true }).click();
+  await expect(
+    page.getByRole("region", { name: "轉換紀錄" }).locator("details"),
+  ).toHaveCount(1);
+  await expect(page.getByRole("region", { name: "轉換紀錄" })).toContainText(
+    "100 °C",
+  );
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(
+    page.getByRole("region", { name: "轉換紀錄" }).locator("details"),
+  ).toHaveCount(1);
+});
+
+test("404 page provides an accessible path back to the converter", async ({
+  page,
+}) => {
+  const response = await page.goto("/missing-page");
+  expect(response?.status()).toBe(404);
+  await expect(
+    page.getByRole("heading", { name: "找不到這個頁面", level: 1 }),
+  ).toBeVisible();
+  await expectPageNotToOverflow(page);
+  await expectNoSeriousAccessibilityViolations(page);
+  await page.getByRole("link", { name: "返回首頁", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "溫度轉換器", level: 1 }),
+  ).toBeVisible();
 });
 
 test("weather search avoids duplicate full requests", async ({ page }) => {

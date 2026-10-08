@@ -7,7 +7,7 @@ type BaseSkeletonProps = HTMLAttributes<HTMLDivElement>;
 export function BaseSkeleton({ className, ...props }: BaseSkeletonProps) {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-surface-muted", className)}
+      className={cn("animate-pulse bg-surface-muted", className)}
       {...props}
     />
   );

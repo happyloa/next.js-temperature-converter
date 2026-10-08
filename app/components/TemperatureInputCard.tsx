@@ -1,4 +1,4 @@
-import { Plus, RotateCcw, Thermometer } from "lucide-react";
+import { Plus, RotateCcw } from "lucide-react";
 
 import type { useTemperatureConversion } from "../hooks/useTemperatureConversion";
 import { formatTemperature } from "../lib/format";
@@ -55,20 +55,16 @@ export function TemperatureInputCard({
 
   return (
     <section
-      className={cn(ui.panel, "p-5 sm:p-6")}
+      className={cn(ui.panel, "p-5 sm:p-7")}
       aria-labelledby="converter-title"
     >
-      <header className="flex min-w-0 items-start justify-between gap-4 border-b border-edge-subtle pb-5 max-[760px]:flex-col max-[760px]:items-stretch">
+      <header className="flex min-w-0 flex-col justify-between gap-4 border-b border-edge-subtle pb-5 sm:flex-row sm:items-center">
         <div>
-          <p className={ui.kicker}>CONVERTER</p>
           <h2 id="converter-title" className={ui.sectionTitle}>
             輸入與結果
           </h2>
-          <p className={ui.description}>
-            選擇輸入溫標並填入數值，其他五種尺度會即時更新。
-          </p>
         </div>
-        <div className="grid w-full grid-cols-3 gap-2 min-[761px]:flex min-[761px]:w-auto min-[761px]:flex-wrap min-[761px]:items-center max-[430px]:grid-cols-2">
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center max-[430px]:grid-cols-2">
           <ShareButton
             title="溫度工作室 - 轉換結果"
             text={shareText || "使用溫度工作室進行溫度轉換"}
@@ -100,16 +96,15 @@ export function TemperatureInputCard({
 
       <ScaleSelector activeScale={scale} onScaleChange={handleScaleChange} />
 
-      <div className="mt-5">
+      <div className="mt-7">
         <label className="block min-w-0">
           <span className={ui.fieldLabel}>輸入數值</span>
           <span
             className={cn(
-              "mt-2 flex min-h-14 w-full min-w-0 items-center gap-2.5 rounded-xl border bg-surface-medium px-3.5 py-3 focus-within:border-accent",
+              "mt-2 flex min-h-28 w-full min-w-0 items-baseline gap-3 border-b-2 bg-surface-medium px-4 py-5 focus-within:border-accent-label sm:px-5",
               validationError ? "border-error-border" : "border-edge-strong",
             )}
           >
-            <Thermometer className="h-5 w-5 shrink-0 text-accent" aria-hidden />
             <input
               type="text"
               inputMode="decimal"
@@ -119,9 +114,14 @@ export function TemperatureInputCard({
               placeholder="例如 25"
               aria-invalid={Boolean(validationError)}
               aria-describedby="temperature-input-help"
-              className="w-full min-w-0 border-0 bg-transparent text-xl font-[720] text-ink-strong outline-0 [font-variant-numeric:tabular-nums]"
+              className={cn(
+                "w-full min-w-0 border-0 bg-transparent font-normal leading-none tracking-[-0.06em] text-ink-strong outline-0",
+                rawInput.length > 8
+                  ? "text-2xl sm:text-3xl"
+                  : "text-[3.5rem] sm:text-[5.5rem]",
+              )}
             />
-            <span className="shrink-0 text-sm font-bold text-ink-subtle">
+            <span className="shrink-0 text-3xl font-normal text-accent-label sm:text-5xl">
               {activeSymbol ?? ""}
             </span>
           </span>
@@ -134,7 +134,7 @@ export function TemperatureInputCard({
           {validationError ?? "可直接輸入小數；物理下限為絕對零度。"}
         </p>
 
-        <div className="mt-5 flex min-w-0 items-center justify-between gap-4 rounded-xl border border-edge-subtle bg-surface-medium p-3.5 max-[760px]:flex-col max-[760px]:items-stretch">
+        <div className="mt-6 flex min-w-0 items-center justify-between gap-4 max-[760px]:flex-col max-[760px]:items-stretch">
           <div className="min-w-0">
             <span className={ui.fieldLabel}>滑桿範圍</span>
             <p className={ui.fieldHelp}>
@@ -169,7 +169,7 @@ export function TemperatureInputCard({
                   ui.rangeButton,
                   rangeMode === option.code
                     ? ui.rangeButtonActive
-                    : "text-ink-subtle",
+                    : "bg-surface-strong text-ink-subtle",
                 )}
               >
                 {option.label}

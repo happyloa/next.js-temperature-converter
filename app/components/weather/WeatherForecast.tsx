@@ -67,7 +67,6 @@ export function WeatherForecast({
         )}
       >
         <div>
-          <p className={ui.kicker}>FORECAST</p>
           <h2 id="forecast-title" className={ui.sectionTitle}>
             溫度趨勢
           </h2>
@@ -93,7 +92,9 @@ export function WeatherForecast({
               disabled={loading}
               className={cn(
                 ui.rangeButton,
-                days === option ? ui.rangeButtonActive : "text-ink-subtle",
+                days === option
+                  ? ui.rangeButtonActive
+                  : "bg-surface-strong text-ink-subtle",
               )}
             >
               {option} 天
@@ -102,7 +103,7 @@ export function WeatherForecast({
         </div>
       </div>
 
-      <div className="mt-3.5 grid gap-px overflow-hidden rounded-lg border border-edge-subtle bg-edge-subtle md:hidden">
+      <div className="mt-3.5 grid gap-px overflow-hidden border border-edge-subtle bg-edge-subtle md:hidden">
         {data.map((day) => (
           <div
             key={day.date}

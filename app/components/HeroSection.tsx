@@ -1,4 +1,6 @@
+import { ArrowUpRight } from "lucide-react";
 import type { TemperaturePreset } from "../types/temperature";
+import { TEMPERATURE_SCALES } from "../lib/temperature";
 import { ui } from "../lib/uiStyles";
 
 type HeroSectionProps = {
@@ -9,28 +11,29 @@ type HeroSectionProps = {
 export function HeroSection({ presets, onPresetSelect }: HeroSectionProps) {
   return (
     <section
-      className="mb-6 overflow-hidden rounded-2xl border border-edge-subtle bg-surface-strong p-5 shadow-[var(--shadow)] sm:p-6"
+      className="mb-8 border-b border-edge-subtle"
       aria-labelledby="page-title"
     >
-      <div className="flex min-w-0 flex-col gap-5 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className={ui.kicker}>TEMPERATURE STUDIO</p>
+      <div className="grid min-w-0 gap-6 pb-8 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <div className="border-l-4 border-accent-label pl-5 sm:pl-7">
           <h1 id="page-title" className={ui.pageTitle}>
             溫度轉換器
           </h1>
           <p className={ui.description}>
-            六種溫標即時換算，搭配常用情境、物理邊界與本機歷史紀錄。
+            輸入一個溫度，即時換算六種溫標。從日常、烹飪到科學情境，都能找到對應的尺度。
           </p>
         </div>
-        <p className="max-w-56 text-sm leading-relaxed text-ink-subtle md:text-right">
-          從一個數值開始，快速理解不同溫標的意義。
-        </p>
+        <div className="hidden border-l border-edge-subtle pl-10 sm:block">
+          <strong className="block text-7xl font-normal leading-none tracking-[-0.06em]">
+            {TEMPERATURE_SCALES.length.toString().padStart(2, "0")}
+          </strong>
+          <p className="mt-3 text-xs text-ink-subtle">種溫標 · 即時換算</p>
+        </div>
       </div>
-
-      <div className="mt-5 border-t border-edge-subtle pt-4">
-        <p className="text-xs font-bold text-ink-medium">快速帶入情境</p>
+      <div className="flex min-w-0 flex-col gap-3 border-t border-edge-subtle py-4 lg:flex-row lg:items-center lg:gap-8">
+        <p className="shrink-0 text-xs font-bold text-ink-medium">常用情境</p>
         <div
-          className="mt-2.5 flex min-w-0 gap-2 overflow-x-auto px-0.5 pb-1 [scrollbar-width:thin]"
+          className="flex min-w-0 flex-wrap gap-2"
           role="group"
           aria-label="常用溫度情境"
         >
@@ -39,10 +42,10 @@ export function HeroSection({ presets, onPresetSelect }: HeroSectionProps) {
               key={preset.label}
               type="button"
               onClick={() => onPresetSelect(preset)}
-              className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-full border border-edge-subtle bg-surface-medium px-3 py-2 text-xs font-bold text-ink-medium transition-colors hover:border-accent hover:bg-surface-soft hover:text-ink-strong"
+              className="inline-flex min-h-10 items-center justify-between gap-3 border border-edge-subtle bg-surface-strong px-3 text-xs text-ink-medium transition-[border-color] hover:border-accent-label hover:text-accent-label"
             >
-              <span aria-hidden>{preset.emoji}</span>
               {preset.label}
+              <ArrowUpRight className="size-3.5" aria-hidden />
             </button>
           ))}
         </div>

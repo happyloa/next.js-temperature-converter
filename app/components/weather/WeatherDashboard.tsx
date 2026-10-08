@@ -37,9 +37,8 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
   return (
     <main id="main-content" className={ui.pageShell}>
       <div className={ui.workspace}>
-        <header className="mb-6 grid gap-5 rounded-2xl border border-edge-subtle bg-surface-strong p-5 shadow-[var(--shadow)] min-[900px]:grid-cols-[minmax(18rem,0.8fr)_minmax(28rem,1.2fr)] min-[900px]:items-center sm:p-6">
-          <div>
-            <p className={ui.kicker}>GLOBAL WEATHER</p>
+        <header className="mb-8 grid gap-7 border-b border-edge-subtle pb-8 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.85fr)] lg:items-end">
+          <div className="border-l-4 border-accent-label pl-5 sm:pl-7">
             <h1 className={ui.pageTitle}>城市天氣與環境</h1>
             <p className={ui.description}>
               查詢即時天氣、空氣品質、紫外線與未來溫度趨勢。
@@ -71,7 +70,7 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
 
         {weatherError ? (
           <div
-            className="mb-4 flex items-center gap-3 rounded-xl border border-error-border bg-error-bg p-4 text-error-ink max-[760px]:flex-col max-[760px]:items-stretch"
+            className="mb-4 flex items-center gap-3 border border-error-border bg-error-bg p-4 text-error-ink max-[760px]:flex-col max-[760px]:items-stretch"
             role="alert"
           >
             <AlertCircle className="h-5 w-5 shrink-0" aria-hidden />
@@ -120,13 +119,13 @@ export function WeatherDashboard({ defaultQuery }: { defaultQuery: string }) {
           </div>
         )}
 
-        <footer className="mt-6 text-center text-[0.6875rem] text-ink-subtle">
+        <footer className="mt-6 text-left text-[0.6875rem] text-ink-subtle">
           <span>Weather data by </span>
           <a
             href="https://open-meteo.com/"
             target="_blank"
             rel="noreferrer"
-            className="text-accent underline underline-offset-2"
+            className="text-accent-label underline underline-offset-2"
           >
             Open-Meteo
           </a>

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { AppHeader } from "./components/AppHeader";
+import { AppFooter } from "./components/AppFooter";
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   manifest: "/manifest.webmanifest",
   title: {
-    default: "溫度工作室 | 多尺度智慧轉換",
+    default: "溫度工作室 | 溫標換算與城市天氣",
     template: "%s | 溫度工作室",
   },
   description:
@@ -27,14 +28,14 @@ export const metadata: Metadata = {
     locale: "zh_TW",
     url: siteUrl,
     siteName: "溫度工作室",
-    title: "溫度工作室 | 多尺度智慧轉換",
+    title: "溫度工作室 | 溫標換算與城市天氣",
     description: "六種溫標即時轉換、全球城市天氣、空氣品質與 14 日溫度趨勢。",
   },
 
   // Twitter 卡片設定
   twitter: {
     card: "summary_large_image",
-    title: "溫度工作室 | 多尺度智慧轉換",
+    title: "溫度工作室 | 溫標換算與城市天氣",
     description: "六種溫標即時轉換、全球城市天氣與空氣品質資訊。",
   },
 
@@ -71,8 +72,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f7f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b121a" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#111111" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -95,12 +96,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ThemeProvider>
           <a
             href="#main-content"
-            className="fixed top-3 left-4 z-100 -translate-y-[150%] rounded-md bg-accent px-3 py-2 font-bold text-accent-ink focus:translate-y-0"
+            className="fixed top-3 left-4 z-100 -translate-y-[150%] bg-accent px-3 py-2 font-bold text-accent-ink focus:translate-y-0"
           >
             跳至主要內容
           </a>
           <AppHeader />
           {children}
+          <AppFooter />
         </ThemeProvider>
       </body>
     </html>

@@ -83,7 +83,7 @@ export function WeatherSearch({
     <div className="min-w-0">
       <form
         onSubmit={onSubmit}
-        className="relative grid min-w-0 grid-cols-[1.25rem_minmax(0,1fr)_auto_auto] items-center gap-1.5 rounded-xl border border-edge-strong bg-surface-medium p-1.5 focus-within:border-accent"
+        className="relative grid min-w-0 grid-cols-[1.25rem_minmax(0,1fr)_auto_auto] items-center gap-1.5 border border-edge-strong bg-surface-medium p-1.5 focus-within:border-accent-label"
         role="search"
       >
         <label htmlFor="weather-search" className="sr-only">
@@ -152,7 +152,7 @@ export function WeatherSearch({
           <div
             id="weather-suggestions"
             role="listbox"
-            className="absolute top-[calc(100%+0.35rem)] right-0 left-0 z-50 overflow-hidden rounded-xl border border-edge-subtle bg-surface-strong p-1.5 shadow-[var(--shadow)]"
+            className="absolute top-[calc(100%+0.35rem)] right-0 left-0 z-50 overflow-hidden border border-edge-subtle bg-surface-strong p-1.5"
           >
             {suggestions.map((location, index) => (
               <div
@@ -161,7 +161,7 @@ export function WeatherSearch({
                 role="option"
                 tabIndex={-1}
                 aria-selected={activeSuggestion === index}
-                className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2.5 py-2 text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong aria-selected:bg-surface-soft aria-selected:text-ink-strong"
+                className="flex w-full cursor-pointer items-center justify-between gap-2 px-2.5 py-2 text-[0.8125rem] text-ink-medium hover:bg-surface-soft hover:text-ink-strong aria-selected:bg-surface-soft aria-selected:text-ink-strong"
                 onMouseEnter={() => setActiveSuggestion(index)}
                 onMouseDown={(event) => {
                   event.preventDefault();
@@ -182,7 +182,7 @@ export function WeatherSearch({
       </form>
 
       <div
-        className="mt-2.5 flex min-w-0 gap-2 overflow-x-auto px-0.5 pt-0.5 pb-1 [scrollbar-width:thin]"
+        className="mt-3 flex min-w-0 flex-wrap gap-2"
         role="group"
         aria-label="常用城市"
       >
@@ -192,9 +192,9 @@ export function WeatherSearch({
             type="button"
             onClick={() => onPreset(preset.query)}
             className={cn(
-              "inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border bg-surface-medium px-3 py-2 text-xs font-semibold transition-colors hover:border-accent hover:bg-surface-soft hover:text-ink-strong",
+              "inline-flex min-h-9 shrink-0 items-center justify-center border bg-surface-medium px-3 py-2 text-xs font-semibold transition-[border-color] hover:border-accent-label hover:bg-surface-soft hover:text-ink-strong",
               query === preset.query || query === preset.label
-                ? "border-accent text-ink-strong"
+                ? "border-accent-label text-ink-strong"
                 : "border-edge-subtle text-ink-medium",
             )}
           >
@@ -208,7 +208,7 @@ export function WeatherSearch({
             onChange={(event) => {
               if (event.target.value) onPreset(event.target.value);
             }}
-            className="min-h-9 rounded-full border border-edge-subtle bg-surface-medium py-1.5 pr-7 pl-2.5 text-xs font-semibold text-ink-medium"
+            className="min-h-9 border border-edge-subtle bg-surface-medium py-1.5 pr-7 pl-2.5 text-xs font-semibold text-ink-medium"
           >
             <option value="">更多城市</option>
             {more.map((preset) => (

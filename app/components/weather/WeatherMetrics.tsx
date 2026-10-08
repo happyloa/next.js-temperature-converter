@@ -15,10 +15,10 @@ import type { WeatherLevel } from "../../lib/weather";
 import type { WeatherData } from "../../types/weather";
 
 const metricTileClass =
-  "relative grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 bg-surface-medium p-3.5";
+  "relative grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-2 bg-surface-medium p-5";
 
 const statusToneClass: Record<WeatherLevel["tone"], string> = {
-  good: "border-accent bg-surface-soft text-accent",
+  good: "border-accent-label bg-surface-strong text-accent-label",
   fair: "border-edge-strong bg-surface-soft text-ink-medium",
   moderate: "border-edge-strong bg-surface-soft text-ink-medium",
   poor: "border-error-border bg-error-bg text-error-ink",
@@ -61,19 +61,18 @@ export function WeatherMetrics({ data }: { data: WeatherData }) {
     >
       <div className={ui.headingRow}>
         <div>
-          <p className={ui.kicker}>ENVIRONMENT</p>
           <h2 id="environment-title" className={ui.sectionTitle}>
             環境指標
           </h2>
         </div>
       </div>
 
-      <div className="mt-3.5 grid min-w-0 grid-cols-1 gap-px overflow-hidden rounded-lg border border-edge-subtle bg-edge-subtle sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-3.5 grid min-w-0 grid-cols-1 gap-px overflow-hidden border border-edge-subtle bg-edge-subtle sm:grid-cols-2 lg:grid-cols-3">
         {metrics.map((metric) => {
           const Icon = metric.icon;
           return (
             <div key={metric.label} className={metricTileClass}>
-              <Icon className="h-5 w-5 text-accent" aria-hidden />
+              <Icon className="h-5 w-5 text-accent-label" aria-hidden />
               <span className="text-xs text-ink-medium">{metric.label}</span>
               <strong className="text-right text-lg text-ink-strong [font-variant-numeric:tabular-nums] [overflow-wrap:anywhere]">
                 {metric.value}
@@ -86,14 +85,14 @@ export function WeatherMetrics({ data }: { data: WeatherData }) {
         })}
 
         <div className={metricTileClass}>
-          <SunMedium className="h-5 w-5 text-accent" aria-hidden />
+          <SunMedium className="h-5 w-5 text-accent-label" aria-hidden />
           <span className="text-xs text-ink-medium">紫外線指數</span>
           <strong className="text-right text-lg text-ink-strong [font-variant-numeric:tabular-nums]">
             {formatOptionalMetric(data.uvIndex)}
           </strong>
           <span
             className={cn(
-              "col-start-3 row-start-2 justify-self-end rounded-full border px-2 py-0.5 text-[0.6875rem] font-[750]",
+              "col-start-3 row-start-2 justify-self-end border px-2 py-0.5 text-[0.6875rem] font-[750]",
               statusToneClass[uv.tone],
             )}
           >
@@ -114,7 +113,7 @@ function AirQualityMetric({ data }: { data: WeatherData }) {
   if (!data.airQuality) {
     return (
       <div className={metricTileClass}>
-        <Waves className="h-5 w-5 text-accent" aria-hidden />
+        <Waves className="h-5 w-5 text-accent-label" aria-hidden />
         <span className="text-xs text-ink-medium">European AQI</span>
         <strong className="text-right text-lg text-ink-strong">--</strong>
         <small className="col-start-2 col-end-[-1] text-[0.6875rem] text-ink-subtle">
@@ -127,14 +126,14 @@ function AirQualityMetric({ data }: { data: WeatherData }) {
   const level = getEuropeanAqiLevel(data.airQuality.aqi);
   return (
     <div className={metricTileClass}>
-      <Waves className="h-5 w-5 text-accent" aria-hidden />
+      <Waves className="h-5 w-5 text-accent-label" aria-hidden />
       <span className="text-xs text-ink-medium">European AQI</span>
       <strong className="text-right text-lg text-ink-strong [font-variant-numeric:tabular-nums]">
         {data.airQuality.aqi}
       </strong>
       <span
         className={cn(
-          "col-start-3 row-start-2 justify-self-end rounded-full border px-2 py-0.5 text-[0.6875rem] font-[750]",
+          "col-start-3 row-start-2 justify-self-end border px-2 py-0.5 text-[0.6875rem] font-[750]",
           statusToneClass[level.tone],
         )}
       >
