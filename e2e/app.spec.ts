@@ -239,6 +239,13 @@ async function expectPageNotToOverflow(page: Page) {
 }
 
 async function expectNoSeriousAccessibilityViolations(page: Page) {
+  // Theme attributes update before the browser paints inherited colors.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      }),
+  );
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
