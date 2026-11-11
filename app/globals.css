@@ -1,10 +1,13 @@
 @import "tailwindcss";
 
+/* Test strings are not UI classes; keep them out of the generated CSS. */
+@source not "./**/*.test.{ts,tsx}";
+@source not "../e2e";
+
 @theme {
   --font-sans:
     "Helvetica Neue", Helvetica, Arial, "PingFang TC", "Microsoft JhengHei",
     sans-serif;
-  --font-mono: var(--font-sans);
   --text-caption: 0.8125rem;
   --text-caption--line-height: 1.5;
   --text-xs: 0.875rem;
@@ -23,6 +26,11 @@
   --text-xl--line-height: 1.35;
   --text-2xl: 1.625rem;
   --text-2xl--line-height: 1.3;
+}
+
+/* Tokens that point at runtime theme variables must be inlined. */
+@theme inline {
+  --font-mono: var(--font-sans);
   --color-canvas: var(--canvas);
   --color-ink-strong: var(--ink-strong);
   --color-ink-medium: var(--ink-medium);

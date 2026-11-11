@@ -4,13 +4,11 @@ import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { AppHeader } from "./components/AppHeader";
 import { AppFooter } from "./components/AppFooter";
-
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  "https://next-js-temperature-convert.vercel.app";
+import { SITE_URL } from "./lib/site";
+import { THEME_INIT_SCRIPT } from "./lib/theme";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
   manifest: "/manifest.webmanifest",
   title: {
     default: "溫度工作室 | 溫標換算與城市天氣",
@@ -26,7 +24,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "zh_TW",
-    url: siteUrl,
+    url: SITE_URL,
     siteName: "溫度工作室",
     title: "溫度工作室 | 溫標換算與城市天氣",
     description: "六種溫標即時轉換、全球城市天氣、空氣品質與 14 日溫度趨勢。",
@@ -85,18 +83,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="zh-TW" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              '(function(){try{var s=localStorage.getItem("theme-preference");var t=s==="dark"||s==="light"?s:(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);}catch(e){}})();',
-          }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="font-sans">
         <ThemeProvider>
           <a
             href="#main-content"
-            className="fixed top-3 left-4 z-100 -translate-y-[150%] bg-accent px-3 py-2 font-bold text-accent-ink focus:translate-y-0"
+            className="fixed top-3 left-4 z-100 translate-y-[-150%] bg-accent px-3 py-2 font-bold text-accent-ink focus:translate-y-0"
           >
             跳至主要內容
           </a>

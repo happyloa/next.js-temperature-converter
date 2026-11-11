@@ -6,11 +6,19 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
 
-type Theme = "dark" | "light";
+import {
+  THEME_STORAGE_KEY,
+  applyTheme,
+  getSystemThemeQuery,
+  readStoredTheme,
+  resolveTheme,
+  type Theme,
+} from "../lib/theme";
 
 interface ThemeContextType {
   theme: Theme;
@@ -23,49 +31,37 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
-    let resolvedTheme: Theme;
-    try {
-      const stored = localStorage.getItem("theme-preference") as Theme | null;
-      if (stored === "dark" || stored === "light") {
-        resolvedTheme = stored;
-      } else {
-        resolvedTheme = window.matchMedia("(prefers-color-scheme: dark)")
-          .matches
-          ? "dark"
-          : "light";
-      }
-    } catch {
-      resolvedTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-    }
-
-    document.documentElement.setAttribute("data-theme", resolvedTheme);
+    const initialTheme = resolveTheme();
+    applyTheme(initialTheme);
     document.documentElement.dataset.hydrated = "true";
-    try {
-      localStorage.setItem("theme-preference", resolvedTheme);
-    } catch {
-      // Storage can be unavailable in strict privacy contexts.
-    }
-    startTransition(() => setThemeState(resolvedTheme));
+    startTransition(() => setThemeState(initialTheme));
+
+    // Until the user picks a theme, keep following OS-level changes.
+    const media = getSystemThemeQuery();
+    const handleSystemChange = (event: MediaQueryListEvent) => {
+      if (readStoredTheme()) return;
+      const systemTheme: Theme = event.matches ? "dark" : "light";
+      applyTheme(systemTheme);
+      setThemeState(systemTheme);
+    };
+    media.addEventListener("change", handleSystemChange);
+    return () => media.removeEventListener("change", handleSystemChange);
   }, []);
 
   const toggleTheme = useCallback(() => {
     const nextTheme = theme === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
     setThemeState(nextTheme);
-    document.documentElement.setAttribute("data-theme", nextTheme);
     try {
-      localStorage.setItem("theme-preference", nextTheme);
+      localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
     } catch {
       // The selected theme still applies for the current session.
     }
   }, [theme]);
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
+
+  return <ThemeContext value={value}>{children}</ThemeContext>;
 }
 
 export function useTheme() {

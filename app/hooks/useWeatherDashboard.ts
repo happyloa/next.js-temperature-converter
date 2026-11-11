@@ -20,7 +20,7 @@ import {
   fetchForecast,
   searchLocation,
 } from "../lib/weatherApi";
-import type { GeoApiLocation } from "../lib/weatherApi";
+import type { AirQualityApiResponse, GeoApiLocation } from "../lib/weatherApi";
 import {
   buildWeatherData,
   mergeWeatherForecast,
@@ -151,7 +151,8 @@ export function useWeatherDashboard(defaultQuery: string) {
       const { signal } = controller;
       const isCurrent = () =>
         operationIdRef.current === operationId && !signal.aborted;
-      let airQualityStarted = false;
+      let airQualityRequest: Promise<AirQualityApiResponse | null> | null =
+        null;
 
       setWeatherLoading(true);
       setForecastLoading(false);
@@ -169,14 +170,21 @@ export function useWeatherDashboard(defaultQuery: string) {
         if (!isCurrent()) return;
         // Preserve the resolved city even if its forecast request fails.
         lastLocationRef.current = location;
-        const requestTimezone = location.timezone ?? "auto";
-        const forecast = await fetchForecast(
+        const forecastRequest = fetchForecast(
           location.latitude,
           location.longitude,
-          requestTimezone,
+          location.timezone ?? "auto",
           days,
           signal,
         );
+        // Air quality only needs coordinates, so request it alongside the
+        // forecast. It is applied only after the forecast succeeds.
+        airQualityRequest = fetchAirQuality(
+          location.latitude,
+          location.longitude,
+          signal,
+        );
+        const forecast = await forecastRequest;
 
         if (!isCurrent()) return;
 
@@ -195,8 +203,7 @@ export function useWeatherDashboard(defaultQuery: string) {
         setWeatherStale(false);
         persistWeather({ query: trimmed, data: nextData, forecastDays: days });
 
-        airQualityStarted = true;
-        void fetchAirQuality(location.latitude, location.longitude, signal)
+        void airQualityRequest
           .then((airQuality) => {
             if (!airQuality || !isCurrent()) return;
             const enrichedData = buildWeatherData(
@@ -216,11 +223,6 @@ export function useWeatherDashboard(defaultQuery: string) {
             if (isCurrent() && !isAbortError(error)) {
               console.error("fetchAirQuality", error);
             }
-          })
-          .finally(() => {
-            if (requestControllerRef.current === controller) {
-              requestControllerRef.current = null;
-            }
           });
       } catch (error) {
         if (!isCurrent() || isAbortError(error)) return;
@@ -229,8 +231,16 @@ export function useWeatherDashboard(defaultQuery: string) {
         setWeatherStale(true);
       } finally {
         if (isCurrent()) setWeatherLoading(false);
-        if (!airQualityStarted && requestControllerRef.current === controller) {
-          requestControllerRef.current = null;
+        const releaseController = () => {
+          if (requestControllerRef.current === controller) {
+            requestControllerRef.current = null;
+          }
+        };
+        // Keep the request abortable until the air-quality call settles.
+        if (airQualityRequest) {
+          void airQualityRequest.catch(() => null).finally(releaseController);
+        } else {
+          releaseController();
         }
       }
     },

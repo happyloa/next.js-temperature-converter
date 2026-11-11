@@ -353,6 +353,44 @@ describe("useWeatherDashboard", () => {
     );
   });
 
+  it("requests air quality in parallel but applies it only after the forecast", async () => {
+    let resolveForecast: ((value: ForecastApiResponse) => void) | undefined;
+    mockFetchForecast.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveForecast = resolve;
+        }),
+    );
+    mockFetchAirQuality.mockResolvedValueOnce(airQuality);
+
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(mockFetchAirQuality).toHaveBeenCalledOnce());
+    expect(mockFetchAirQuality).toHaveBeenCalledWith(
+      taipei.latitude,
+      taipei.longitude,
+      expect.any(AbortSignal),
+    );
+    expect(result.current.weatherData).toBeNull();
+
+    await act(async () => resolveForecast?.(createForecast()));
+    await waitFor(() =>
+      expect(result.current.weatherData?.airQuality?.aqi).toBe(42),
+    );
+  });
+
+  it("ignores air quality when the forecast fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockFetchForecast.mockRejectedValueOnce(new Error("offline"));
+    mockFetchAirQuality.mockResolvedValueOnce(airQuality);
+
+    const { result } = renderHook(() => useWeatherDashboard("Taipei"));
+    await waitFor(() => expect(result.current.weatherError).not.toBeNull());
+
+    expect(mockFetchAirQuality).toHaveBeenCalledOnce();
+    expect(result.current.weatherData).toBeNull();
+    expect(result.current.weatherLoading).toBe(false);
+  });
+
   it("updates forecast days without repeating geocoding or air-quality calls", async () => {
     const { result } = renderHook(() => useWeatherDashboard("Taipei"));
     await waitFor(() => expect(result.current.weatherData).not.toBeNull());

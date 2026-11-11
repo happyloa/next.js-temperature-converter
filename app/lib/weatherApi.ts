@@ -269,58 +269,49 @@ async function requestJson(
   }, API_TIMEOUT_MS);
 
   try {
-    for (let attempt = 1; attempt <= MAX_GET_ATTEMPTS; attempt += 1) {
+    // Every retry shares the same overall timeout.
+    for (let attempt = 1; ; attempt += 1) {
+      const canRetry = attempt < MAX_GET_ATTEMPTS;
+      let response: Response;
       try {
-        const response = await fetch(url, {
+        response = await fetch(url, {
           signal: controller.signal,
           headers: { Accept: "application/json" },
         });
-        if (!response.ok) {
-          const error = getResponseError(response, fallbackMessage);
-          // GET requests are idempotent. Retry one transient server failure,
-          // but never retry a rate limit response because the provider decides
-          // when it is safe to send the next request.
-          if (
-            error.status !== undefined &&
-            error.status >= 500 &&
-            attempt < MAX_GET_ATTEMPTS
-          ) {
-            await waitForRetry(controller.signal);
-            continue;
-          }
-          throw error;
-        }
-
-        try {
-          return await response.json();
-        } catch {
-          throw new WeatherApiError(fallbackMessage);
-        }
       } catch (error) {
-        if (signal?.aborted) throw error;
-        if (timedOut) {
-          throw new WeatherApiError("服務回應逾時，請稍後再試。");
-        }
-        if (isAbortError(error)) throw error;
-        if (error instanceof WeatherApiError) throw error;
-        // A transport failure before receiving a response can also be
-        // transient. Limit this to a single retry within the same timeout.
-        if (attempt < MAX_GET_ATTEMPTS) {
+        // A transport failure before receiving a response can be transient.
+        if (canRetry && !controller.signal.aborted && !isAbortError(error)) {
           await waitForRetry(controller.signal);
           continue;
         }
+        throw error;
+      }
+
+      if (!response.ok) {
+        const error = getResponseError(response, fallbackMessage);
+        // GET requests are idempotent. Retry one transient server failure,
+        // but never retry a rate limit response because the provider decides
+        // when it is safe to send the next request.
+        if (canRetry && error.status !== undefined && error.status >= 500) {
+          await waitForRetry(controller.signal);
+          continue;
+        }
+        throw error;
+      }
+
+      try {
+        return await response.json();
+      } catch {
         throw new WeatherApiError(fallbackMessage);
       }
     }
-
-    throw new WeatherApiError(fallbackMessage);
   } catch (error) {
+    // Map every failure to a user-facing error once, in priority order.
     if (signal?.aborted) throw error;
     if (timedOut) {
       throw new WeatherApiError("服務回應逾時，請稍後再試。");
     }
-    if (isAbortError(error)) throw error;
-    if (error instanceof WeatherApiError) throw error;
+    if (isAbortError(error) || error instanceof WeatherApiError) throw error;
     throw new WeatherApiError(fallbackMessage);
   } finally {
     globalThis.clearTimeout(timeout);

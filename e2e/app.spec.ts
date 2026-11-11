@@ -91,6 +91,36 @@ test("navigation preserves saved history and the selected theme", async ({
   ).toHaveCount(1);
 });
 
+test("theme follows the system until the user picks one", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/");
+  const html = page.locator("html");
+  await expect(html).toHaveAttribute("data-hydrated", "true");
+  await expect(html).toHaveAttribute("data-theme", "light");
+
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  await expect(
+    page.getByRole("button", { name: "切換為淺色主題" }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("theme-preference")),
+  ).toBeNull();
+
+  await page.getByRole("button", { name: "切換為淺色主題" }).click();
+  await expect(html).toHaveAttribute("data-theme", "light");
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.emulateMedia({ colorScheme: "dark" });
+  // Let the media query change events run before asserting nothing changed.
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(resolve)),
+  );
+  await expect(html).toHaveAttribute("data-theme", "light");
+
+  await page.reload();
+  await expect(html).toHaveAttribute("data-theme", "light");
+});
+
 test("404 page provides an accessible path back to the converter", async ({
   page,
 }) => {
