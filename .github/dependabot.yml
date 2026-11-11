@@ -5,8 +5,21 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Wait before adopting fresh releases; majors get longer to surface regressions.
+    cooldown:
+      default-days: 3
+      semver-major-days: 7
+    groups:
+      # Major updates stay in separate pull requests for individual review.
+      npm-minor-and-patch:
+        update-types: [minor, patch]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 3
+    groups:
+      github-actions:
+        patterns: ["*"]
