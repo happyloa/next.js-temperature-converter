@@ -2,6 +2,7 @@ import type {
   HistoryEntry,
   TemperatureConversionSummary,
 } from "../types/history";
+import { isDateString, isFiniteNumber, isRecord } from "./guards";
 import { TEMPERATURE_SCALE_CODES } from "./temperature";
 
 /**
@@ -12,37 +13,30 @@ export const HISTORY_STORAGE_KEY = "temperature-studio-history";
 const isTemperatureConversionSummary = (
   value: unknown,
 ): value is TemperatureConversionSummary => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
+  if (!isRecord(value)) return false;
 
   const candidate = value as Partial<TemperatureConversionSummary>;
   return (
     typeof candidate.label === "string" &&
     typeof candidate.symbol === "string" &&
-    typeof candidate.result === "number" &&
-    Number.isFinite(candidate.result) &&
+    isFiniteNumber(candidate.result) &&
     typeof candidate.code === "string" &&
     TEMPERATURE_SCALE_CODES.includes(candidate.code as never)
   );
 };
 
 const isHistoryEntry = (value: unknown): value is HistoryEntry => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
+  if (!isRecord(value)) return false;
 
   const candidate = value as Partial<HistoryEntry>;
   return (
     typeof candidate.id === "string" &&
-    typeof candidate.timestamp === "string" &&
-    !Number.isNaN(Date.parse(candidate.timestamp)) &&
+    isDateString(candidate.timestamp) &&
     typeof candidate.scale === "string" &&
     TEMPERATURE_SCALE_CODES.includes(candidate.scale as never) &&
     typeof candidate.scaleLabel === "string" &&
     typeof candidate.scaleSymbol === "string" &&
-    typeof candidate.value === "number" &&
-    Number.isFinite(candidate.value) &&
+    isFiniteNumber(candidate.value) &&
     Array.isArray(candidate.conversions) &&
     candidate.conversions.length > 0 &&
     candidate.conversions.every(isTemperatureConversionSummary)

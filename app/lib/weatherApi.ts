@@ -4,6 +4,7 @@
  */
 
 import { isAbortError } from "./async";
+import { isFiniteNumber, isRecord } from "./guards";
 
 export type GeoApiLocation = {
   id?: number;
@@ -86,12 +87,6 @@ class WeatherApiError extends Error {
     this.name = "WeatherApiError";
   }
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
-
-const isFiniteNumber = (value: unknown): value is number =>
-  typeof value === "number" && Number.isFinite(value);
 
 const isOptionalString = (value: unknown): value is string | undefined =>
   value === undefined || typeof value === "string";

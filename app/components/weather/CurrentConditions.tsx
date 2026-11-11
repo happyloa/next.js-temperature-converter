@@ -94,10 +94,7 @@ export function CurrentConditions({
             {stale ? "資料可能已過期" : "資料已更新"}
           </strong>
           <span className="text-xs text-ink-subtle [overflow-wrap:anywhere]">
-            更新於{" "}
-            {formatLocalClock(data.fetchedAt, data.timezone, {
-              withSeconds: false,
-            })}
+            更新於 {formatLocalClock(data.fetchedAt, data.timezone)}
           </span>
           <span className="text-xs text-ink-subtle [overflow-wrap:anywhere]">
             {weekday ? `${weekday} · ` : ""}

@@ -90,14 +90,7 @@ export function WeatherMetrics({ data }: { data: WeatherData }) {
           <strong className="text-right text-lg text-ink-strong [font-variant-numeric:tabular-nums]">
             {formatOptionalMetric(data.uvIndex)}
           </strong>
-          <span
-            className={cn(
-              "col-start-3 row-start-2 justify-self-end border px-2 py-0.5 text-caption font-[750]",
-              statusToneClass[uv.tone],
-            )}
-          >
-            {uv.label}
-          </span>
+          <LevelBadge level={uv} />
           <small className="col-start-2 col-end-3 row-start-2 text-caption text-ink-subtle">
             {uv.guidance}
           </small>
@@ -106,6 +99,19 @@ export function WeatherMetrics({ data }: { data: WeatherData }) {
         <AirQualityMetric data={data} />
       </div>
     </section>
+  );
+}
+
+function LevelBadge({ level }: { level: WeatherLevel }) {
+  return (
+    <span
+      className={cn(
+        "col-start-3 row-start-2 justify-self-end border px-2 py-0.5 text-caption font-[750]",
+        statusToneClass[level.tone],
+      )}
+    >
+      {level.label}
+    </span>
   );
 }
 
@@ -131,14 +137,7 @@ function AirQualityMetric({ data }: { data: WeatherData }) {
       <strong className="text-right text-lg text-ink-strong [font-variant-numeric:tabular-nums]">
         {data.airQuality.aqi}
       </strong>
-      <span
-        className={cn(
-          "col-start-3 row-start-2 justify-self-end border px-2 py-0.5 text-caption font-[750]",
-          statusToneClass[level.tone],
-        )}
-      >
-        {level.label}
-      </span>
+      <LevelBadge level={level} />
       <div className="col-start-2 col-end-3 row-start-2 flex flex-wrap gap-x-4 gap-y-2 text-caption text-ink-subtle [&_b]:text-ink-strong">
         <span>
           PM2.5{" "}

@@ -47,7 +47,7 @@ describe("UI accessibility feedback", () => {
         ]}
         copiedScale="fahrenheit"
         validationError={null}
-        mood={{ title: "舒適區間", description: "", emoji: "🙂" }}
+        mood={{ title: "舒適區間", description: "" }}
         onCopy={vi.fn()}
       />,
     );

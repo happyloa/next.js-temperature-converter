@@ -1,4 +1,7 @@
-import { TEMPERATURE_SCALES } from "../../lib/temperature";
+import {
+  TEMPERATURE_SCALE_CODES,
+  TEMPERATURE_SCALES,
+} from "../../lib/temperature";
 import { cn, handleRadioGroupKeyDown } from "../../lib/utils";
 import type { TemperatureScaleCode } from "../../types/temperature";
 
@@ -9,14 +12,17 @@ export function ScaleSelector({
   activeScale: TemperatureScaleCode;
   onScaleChange: (code: TemperatureScaleCode) => void;
 }) {
-  const codes = TEMPERATURE_SCALES.map((item) => item.code);
-
   return (
     <div
       role="radiogroup"
       aria-label="選擇輸入溫標"
       onKeyDown={(event) =>
-        handleRadioGroupKeyDown(event, codes, activeScale, onScaleChange)
+        handleRadioGroupKeyDown(
+          event,
+          TEMPERATURE_SCALE_CODES,
+          activeScale,
+          onScaleChange,
+        )
       }
       className="mt-5 grid grid-cols-3 gap-px border border-edge-subtle bg-edge-subtle sm:grid-cols-6"
     >

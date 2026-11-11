@@ -24,6 +24,9 @@ type WeatherSearchProps = {
   onSuggestionSelect: (location: GeoApiLocation) => void;
 };
 
+const FEATURED_PRESETS = WEATHER_PRESETS.slice(0, 6);
+const MORE_PRESETS = WEATHER_PRESETS.slice(6);
+
 export function WeatherSearch({
   query,
   onQueryChange,
@@ -38,8 +41,6 @@ export function WeatherSearch({
   setSuggestionsOpen,
   onSuggestionSelect,
 }: WeatherSearchProps) {
-  const featured = WEATHER_PRESETS.slice(0, 6);
-  const more = WEATHER_PRESETS.slice(6);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const closeSuggestions = () => {
     setSuggestionsOpen(false);
@@ -186,7 +187,7 @@ export function WeatherSearch({
         role="group"
         aria-label="常用城市"
       >
-        {featured.map((preset) => (
+        {FEATURED_PRESETS.map((preset) => (
           <button
             key={preset.query}
             type="button"
@@ -211,7 +212,7 @@ export function WeatherSearch({
             className="min-h-9 border border-edge-subtle bg-surface-medium py-1.5 pr-7 pl-2.5 text-xs font-semibold text-ink-medium"
           >
             <option value="">更多城市</option>
-            {more.map((preset) => (
+            {MORE_PRESETS.map((preset) => (
               <option key={preset.query} value={preset.query}>
                 {preset.label}
               </option>

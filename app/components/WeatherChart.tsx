@@ -8,6 +8,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
+import { parseLocalDate } from "../lib/format";
 import type { DailyForecast } from "../types/weather";
 
 interface WeatherChartProps {
@@ -26,6 +27,19 @@ const colors = {
   low: "var(--accent-label)",
 };
 
+const weekdayFormatter = new Intl.DateTimeFormat("zh-TW", { weekday: "short" });
+const tooltipDateFormatter = new Intl.DateTimeFormat("zh-TW", {
+  month: "short",
+  day: "numeric",
+  weekday: "short",
+});
+
+const formatTickDate = (value: string) => {
+  const date = parseLocalDate(value);
+  const weekday = weekdayFormatter.format(date).replace("週", "");
+  return `${date.getMonth() + 1}/${date.getDate()}(${weekday})`;
+};
+
 /**
  * Weather trend chart showing the selected forecast range.
  */
@@ -37,13 +51,6 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
       </div>
     );
   }
-
-  const formatDate = (dateStr: string) => {
-    const [year, month, day] = dateStr.split("-").map(Number);
-    const date = new Date(year, month - 1, day);
-    const weekday = date.toLocaleDateString("zh-TW", { weekday: "short" });
-    return `${date.getMonth() + 1}/${date.getDate()}(${weekday.replace("週", "")})`;
-  };
 
   return (
     <div
@@ -68,7 +75,7 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
           />
           <XAxis
             dataKey="date"
-            tickFormatter={formatDate}
+            tickFormatter={formatTickDate}
             tick={{ fill: colors.axisText, fontSize: 13 }}
             axisLine={{ stroke: colors.axisLine }}
             tickLine={{ stroke: colors.axisLine }}
@@ -86,15 +93,9 @@ export const WeatherChart: FC<WeatherChartProps> = ({ data, unit = "°C" }) => {
               borderRadius: "0",
               fontSize: "14px",
             }}
-            labelFormatter={(label) => {
-              const [year, month, day] = `${label}`.split("-").map(Number);
-              const date = new Date(year, month - 1, day);
-              return date.toLocaleDateString("zh-TW", {
-                month: "short",
-                day: "numeric",
-                weekday: "short",
-              });
-            }}
+            labelFormatter={(label) =>
+              tooltipDateFormatter.format(parseLocalDate(`${label}`))
+            }
             formatter={(value, name) => {
               const numValue = typeof value === "number" ? value : 0;
               return [

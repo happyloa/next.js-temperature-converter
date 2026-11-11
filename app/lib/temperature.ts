@@ -5,9 +5,9 @@ import type {
   TemperatureRangeOption,
   TemperatureScale,
   TemperatureScaleCode,
+  ThermalInsight,
   ThermalMood,
 } from "../types/temperature";
-import type { ThermalInsight } from "../types/insight";
 import { formatTemperature } from "./format";
 
 /**
@@ -45,18 +45,6 @@ export const TEMPERATURE_RANGE_OPTIONS: TemperatureRangeOption[] = [
     maxKelvin: SOLAR_SURFACE_K,
     stepCount: 1000,
   },
-];
-
-/**
- * 溫標代碼清單，方便驗證外部輸入。
- */
-export const TEMPERATURE_SCALE_CODES: TemperatureScaleCode[] = [
-  "celsius",
-  "fahrenheit",
-  "kelvin",
-  "rankine",
-  "reaumur",
-  "newton",
 ];
 
 /**
@@ -107,17 +95,22 @@ export const TEMPERATURE_SCALES: TemperatureScale[] = [
   },
 ];
 
+/** 溫標代碼清單，方便驗證外部輸入。 */
+export const TEMPERATURE_SCALE_CODES = TEMPERATURE_SCALES.map(
+  (scale) => scale.code,
+);
+
 /**
  * 首頁英雄區塊使用的預設溫度清單。
  */
 export const TEMPERATURE_PRESETS: TemperaturePreset[] = [
-  { label: "絕對零度", value: 0, scale: "kelvin", emoji: "🧊" },
-  { label: "冰點", value: 0, scale: "celsius", emoji: "❄️" },
-  { label: "體溫", value: 98.6, scale: "fahrenheit", emoji: "🫀" },
-  { label: "咖啡沖泡", value: 92, scale: "celsius", emoji: "☕️" },
-  { label: "烤箱模式", value: 392, scale: "fahrenheit", emoji: "🍞" },
-  { label: "熔岩", value: 1300, scale: "celsius", emoji: "🌋" },
-  { label: "太陽表面", value: 5778, scale: "kelvin", emoji: "☀️" },
+  { label: "絕對零度", value: 0, scale: "kelvin" },
+  { label: "冰點", value: 0, scale: "celsius" },
+  { label: "體溫", value: 98.6, scale: "fahrenheit" },
+  { label: "咖啡沖泡", value: 92, scale: "celsius" },
+  { label: "烤箱模式", value: 392, scale: "fahrenheit" },
+  { label: "熔岩", value: 1300, scale: "celsius" },
+  { label: "太陽表面", value: 5778, scale: "kelvin" },
 ];
 
 /**
@@ -163,7 +156,6 @@ export const getThermalMood = (celsiusValue: number): ThermalMood => {
     return {
       title: "等待輸入",
       description: "輸入溫度後即可取得對應的情境說明與建議。",
-      emoji: "🌡️",
     };
   }
 
@@ -171,7 +163,6 @@ export const getThermalMood = (celsiusValue: number): ThermalMood => {
     return {
       title: "極地酷寒",
       description: "此溫度代表極端寒冷環境，需使用多層防寒裝備並注意結霜。",
-      emoji: "🥶",
     };
   }
 
@@ -179,7 +170,6 @@ export const getThermalMood = (celsiusValue: number): ThermalMood => {
     return {
       title: "冰點以下",
       description: "低於純水在標準氣壓下的冰點，戶外環境可能出現結霜或結冰。",
-      emoji: "❄️",
     };
   }
 
@@ -187,7 +177,6 @@ export const getThermalMood = (celsiusValue: number): ThermalMood => {
     return {
       title: "偏冷環境",
       description: "屬於明顯偏冷的日常環境，長時間停留時應留意保暖。",
-      emoji: "🧥",
     };
   }
 
@@ -196,7 +185,6 @@ export const getThermalMood = (celsiusValue: number): ThermalMood => {
       title: "舒適區間",
       description:
         "接近常見室內活動溫度，實際體感仍會受濕度、風速與個人狀況影響。",
-      emoji: "🙂",
     };
   }
 
@@ -204,7 +192,6 @@ export const getThermalMood = (celsiusValue: number): ThermalMood => {
     return {
       title: "偏暖環境",
       description: "環境已偏暖，體感會隨濕度、日照與通風條件明顯變化。",
-      emoji: "🌤️",
     };
   }
 
@@ -212,7 +199,6 @@ export const getThermalMood = (celsiusValue: number): ThermalMood => {
     return {
       title: "高溫區間",
       description: "已高於一般環境溫度，不宜僅依數值推斷接觸或暴露安全性。",
-      emoji: "🌡️",
     };
   }
 
@@ -220,7 +206,6 @@ export const getThermalMood = (celsiusValue: number): ThermalMood => {
     return {
       title: "沸點逼近",
       description: "接近純水在標準氣壓下的沸點；實際沸點會隨氣壓與溶質改變。",
-      emoji: "♨️",
     };
   }
 
@@ -229,14 +214,12 @@ export const getThermalMood = (celsiusValue: number): ThermalMood => {
       title: "高熱作業",
       description:
         "屬於烹飪或工業常見的高溫範圍，安全條件需依材料與設備規格判斷。",
-      emoji: "🔥",
     };
   }
 
   return {
     title: "極端高能",
     description: "已達極端高溫範圍，這裡的換算結果僅供單位與尺度比較。",
-    emoji: "🌋",
   };
 };
 
@@ -250,9 +233,8 @@ export const getThermalInsights = (
   const boilDelta = celsiusValue - 100;
 
   return [
-    { icon: mood.emoji, title: mood.title, description: mood.description },
+    mood,
     {
-      icon: freezeDelta >= 0 ? "💧" : "🧊",
       title:
         freezeDelta >= 0
           ? `比冰點高 ${formatTemperature(Math.abs(freezeDelta))}°C`
@@ -263,7 +245,6 @@ export const getThermalInsights = (
           : "以純水、標準氣壓為基準；低於冰點不代表所有液體都會結凍。",
     },
     {
-      icon: boilDelta >= 0 ? "♨️" : "🌡️",
       title:
         boilDelta >= 0
           ? `超過沸點 ${formatTemperature(Math.abs(boilDelta))}°C`

@@ -3,7 +3,6 @@
  */
 const numberFormatter = new Intl.NumberFormat("zh-TW", {
   maximumFractionDigits: 2,
-  minimumFractionDigits: 0,
 });
 
 export const timeFormatter = new Intl.DateTimeFormat("zh-TW", {
@@ -59,7 +58,6 @@ export const formatOptionalMetric = (value: number, suffix = ""): string => {
 export const formatLocalClock = (
   value: string | null,
   timezone: string | null | undefined,
-  { withSeconds = false }: { withSeconds?: boolean } = {},
 ): string => {
   if (!value) return "--";
 
@@ -72,15 +70,20 @@ export const formatLocalClock = (
     const formatter = new Intl.DateTimeFormat("zh-TW", {
       hour: "2-digit",
       minute: "2-digit",
-      ...(withSeconds ? { second: "2-digit" } : {}),
       timeZone: timezone ?? "UTC",
     });
 
     return formatter.format(date);
   } catch (error) {
     console.error("formatLocalClock", error);
-    return value ?? "--";
+    return value;
   }
+};
+
+/** 將 YYYY-MM-DD 解析為本地日期，避免以 UTC 解析造成日期偏移一天。 */
+export const parseLocalDate = (value: string): Date => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
 };
 
 export const formatUtcOffset = (value: string | null): string => {

@@ -1,4 +1,5 @@
 import type { WeatherData, WeatherLocationSource } from "../types/weather";
+import { isDateString, isFiniteNumber, isRecord } from "./guards";
 import type {
   AirQualityApiResponse,
   ForecastApiResponse,
@@ -85,11 +86,7 @@ export function buildWeatherData(
     localTime: fetchedAt,
     utcOffset: formatOffset(forecast.utc_offset_seconds ?? 0),
     dayOfWeek: dayOfWeekIndex,
-    dailyForecast: forecast.daily.time.map((date, index) => ({
-      date,
-      high: forecast.daily.temperature_2m_max[index],
-      low: forecast.daily.temperature_2m_min[index],
-    })),
+    dailyForecast: toDailyForecast(forecast),
   };
 }
 
@@ -110,13 +107,16 @@ export function mergeWeatherForecast(
     dailyLow: forecast.daily.temperature_2m_min[0],
     dailyTemperatureUnit:
       forecast.daily_units?.temperature_2m_max ?? current.dailyTemperatureUnit,
-    dailyForecast: forecast.daily.time.map((date, index) => ({
-      date,
-      high: forecast.daily.temperature_2m_max[index],
-      low: forecast.daily.temperature_2m_min[index],
-    })),
+    dailyForecast: toDailyForecast(forecast),
   };
 }
+
+const toDailyForecast = (forecast: ForecastApiResponse) =>
+  forecast.daily.time.map((date, index) => ({
+    date,
+    high: forecast.daily.temperature_2m_max[index],
+    low: forecast.daily.temperature_2m_min[index],
+  }));
 
 function formatOffset(offsetSeconds: number): string {
   const offsetSign = offsetSeconds >= 0 ? "+" : "-";
@@ -132,43 +132,32 @@ function formatOffset(offsetSeconds: number): string {
 export function parseWeatherPayload(
   value: unknown,
 ): { query: string; data: WeatherData; forecastDays: 7 | 14 } | null {
-  if (!value || typeof value !== "object") return null;
+  if (!isRecord(value)) return null;
 
   const record = value as {
     query?: unknown;
     data?: unknown;
     forecastDays?: unknown;
   };
-  if (
-    typeof record.query !== "string" ||
-    !record.data ||
-    typeof record.data !== "object"
-  ) {
+  if (typeof record.query !== "string" || !isRecord(record.data)) {
     return null;
   }
 
   const data = record.data as Partial<WeatherData>;
-  const isValidDate = (candidate: unknown): candidate is string =>
-    typeof candidate === "string" && !Number.isNaN(Date.parse(candidate));
   const optionalNumberFields: Array<keyof WeatherData> = [
     "pressure",
     "dailyHigh",
     "dailyLow",
   ];
   const hasValidOptionalNumbers = optionalNumberFields.every(
-    (field) =>
-      (typeof data[field] === "number" &&
-        Number.isFinite(data[field] as number)) ||
-      data[field] === null,
+    (field) => isFiniteNumber(data[field]) || data[field] === null,
   );
   const hasValidCoordinates =
     data.coordinates === null ||
     (data.coordinates !== undefined &&
       typeof data.coordinates === "object" &&
-      typeof data.coordinates.latitude === "number" &&
-      Number.isFinite(data.coordinates.latitude) &&
-      typeof data.coordinates.longitude === "number" &&
-      Number.isFinite(data.coordinates.longitude));
+      isFiniteNumber(data.coordinates.latitude) &&
+      isFiniteNumber(data.coordinates.longitude));
   const hasValidAdministrative =
     Array.isArray(data.administrative) &&
     data.administrative.every((item) => typeof item === "string");
@@ -180,10 +169,8 @@ export function parseWeatherPayload(
         typeof item === "object" &&
         typeof item.date === "string" &&
         !Number.isNaN(Date.parse(`${item.date}T00:00:00`)) &&
-        typeof item.high === "number" &&
-        Number.isFinite(item.high) &&
-        typeof item.low === "number" &&
-        Number.isFinite(item.low),
+        isFiniteNumber(item.high) &&
+        isFiniteNumber(item.low),
     );
   const forecastLength = Array.isArray(data.dailyForecast)
     ? data.dailyForecast.length
@@ -192,19 +179,15 @@ export function parseWeatherPayload(
     data.airQuality === null ||
     data.airQuality === undefined ||
     (typeof data.airQuality === "object" &&
-      typeof data.airQuality.aqi === "number" &&
-      Number.isFinite(data.airQuality.aqi) &&
+      isFiniteNumber(data.airQuality.aqi) &&
       typeof data.airQuality.aqiUnit === "string" &&
-      typeof data.airQuality.pm25 === "number" &&
-      Number.isFinite(data.airQuality.pm25) &&
+      isFiniteNumber(data.airQuality.pm25) &&
       typeof data.airQuality.pm25Unit === "string" &&
-      typeof data.airQuality.pm10 === "number" &&
-      Number.isFinite(data.airQuality.pm10) &&
+      isFiniteNumber(data.airQuality.pm10) &&
       typeof data.airQuality.pm10Unit === "string" &&
-      typeof data.airQuality.time === "string" &&
-      !Number.isNaN(Date.parse(data.airQuality.time)));
+      isDateString(data.airQuality.time));
   const hasValidFetchedAt =
-    data.fetchedAt === undefined || isValidDate(data.fetchedAt);
+    data.fetchedAt === undefined || isDateString(data.fetchedAt);
   const hasValidLocationSource =
     data.locationSource === undefined ||
     data.locationSource === "search" ||
@@ -215,29 +198,21 @@ export function parseWeatherPayload(
     !hasValidAdministrative ||
     typeof data.timezone !== "string" ||
     typeof data.timezoneAbbreviation !== "string" ||
-    typeof data.observationTime !== "string" ||
-    Number.isNaN(Date.parse(data.observationTime)) ||
-    typeof data.temperature !== "number" ||
-    !Number.isFinite(data.temperature) ||
+    !isDateString(data.observationTime) ||
+    !isFiniteNumber(data.temperature) ||
     typeof data.temperatureUnit !== "string" ||
-    typeof data.apparentTemperature !== "number" ||
-    !Number.isFinite(data.apparentTemperature) ||
+    !isFiniteNumber(data.apparentTemperature) ||
     typeof data.apparentTemperatureUnit !== "string" ||
-    typeof data.humidity !== "number" ||
-    !Number.isFinite(data.humidity) ||
+    !isFiniteNumber(data.humidity) ||
     typeof data.humidityUnit !== "string" ||
-    typeof data.windSpeed !== "number" ||
-    !Number.isFinite(data.windSpeed) ||
+    !isFiniteNumber(data.windSpeed) ||
     typeof data.windSpeedUnit !== "string" ||
     typeof data.pressureUnit !== "string" ||
-    typeof data.precipitation !== "number" ||
-    !Number.isFinite(data.precipitation) ||
+    !isFiniteNumber(data.precipitation) ||
     typeof data.precipitationUnit !== "string" ||
-    typeof data.uvIndex !== "number" ||
-    !Number.isFinite(data.uvIndex) ||
+    !isFiniteNumber(data.uvIndex) ||
     typeof data.uvIndexUnit !== "string" ||
-    typeof data.weatherCode !== "number" ||
-    !Number.isFinite(data.weatherCode) ||
+    !isFiniteNumber(data.weatherCode) ||
     typeof data.isDay !== "boolean" ||
     !hasValidOptionalNumbers ||
     typeof data.dailyTemperatureUnit !== "string" ||
@@ -248,8 +223,7 @@ export function parseWeatherPayload(
     !hasValidLocationSource ||
     (data.localTime !== null &&
       data.localTime !== undefined &&
-      (typeof data.localTime !== "string" ||
-        Number.isNaN(Date.parse(data.localTime)))) ||
+      !isDateString(data.localTime)) ||
     (data.utcOffset !== null &&
       data.utcOffset !== undefined &&
       typeof data.utcOffset !== "string") ||
@@ -280,9 +254,9 @@ export function parseWeatherPayload(
       airQuality: data.airQuality ?? null,
       // Older cache records predate fetchedAt. Their legacy localTime is the
       // best available timestamp; without one, mark it as immediately stale.
-      fetchedAt: isValidDate(data.fetchedAt)
+      fetchedAt: isDateString(data.fetchedAt)
         ? data.fetchedAt
-        : isValidDate(data.localTime)
+        : isDateString(data.localTime)
           ? data.localTime
           : new Date(0).toISOString(),
       locationSource:

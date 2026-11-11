@@ -32,9 +32,6 @@ const WEATHER_CODE_MAP: Record<number, string> = {
   99: "強雷陣雨伴隨冰雹",
 };
 
-/**
- * 預設城市清單，方便快速體驗。
- */
 export type WeatherPreset = {
   label: string;
   query: string;

@@ -4,9 +4,11 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { CalendarDays } from "lucide-react";
 
+import { parseLocalDate } from "../../lib/format";
 import { ui } from "../../lib/uiStyles";
-import { cn, handleRadioGroupKeyDown } from "../../lib/utils";
+import { cn } from "../../lib/utils";
 import type { DailyForecast } from "../../types/weather";
+import { SegmentedControl } from "../SegmentedControl";
 import { ChartGraphicSkeleton } from "../skeletons/ChartSkeleton";
 
 const WeatherChart = dynamic(
@@ -18,6 +20,10 @@ const WeatherChart = dynamic(
 );
 
 const DESKTOP_CHART_QUERY = "(min-width: 768px)";
+const FORECAST_DAY_OPTIONS = [
+  { value: 7, label: "7 天" },
+  { value: 14, label: "14 天" },
+] as const;
 const forecastDateFormatter = new Intl.DateTimeFormat("zh-TW", {
   month: "numeric",
   day: "numeric",
@@ -72,35 +78,13 @@ export function WeatherForecast({
           </h2>
           <p className={ui.fieldHelp}>未來 {days} 天的每日高低溫</p>
         </div>
-        <div
-          role="radiogroup"
-          aria-label="預報天數"
-          onKeyDown={(event) =>
-            handleRadioGroupKeyDown(event, [7, 14], days, onDaysChange)
-          }
-          className={ui.rangeControl}
-        >
-          {[7, 14].map((option) => (
-            <button
-              key={option}
-              type="button"
-              role="radio"
-              aria-checked={days === option}
-              data-radio-value={option}
-              tabIndex={days === option ? 0 : -1}
-              onClick={() => onDaysChange(option as 7 | 14)}
-              disabled={loading}
-              className={cn(
-                ui.rangeButton,
-                days === option
-                  ? ui.rangeButtonActive
-                  : "bg-surface-strong text-ink-subtle",
-              )}
-            >
-              {option} 天
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          label="預報天數"
+          options={FORECAST_DAY_OPTIONS}
+          value={days}
+          onChange={onDaysChange}
+          disabled={loading}
+        />
       </div>
 
       <div className="mt-3.5 grid gap-px overflow-hidden border border-edge-subtle bg-edge-subtle md:hidden">
@@ -156,6 +140,5 @@ export function WeatherForecast({
 }
 
 function formatForecastDate(value: string): string {
-  const [year, month, day] = value.split("-").map(Number);
-  return forecastDateFormatter.format(new Date(year, month - 1, day));
+  return forecastDateFormatter.format(parseLocalDate(value));
 }

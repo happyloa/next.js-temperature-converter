@@ -4,8 +4,9 @@ import type { useTemperatureConversion } from "../hooks/useTemperatureConversion
 import { formatTemperature } from "../lib/format";
 import { TEMPERATURE_RANGE_OPTIONS } from "../lib/temperature";
 import { ui } from "../lib/uiStyles";
-import { cn, handleRadioGroupKeyDown } from "../lib/utils";
+import { cn } from "../lib/utils";
 import type { TemperatureScaleCode } from "../types/temperature";
+import { SegmentedControl } from "./SegmentedControl";
 import { ShareButton } from "./ShareButton";
 import { ConversionResults } from "./temperature/ConversionResults";
 import { ScaleSelector } from "./temperature/ScaleSelector";
@@ -17,6 +18,12 @@ type TemperatureInputCardProps = {
   onCopy: (text: string, code: TemperatureScaleCode) => void | Promise<void>;
   onAddHistory: () => void;
 };
+
+const RANGE_MODE_OPTIONS = TEMPERATURE_RANGE_OPTIONS.map((option) => ({
+  value: option.code,
+  label: option.label,
+  title: option.description,
+}));
 
 export function TemperatureInputCard({
   converter,
@@ -45,7 +52,7 @@ export function TemperatureInputCard({
     handleSliderChange,
     handleReset,
   } = converter;
-  const activeSymbol = activeScale?.symbol;
+  const activeSymbol = activeScale.symbol;
   const shareText = conversions
     .map(
       (conversion) =>
@@ -122,7 +129,7 @@ export function TemperatureInputCard({
               )}
             />
             <span className="shrink-0 text-3xl font-normal text-accent-label sm:text-5xl">
-              {activeSymbol ?? ""}
+              {activeSymbol}
             </span>
           </span>
         </label>
@@ -142,40 +149,12 @@ export function TemperatureInputCard({
               {formatTemperature(sliderRange.max)} {activeSymbol}
             </p>
           </div>
-          <div
-            role="radiogroup"
-            aria-label="滑桿使用情境"
-            className={ui.rangeControl}
-            onKeyDown={(event) =>
-              handleRadioGroupKeyDown(
-                event,
-                TEMPERATURE_RANGE_OPTIONS.map((item) => item.code),
-                rangeMode,
-                setRangeMode,
-              )
-            }
-          >
-            {TEMPERATURE_RANGE_OPTIONS.map((option) => (
-              <button
-                key={option.code}
-                type="button"
-                role="radio"
-                aria-checked={rangeMode === option.code}
-                data-radio-value={option.code}
-                tabIndex={rangeMode === option.code ? 0 : -1}
-                title={option.description}
-                onClick={() => setRangeMode(option.code)}
-                className={cn(
-                  ui.rangeButton,
-                  rangeMode === option.code
-                    ? ui.rangeButtonActive
-                    : "bg-surface-strong text-ink-subtle",
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            label="滑桿使用情境"
+            options={RANGE_MODE_OPTIONS}
+            value={rangeMode}
+            onChange={setRangeMode}
+          />
         </div>
         <input
           type="range"
@@ -184,7 +163,7 @@ export function TemperatureInputCard({
           step={sliderRange.step}
           value={sliderValue}
           onChange={(event) => handleSliderChange(Number(event.target.value))}
-          aria-label={`溫度滑桿，單位 ${activeSymbol ?? ""}`}
+          aria-label={`溫度滑桿，單位 ${activeSymbol}`}
           className="mt-3 h-5 w-full accent-accent"
         />
         {sliderOutOfRange ? (

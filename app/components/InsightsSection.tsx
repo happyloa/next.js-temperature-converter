@@ -1,7 +1,7 @@
 import { Lightbulb } from "lucide-react";
 import { ui } from "../lib/uiStyles";
 import { cn } from "../lib/utils";
-import type { ThermalInsight } from "../types/insight";
+import type { ThermalInsight } from "../types/temperature";
 
 export function InsightsSection({ insights }: { insights: ThermalInsight[] }) {
   return (

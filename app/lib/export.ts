@@ -1,14 +1,5 @@
 import type { HistoryEntry } from "../types/history";
-import type { TemperatureScaleCode } from "../types/temperature";
-
-const CSV_COLUMNS: Array<{ code: TemperatureScaleCode; label: string }> = [
-  { code: "celsius", label: "攝氏 (°C)" },
-  { code: "fahrenheit", label: "華氏 (°F)" },
-  { code: "kelvin", label: "絕對溫標 (K)" },
-  { code: "rankine", label: "蘭氏 (°R)" },
-  { code: "reaumur", label: "列氏 (°Ré)" },
-  { code: "newton", label: "牛頓氏 (°N)" },
-];
+import { TEMPERATURE_SCALES } from "./temperature";
 
 const escapeCsvCell = (value: string | number): string => {
   const normalized = `${value}`;
@@ -20,9 +11,9 @@ const escapeCsvCell = (value: string | number): string => {
 export function historyToCsv(history: HistoryEntry[]): string {
   if (history.length === 0) return "";
 
-  const headers = ["時間", ...CSV_COLUMNS.map((item) => item.label)];
+  const headers = ["時間", ...TEMPERATURE_SCALES.map((item) => item.label)];
   const rows = history.map((entry) => {
-    const values = CSV_COLUMNS.map((column) => {
+    const values = TEMPERATURE_SCALES.map((column) => {
       const conversion = entry.conversions.find(
         (item) => item.code === column.code,
       );

@@ -6,6 +6,7 @@ import {
   formatOptionalMetric,
   formatTemperature,
   formatUtcOffset,
+  parseLocalDate,
   toInputString,
 } from "./format";
 
@@ -39,5 +40,13 @@ describe("format helpers", () => {
       .mockImplementation(() => undefined);
     expect(formatLocalClock("not-a-date", "Asia/Taipei")).toBe("not-a-date");
     expect(consoleSpy).not.toHaveBeenCalled();
+  });
+
+  it("parses calendar dates in local time without a UTC day shift", () => {
+    const date = parseLocalDate("2026-07-10");
+    expect([date.getFullYear(), date.getMonth(), date.getDate()]).toEqual([
+      2026, 6, 10,
+    ]);
+    expect(date.getHours()).toBe(0);
   });
 });
