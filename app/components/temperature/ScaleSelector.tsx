@@ -16,6 +16,7 @@ export function ScaleSelector({
     <div
       role="radiogroup"
       aria-label="選擇輸入溫標"
+      tabIndex={-1}
       onKeyDown={(event) =>
         handleRadioGroupKeyDown(
           event,

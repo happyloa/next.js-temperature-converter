@@ -21,6 +21,7 @@ export function SegmentedControl<T extends string | number>({
     <div
       role="radiogroup"
       aria-label={label}
+      tabIndex={-1}
       className={ui.rangeControl}
       onKeyDown={(event) =>
         handleRadioGroupKeyDown(
